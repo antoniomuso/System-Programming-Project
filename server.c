@@ -3,5 +3,5 @@
 //
 
 int run_server(p_commands prova) {
-
+    printf("Server start\n");
 }

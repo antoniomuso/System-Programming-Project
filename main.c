@@ -25,7 +25,7 @@ int main(int argc, char argv[]) {
 
 
 #ifdef __unix__
-    printf("Unix");
+    printf("Unix\n");
     fflush(stdout);
 #if DEBUG != 1
     // Deamon fork
@@ -64,14 +64,14 @@ int main(int argc, char argv[]) {
     // Qui il demone è nato.
     run_server(options);
 #endif
-
+    run_server(options);
 
 
 
 #endif
 
 #if _WIN32
-    printf("Windows");
+    printf("Windows\n");
 
 
 
