@@ -8,80 +8,76 @@
 		<Option virtualFolders="CMake Files\;"/>
 		<Build>
 			<Target title="all">
-				<Option working_dir="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug"/>
+				<Option working_dir="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="rebuild_cache">
-				<Option working_dir="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="edit_cache">
-				<Option working_dir="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug"/>
-				<Option type="4"/>
-				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="SystemProgramming">
-				<Option output="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/SystemProgramming" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug"/>
+				<Option output="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/SystemProgramming.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
-					<Add directory="/usr/include/x86_64-linux-gnu"/>
-					<Add directory="/usr/include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/../../../../include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/include-fixed"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 SystemProgramming"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 SystemProgramming"/>
+					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="SystemProgramming/fast">
-				<Option output="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/SystemProgramming" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug"/>
+				<Option output="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/SystemProgramming.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
-					<Add directory="/usr/include/x86_64-linux-gnu"/>
-					<Add directory="/usr/include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/../../../../include"/>
+					<Add directory="c:\mingw\bin\../lib/gcc/mingw32/6.3.0/include-fixed"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 SystemProgramming/fast"/>
-					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j8 -f &quot;/home/anotoniomusolino/Scrivania/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 SystemProgramming/fast"/>
+					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="C:/MinGW/bin/mingw32-make.exe -f &quot;C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/anotoniomusolino/Scrivania/System-Programming-Project/main.c">
+		<Unit filename="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/main.c">
 			<Option target="SystemProgramming"/>
 		</Unit>
-		<Unit filename="/home/anotoniomusolino/Scrivania/System-Programming-Project/CMakeLists.txt">
+		<Unit filename="C:/Users/kron/Desktop/Uni-Informatica/Terzo Anno/PROG. SISTEMA/System-Programming-Project/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 	</Project>

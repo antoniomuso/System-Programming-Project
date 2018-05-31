@@ -46,7 +46,6 @@ int main(int argc, char argv[]) {
         exit(EXIT_FAILURE);
 
     /* Catch, ignore and handle signals */
-    //TODO: Implement a working signal handler */
     signal(SIGCHLD, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
 
