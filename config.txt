@@ -1,0 +1,4 @@
+port=8080
+server_ip=localhost
+mode=MT
+n_proc=8
