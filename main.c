@@ -28,7 +28,7 @@ int main(int argc, char argv[]) {
     printf("Unix\n");
     fflush(stdout);
 #if DEBUG != 1
-    // Deamon fork
+    // Daemon fork
     pid_t pid;
 
     /* Fork off the parent process */
