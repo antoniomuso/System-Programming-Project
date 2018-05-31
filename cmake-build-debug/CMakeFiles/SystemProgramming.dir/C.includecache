@@ -6,7 +6,27 @@
 
 #IncludeRegexTransform: 
 
+/home/anotoniomusolino/Scrivania/System-Programming-Project/command_parser.c
+
 /home/anotoniomusolino/Scrivania/System-Programming-Project/main.c
 stdio.h
 -
+command_parser.c
+/home/anotoniomusolino/Scrivania/System-Programming-Project/command_parser.c
+server.c
+/home/anotoniomusolino/Scrivania/System-Programming-Project/server.c
+unistd.h
+-
+memory.h
+-
+errno.h
+-
+stdlib.h
+-
+signal.h
+-
+sys/stat.h
+-
+
+/home/anotoniomusolino/Scrivania/System-Programming-Project/server.c
 
