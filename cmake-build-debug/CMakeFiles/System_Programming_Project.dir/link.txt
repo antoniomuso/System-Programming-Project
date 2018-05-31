@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -Werror -g   CMakeFiles/System_Programming_Project.dir/main.c.o  -o System_Programming_Project 
