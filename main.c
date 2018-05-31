@@ -1,8 +1,10 @@
 #include <stdio.h>
-
+#define DEBUG 1
 #include "command_parser.c"
 #include "server.c"
+
 #ifdef __unix__
+
 #include <unistd.h>
 #include <memory.h>
 #include <errno.h>
@@ -11,7 +13,7 @@
 #include <sys/stat.h>
 
 #elif _WIN32
-printf("Windows");
+
 
 #endif
 
@@ -25,7 +27,7 @@ int main(int argc, char argv[]) {
 #ifdef __unix__
     printf("Unix");
     fflush(stdout);
-
+#if DEBUG != 1
     // Deamon fork
     pid_t pid;
 
@@ -60,9 +62,18 @@ int main(int argc, char argv[]) {
         exit(EXIT_SUCCESS);
 
     // Qui il demone è nato.
+    run_server(options);
+#endif
 
-#elif _WIN32
+
+
+
+#endif
+
+#if _WIN32
     printf("Windows");
+
+
 
 #endif
 
