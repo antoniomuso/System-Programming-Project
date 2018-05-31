@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/SystemProgramming.dir/main.c.o  -o SystemProgramming 

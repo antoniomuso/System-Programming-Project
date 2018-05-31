@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-project(System_Programming_Project)
+project(SystemProgramming C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+set(CMAKE_C_STANDARD 11)
 
-add_executable(System_Programming_Project
-        Makefile main.c)
+add_executable(SystemProgramming main.c)

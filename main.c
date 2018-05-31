@@ -1,7 +1,6 @@
-//
-// Created by anotoniomusolino on 31/05/18.
-//
+#include <stdio.h>
 
-int main () {
-    
+int main() {
+    printf("Hello, World!\n");
+    return 0;
 }

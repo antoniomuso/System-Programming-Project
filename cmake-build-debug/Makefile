@@ -111,17 +111,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named System_Programming_Project
+# Target rules for targets named SystemProgramming
 
 # Build rule for target.
-System_Programming_Project: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 System_Programming_Project
-.PHONY : System_Programming_Project
+SystemProgramming: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 SystemProgramming
+.PHONY : SystemProgramming
 
 # fast build rule for target.
-System_Programming_Project/fast:
-	$(MAKE) -f CMakeFiles/System_Programming_Project.dir/build.make CMakeFiles/System_Programming_Project.dir/build
-.PHONY : System_Programming_Project/fast
+SystemProgramming/fast:
+	$(MAKE) -f CMakeFiles/SystemProgramming.dir/build.make CMakeFiles/SystemProgramming.dir/build
+.PHONY : SystemProgramming/fast
 
 main.o: main.c.o
 
@@ -129,7 +129,7 @@ main.o: main.c.o
 
 # target to build an object file
 main.c.o:
-	$(MAKE) -f CMakeFiles/System_Programming_Project.dir/build.make CMakeFiles/System_Programming_Project.dir/main.c.o
+	$(MAKE) -f CMakeFiles/SystemProgramming.dir/build.make CMakeFiles/SystemProgramming.dir/main.c.o
 .PHONY : main.c.o
 
 main.i: main.c.i
@@ -138,7 +138,7 @@ main.i: main.c.i
 
 # target to preprocess a source file
 main.c.i:
-	$(MAKE) -f CMakeFiles/System_Programming_Project.dir/build.make CMakeFiles/System_Programming_Project.dir/main.c.i
+	$(MAKE) -f CMakeFiles/SystemProgramming.dir/build.make CMakeFiles/SystemProgramming.dir/main.c.i
 .PHONY : main.c.i
 
 main.s: main.c.s
@@ -147,7 +147,7 @@ main.s: main.c.s
 
 # target to generate assembly for a file
 main.c.s:
-	$(MAKE) -f CMakeFiles/System_Programming_Project.dir/build.make CMakeFiles/System_Programming_Project.dir/main.c.s
+	$(MAKE) -f CMakeFiles/SystemProgramming.dir/build.make CMakeFiles/SystemProgramming.dir/main.c.s
 .PHONY : main.c.s
 
 # Help Target
@@ -158,7 +158,7 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... System_Programming_Project"
+	@echo "... SystemProgramming"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

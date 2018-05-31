@@ -7,4 +7,6 @@
 #IncludeRegexTransform: 
 
 /home/anotoniomusolino/Scrivania/System-Programming-Project/main.c
+stdio.h
+-
 
