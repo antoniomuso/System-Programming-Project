@@ -12,7 +12,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3f60b7a-4c65-4411-97b2-cc3dc84eca38" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/command_parser.c" beforeDir="false" afterPath="$PROJECT_DIR$/command_parser.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -25,15 +25,28 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.c" pinned="false" current-in-tab="true">
+      <file leaf-file-name="main.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="484">
-              <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+            <state relative-caret-position="376">
+              <caret line="26" selection-start-line="26" selection-end-line="26" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#75#102#0" expanded="true" />
+                <element signature="e#594#1338#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="66">
+                <caret line="3" column="4" selection-start-line="3" selection-start-column="4" selection-end-line="3" selection-end-column="4" />
+              </first_editor>
+              <second_editor />
             </state>
           </provider>
         </entry>
@@ -47,11 +60,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="command_parser.c" pinned="false" current-in-tab="false">
+      <file leaf-file-name="command_parser.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/command_parser.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-511">
-              <caret line="3" column="19" lean-forward="true" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
+            <state relative-caret-position="198">
+              <caret line="36" column="23" selection-start-line="36" selection-start-column="23" selection-end-line="36" selection-end-column="23" />
             </state>
           </provider>
         </entry>
@@ -76,11 +89,11 @@
         <option value="$PROJECT_DIR$/passwordFile.txt" />
         <option value="$PROJECT_DIR$/config.txt" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/command_parser.h" />
-        <option value="$PROJECT_DIR$/command_parser.c" />
         <option value="$PROJECT_DIR$/main.c" />
         <option value="$PROJECT_DIR$/server.c" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/command_parser.c" />
       </list>
     </option>
   </component>
@@ -167,12 +180,12 @@
       <workItem from="1527786245688" duration="31000" />
       <workItem from="1527786278214" duration="72000" />
       <workItem from="1527786351043" duration="14000" />
-      <workItem from="1527833126343" duration="10025000" />
+      <workItem from="1527833126343" duration="10772000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="22691000" />
+    <option name="totallyTimeSpent" value="23438000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1987" y="25" width="1853" height="1055" extended-state="6" />
@@ -184,7 +197,7 @@
       <window_info anchor="bottom" id="CMake" order="11" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="10" />
-      <window_info anchor="bottom" id="Run" order="3" visible="true" weight="0.24444444" />
+      <window_info active="true" anchor="bottom" id="Run" order="3" visible="true" weight="0.24444444" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="8" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -217,6 +230,7 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -235,6 +249,7 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -282,6 +297,7 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -329,6 +345,7 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -376,6 +393,7 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -384,19 +402,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="22">
           <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="7" column="103" lean-forward="true" selection-start-line="7" selection-start-column="103" selection-end-line="7" selection-end-column="103" />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor />
-          <second_editor />
         </state>
       </provider>
     </entry>
@@ -424,10 +429,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/command_parser.c">
+    <entry file="file://$PROJECT_DIR$/main.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-511">
-          <caret line="3" column="19" lean-forward="true" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
+        <state relative-caret-position="376">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#75#102#0" expanded="true" />
+            <element signature="e#594#1338#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="154">
+          <caret line="7" column="103" lean-forward="true" selection-start-line="7" selection-start-column="103" selection-end-line="7" selection-end-column="103" />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="66">
+            <caret line="3" column="4" selection-start-line="3" selection-start-column="4" selection-end-line="3" selection-end-column="4" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
@@ -438,14 +463,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.c">
+    <entry file="file://$PROJECT_DIR$/command_parser.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="484">
-          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <element signature="e#75#102#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="198">
+          <caret line="36" column="23" selection-start-line="36" selection-start-column="23" selection-end-line="36" selection-end-column="23" />
         </state>
       </provider>
     </entry>

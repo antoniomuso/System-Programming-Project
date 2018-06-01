@@ -27,6 +27,19 @@ struct options {
 };
 typedef struct options options;
 
+/**
+ *
+ * @param command Command String
+ * @param options Commands data struct
+ * @return NULL if command isn't contain insiede options,
+ *         Pointer to a string that it contain the command value.
+ */
+char* get_command_value (char command[], options options) {
+    for (int i = 0; i < options.comm_len; i++) {
+        if (strcmp(options.commands[i].name, command) == 0) return options.commands[i].value;
+    }
+    return NULL;
+}
 
 /**
  *
@@ -108,5 +121,8 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 
     return option;
 }
+
+
+
 
 
