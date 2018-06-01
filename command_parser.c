@@ -7,7 +7,7 @@
 
 struct command_arc {
     char name[MAX_OPTION_LEN];
-    char type[8]; // Accept type are: int, str, null
+    char type[8]; // Accept type are: int, str, null, float
 };
 
 
@@ -99,6 +99,12 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 
                 if ( strcmp(command_list[j].type, "int") == 0 ) {
                     sprintf( comm[pos].value,"%d",atoi(argv[i]));
+                    pos++;
+                    break;
+                }
+
+                if ( strcmp(command_list[j].type, "float") == 0 ) {
+                    sprintf( comm[pos].value,"%d",atof(argv[i]));
                     pos++;
                     break;
                 }
