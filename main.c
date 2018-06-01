@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define DEBUG 1
 #include "command_parser.c"
 #include "server.c"
@@ -8,7 +10,6 @@
 #include <unistd.h>
 #include <memory.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <signal.h>
 #include <sys/stat.h>
 
@@ -18,9 +19,12 @@
 #endif
 
 
-int main(int argc, char argv[]) {
+int main(int argc, char *argv[]) {
     // TODO: Qui ci va un Parser per le opzioni.
-    p_commands options = {};
+
+    command_arc comm[] = { {"-n_proc","int"},{"-port", "int"},{"-server_ip", "str"}, {"-mode","str"}};
+    options options = options_parse(argc, argv, comm, 4);
+
 
 
 
