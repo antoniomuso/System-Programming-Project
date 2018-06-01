@@ -23,7 +23,7 @@ typedef struct command_arc command_arc;
 
 struct options {
     command* commands;
-    u_int comm_len;
+    int comm_len;
 };
 typedef struct options options;
 
@@ -52,8 +52,8 @@ char* get_command_value (char command[], options options) {
 
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm) {
 
-    u_int pos = 0;
-    u_int len = 6;
+    int pos = 0;
+    int len = 6;
     command* comm = calloc(sizeof(command), len);
 
 

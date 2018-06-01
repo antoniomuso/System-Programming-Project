@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     command_arc comm[] = { {"-n_proc","int"},{"-port", "int"},{"-server_ip", "str"}, {"-mode","str"}};
     options options = options_parse(argc, argv, comm, 4);
-
+    get_command_value((char *) comm, options);
 
 
 
