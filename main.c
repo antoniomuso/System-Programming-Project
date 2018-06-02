@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define DEBUG 1
-#include "command_parser.c"
+#include "command_parser.h"
 #include "server.c"
 
 #ifdef __unix__

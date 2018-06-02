@@ -1,31 +1,12 @@
 //
 // Created by anotoniomusolino on 31/05/18.
 //
+#include "command_parser.h"
 #include <stdlib.h>
-#define MAX_OPTION_LEN 20
-#define REALLOC_INC_SIZE 4
-
-struct command_arc {
-    char name[MAX_OPTION_LEN];
-    char type[8]; // Accept type are: int, str, null, float
-};
+#include <stdio.h>
+#include <string.h>
 
 
-struct command {
-    char name[MAX_OPTION_LEN];
-    char value[MAX_OPTION_LEN];
-};
-
-
-
-typedef struct command command;
-typedef struct command_arc command_arc;
-
-struct options {
-    command* commands;
-    int comm_len;
-};
-typedef struct options options;
 
 /**
  *
