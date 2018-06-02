@@ -23,9 +23,8 @@ int main(int argc, char *argv[]) {
     // TODO: Qui ci va un Parser per le opzioni.
 
     command_arc comm[] = { {"-n_proc","int"},{"-port", "int"},{"-server_ip", "str"}, {"-mode","str"}};
-    options options = options_parse(argc, argv, comm, 4);
-    get_command_value((char *) comm, options);
-
+    options options = options_parse(argc, argv, comm, 4); // Il puntatore dentro options va liberato.
+    //get_command_value((char *) comm, options);
 
 
 #ifdef __unix__
