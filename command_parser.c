@@ -104,7 +104,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                 }
 
                 if ( strcmp(command_list[j].type, "float") == 0 ) {
-                    sprintf( comm[pos].value,"%d",atof(argv[i]));
+                    sprintf( comm[pos].value,"%f",atof(argv[i]));
                     pos++;
                     break;
                 }
