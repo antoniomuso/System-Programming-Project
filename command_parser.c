@@ -48,13 +48,13 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                     len += REALLOC_INC_SIZE;
                     comm = (command*) realloc(comm, sizeof(command) * len);
                     if (comm == NULL) {
-                        fprintf(stderr, "Options realloc failed");
+                        fprintf(stderr, "Options realloc failed\n");
                         exit(EXIT_FAILURE);
                     }
                 }
 
                 if (strlen(argv[i]) > MAX_OPTION_LEN) {
-                    fprintf(stderr, "Command %s exceeds the maximum command length", argv[i]);
+                    fprintf(stderr, "Command %s exceeds the maximum command length\n", argv[i]);
                     exit(EXIT_FAILURE);
                 }
 
@@ -68,13 +68,13 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                 }
                 // Passo all'indice dell'input
                 if (++i >= argc) {
-                    fprintf(stderr, "Iput for command %s not passed", argv[i-1]);
+                    fprintf(stderr, "Iput for command %s not passed\n", argv[i-1]);
                     exit(EXIT_FAILURE);
                 }
 
                 // Controllo che l'input non superi la lunghezza massima
                 if (strlen(argv[i]) > MAX_OPTION_LEN) {
-                    fprintf(stderr, "Command input %s exceeds the maximum command length", argv[i]);
+                    fprintf(stderr, "Command input %s exceeds the maximum command length\n", argv[i]);
                     exit(EXIT_FAILURE);
                 }
 

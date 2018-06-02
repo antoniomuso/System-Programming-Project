@@ -3,7 +3,9 @@
 #include <string.h>
 #define DEBUG 1
 #include "command_parser.h"
-#include "server.c"
+#include "server.h"
+
+
 
 #ifdef __unix__
 

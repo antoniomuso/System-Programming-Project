@@ -1,7 +1,10 @@
 //
 // Created by anotoniomusolino on 31/05/18.
 //
+
+
 #include "command_parser.h"
+#include "server.h"
 #include <stdio.h>
 
 #ifdef __unix__
@@ -16,7 +19,7 @@
 #endif
 
 
-inline int run_server(options options) {
+int run_server(options options) {
     printf("Server start\n");
 
 #if _WIN32
