@@ -12,7 +12,7 @@
  *
  * @param command Command String
  * @param options Commands data struct
- * @return NULL if command isn't contain insiede options,
+ * @return NULL if command isn't contained inside options,
  *         Pointer to a string that it contain the command value.
  */
 char* get_command_value (char command[], options options) {
