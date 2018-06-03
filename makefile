@@ -1,5 +1,5 @@
 
-main: command_parser.o server.o main.o
+main: b64.c/decode.o b64.c/encode.o command_parser.o server.o main.o
 	gcc server.o command_parser.o main.o -o main
 
 main.o: main.c
@@ -11,5 +11,11 @@ server.o: server.c
 command_parser.o: command_parser.c
 	gcc -c command_parser.c -o command_parser.o
 
+b64.c/decode.o: ./b64.c/decode.c
+	gcc -c b64.c/decode.c -o b64.c/decode.o
+
+b64.c/encode.o: ./b64.c/encode.c
+	gcc -c b64.c/encode.c -o b64.c/encode.o
+
 clean:
-	rm ./*.o | rm ./main
+	rm ./*.o |  rm ./main
