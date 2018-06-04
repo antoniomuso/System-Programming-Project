@@ -35,9 +35,22 @@
 /*
  * Run thread function
  */
-void* process_routine () {
+void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
+    int server_socket = *((int*)arg);
+
+    int clientfd;
+
+    while (clientfd = accept(server_socket, NULL, NULL)) {
+        printf("Client Connect\n");
+        fflush(stdout);
+        send(clientfd,"First Message",14,0);
+        //close(server_socket);
+        sleep(40);
+    }
+
+
 }
 
 int run_server(options options) {
@@ -98,25 +111,22 @@ int run_server(options options) {
     printf("Server Listen on %s:%s\n", get_command_value("-server_ip", options), get_command_value("-port", options));
     fflush(stdout);
 
-    /*
-    int clientfd;
-    while (clientfd = accept(server_socket, NULL, NULL)) {
-        printf("Client Connect\n");
-        fflush(stdout);
-        send(clientfd,"First Message",14,0);
-        //close(server_socket);
-    }
-    */
+
 
 #ifdef __unix__
 
     int n_proc = atoi(get_command_value("-n_proc", options));
-    pthread_t tid[n_proc];
+    pthread_t tid[n_proc-1];
 
+    int * sock_pointer ;
+    sock_pointer = &server_socket;
 
-    for (int i = 0; i < n_proc; i++) {
-        pthread_create(&(tid[i]), NULL, &process_routine, NULL);
+    for (int i = 0; i < n_proc-1; i++) {
+
+        pthread_create(&(tid[i]), NULL, &process_routine, (void *)sock_pointer);
     }
+
+    process_routine(sock_pointer);
 
 #elif _WIN32
 
