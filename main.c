@@ -66,9 +66,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
 
     // Qui il demone è nato.
-    run_server(options);
 #endif
-    run_server(options);
 
 
 
@@ -76,10 +74,9 @@ int main(int argc, char *argv[]) {
 
 #if _WIN32
     printf("Windows\n");
-
-
-
 #endif
+
+    run_server(options);
 
     return 0;
 }

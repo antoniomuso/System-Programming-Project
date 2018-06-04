@@ -36,14 +36,14 @@ int run_server(options options) {
 #if _WIN32
     WSADATA wsa;
 
-    printf("\nInitialising Winsock...");
+    printf("Initialising Winsock...\n");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
     {
         fprintf(stderr,"Failed. Error Code : %d",WSAGetLastError());
         return 1;
     }
 
-    printf("Initialised.");
+    printf("Initialised.\n");
 
 #endif
 
@@ -53,22 +53,27 @@ int run_server(options options) {
     int yes = 1;
 
     if (server_socket == -1) {
-        fprintf(stderr,"Couldn't create socket");
+        fprintf(stderr,"Couldn't create socket\n");
+        exit(EXIT_FAILURE);
     }
 
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1) {
-        fprintf(stderr,"Couldn't setsockopt");
+        fprintf(stderr,"Couldn't setsockopt\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Fill the address info struct (host + port) -- getaddrinfo(3) */
 
 
     if (getaddrinfo(get_command_value("-server_ip", options), get_command_value("-port",options), NULL, &addr_info) != 0) {
-        fprintf(stderr,"Couldn't get address");
+        fprintf(stderr,"Couldn't get address\n");
+        exit(EXIT_FAILURE);
+
     }
 
     if (bind(server_socket, addr_info->ai_addr, addr_info->ai_addrlen) != 0) {
-        fprintf(stderr,"Couldn't bind socket to address");
+        fprintf(stderr,"Couldn't bind socket to address\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Free the memory used by our address info struct */
@@ -76,7 +81,8 @@ int run_server(options options) {
 
 
     if (listen(server_socket, 10) == -1) {
-        fprintf(stderr,"Couldn't make socket listen");
+        fprintf(stderr,"Couldn't make socket listen\n");
+        exit(EXIT_FAILURE);
     }
     int clientfd;
 
