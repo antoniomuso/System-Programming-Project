@@ -3,7 +3,10 @@ CC=gcc -std=gnu11
 OPTIONS=
 ifeq ($(OS),Windows_NT)
 OPTIONS += -lws2_32
+else
+OPTIONS += -lpthread
 endif
+
 
 main: b64.c/decode.o b64.c/encode.o command_parser.o server.o main.o
 	${CC} server.o command_parser.o main.o -o main ${OPTIONS}

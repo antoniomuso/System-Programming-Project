@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <pthread.h>
 
 
 
@@ -31,7 +32,13 @@
 
 #endif
 
-
+/*
+ * Run thread function
+ */
+void* process_routine () {
+    printf("Thread Start\n");
+    fflush(stdout);
+}
 
 int run_server(options options) {
 
@@ -86,19 +93,34 @@ int run_server(options options) {
         fprintf(stderr,"Couldn't make socket listen\n");
         exit(EXIT_FAILURE);
     }
-    int clientfd;
+
 
     printf("Server Listen on %s:%s\n", get_command_value("-server_ip", options), get_command_value("-port", options));
     fflush(stdout);
 
+    /*
+    int clientfd;
     while (clientfd = accept(server_socket, NULL, NULL)) {
         printf("Client Connect\n");
         fflush(stdout);
         send(clientfd,"First Message",14,0);
         //close(server_socket);
     }
+    */
+
+#ifdef __unix__
+
+    int n_proc = atoi(get_command_value("-n_proc", options));
+    pthread_t tid[n_proc];
 
 
+    for (int i = 0; i < n_proc; i++) {
+        pthread_create(&(tid[i]), NULL, &process_routine, NULL);
+    }
 
+#elif _WIN32
+
+#endif
 
 }
+
