@@ -9,6 +9,7 @@
 #include "server.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 #ifdef __unix__
@@ -115,18 +116,49 @@ int run_server(options options) {
 
 #ifdef __unix__
 
+    char *mode = get_command_value("-mode", options);
     int n_proc = atoi(get_command_value("-n_proc", options));
-    pthread_t tid[n_proc-1];
 
-    int * sock_pointer ;
-    sock_pointer = &server_socket;
 
-    for (int i = 0; i < n_proc-1; i++) {
+    if (strcmp(mode, "MT") == 0) {
+        printf("mode = MT\n");
+        fflush(stdout);
 
-        pthread_create(&(tid[i]), NULL, &process_routine, (void *)sock_pointer);
+        pthread_t tid[n_proc - 1];
+
+        int *sock_pointer;
+        sock_pointer = &server_socket;
+
+        for (int i = 0; i < n_proc - 1; i++) {
+            pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
+        }
+
+        process_routine(sock_pointer);
+
+    } else if (strcmp(mode, "MP") == 0) {
+        printf("mode = MP\n");
+        fflush(stdout);
+
+        int tid[n_proc - 1];
+
+        int *sock_pointer;
+        sock_pointer = &server_socket;
+
+        for (int i = 0; i < n_proc-1; i++) {
+            int pid = fork();
+            if (pid > 0) {
+                tid[i] = pid;
+                process_routine((void *)sock_pointer);
+
+            } else if (pid < 0) {
+                fprintf(stderr, "Fork Error %i", pid);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        process_routine(sock_pointer);
+
     }
-
-    process_routine(sock_pointer);
 
 #elif _WIN32
 
