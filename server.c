@@ -75,6 +75,9 @@ int run_server(options options) {
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
 
+    char *port = get_command_value("-port",options);
+    char *server_ip = get_command_value("-server_ip", options);
+
     if (server_socket == -1) {
         fprintf(stderr,"Couldn't create socket\n");
         exit(EXIT_FAILURE);
@@ -88,7 +91,7 @@ int run_server(options options) {
     /* Fill the address info struct (host + port) -- getaddrinfo(3) */
 
 
-    if (getaddrinfo(get_command_value("-server_ip", options), get_command_value("-port",options), NULL, &addr_info) != 0) {
+    if (getaddrinfo(server_ip, port, NULL, &addr_info) != 0) {
         fprintf(stderr,"Couldn't get address\n");
         exit(EXIT_FAILURE);
 
@@ -109,7 +112,7 @@ int run_server(options options) {
     }
 
 
-    printf("Server Listen on %s:%s\n", get_command_value("-server_ip", options), get_command_value("-port", options));
+    printf("Server Listen on %s:%s\n", server_ip, port);
     fflush(stdout);
 
 
