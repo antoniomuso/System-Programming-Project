@@ -30,10 +30,21 @@ struct options {
 };
 typedef struct options options;
 
+struct http_header {
+    char * type_req;
+    char * url;
+    char * protocol_type;
+    char * authorization; //example, Authorization: Basic am9lYjp4eDEyMw==
+    char * user_agent; //example, User-Agent:
+    int content_length; //example, Content-Length: 45033
+};
+typedef struct http_header http_header;
+
+
 
 char* get_command_value (char command[], options options);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);
-
+http_header parse_http_request (char* data, int data_len);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 
 

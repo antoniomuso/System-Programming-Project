@@ -111,5 +111,15 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 
 
 
+http_header parse_http_request (char* data, int data_len) {
+    const char line_end[] = "\r\n";
+    const char header_end[] = "\r\n\r\n";
+
+
+
+}
+
+
+
 
 
