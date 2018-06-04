@@ -8,11 +8,11 @@
 #include "command_parser.h"
 #include "server.h"
 #include <stdio.h>
-#include <netdb.h>
+
 
 #ifdef __unix__
 
-
+#include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
 
