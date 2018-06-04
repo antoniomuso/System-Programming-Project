@@ -8,6 +8,8 @@
 #define MAX_OPTION_LEN 20
 #define REALLOC_INC_SIZE 4
 
+#define MAX_HTTP_FIELD_LEN 60
+
 struct command_arc {
     char name[MAX_OPTION_LEN];
     char type[8]; // Accept type are: int, str, null, float
@@ -31,12 +33,14 @@ struct options {
 typedef struct options options;
 
 struct http_header {
+    int is_request ; // if is_request < 0 there are a error during parsing.
     char * type_req;
-    char * url;
+    char * url ;
     char * protocol_type;
     char * authorization; //example, Authorization: Basic am9lYjp4eDEyMw==
     char * user_agent; //example, User-Agent:
     int content_length; //example, Content-Length: 45033
+    char * pointer_to_free;
 };
 typedef struct http_header http_header;
 
@@ -44,7 +48,8 @@ typedef struct http_header http_header;
 
 char* get_command_value (char command[], options options);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);
-http_header parse_http_request (char* data, int data_len);
+http_header parse_http_header_request (const char* data, int data_len);
+void free_http_header(http_header http_h);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 
 
