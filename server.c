@@ -18,9 +18,13 @@
 
 
 #elif _WIN32
+# undef  _WIN32_WINNT
+# define _WIN32_WINNT _WIN32_WINNT_WINXP
+# undef  WINVER
+# define WINVER       _WIN32_WINNT_WINXP
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
 
 #endif
