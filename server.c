@@ -8,6 +8,7 @@
 #include "command_parser.h"
 #include "server.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 #ifdef __unix__
@@ -15,6 +16,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
+
 
 
 #elif _WIN32
