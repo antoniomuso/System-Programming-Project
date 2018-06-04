@@ -8,19 +8,22 @@
 #include "command_parser.h"
 #include "server.h"
 #include <stdio.h>
-#include <netdb.h>
+
 
 #ifdef __unix__
 
 #include <unistd.h>
 #include <sys/socket.h>
-
+#include <netdb.h>
 
 #elif _WIN32
 
 #include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment (lib, "Ws_32.lib")
 
 #endif
+
 
 
 int run_server(options options) {
