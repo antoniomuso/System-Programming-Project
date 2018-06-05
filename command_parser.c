@@ -153,26 +153,28 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
         exit(EXIT_FAILURE);
     }
     fclose(fname);
-    text[fsize] = 0;
+    text[fsize] = '\0';
     //printf("File content: %s\n", text);
 
     options ret;
 
     char *lines = strtok(text, "\n");
     int len = LEN(lines);
+    //printf("%d\n", len);
 
 
     command* comm = calloc(sizeof(command), len);
 
     for (int k = 0; k < len; k++) {
-        printf("LINE (%d): %s\n", k, lines);
-        char tmp[LEN(lines)];
+        //printf("LINE (%d): %s\n", k, lines);
+        char tmp[strlen(lines)];
         strcpy(tmp, lines);
         command cmd = extract_command(tmp);
-        printf("cmd out: %s %s\n", cmd.name, cmd.value);
+        //printf("cmd out: %s %s\n", cmd.name, cmd.value);
         for (int j = 0; j < arc_len; j++) {
             if (strcmp(cmd_arc[j].name, cmd.name) == 0) {
-                printf("%s == %s\n", cmd_arc[j].name, cmd.name);
+                //printf("%s == %s\n", cmd_arc[j].name, cmd.name);
+                fflush(stdout);
 
 
                 if (strcmp(cmd_arc[j].type, "null") == 0) {
@@ -189,26 +191,27 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 //                strcpy(comm[k].name, cmd.name); //Problem here
 //
                 if (strcmp(cmd_arc[j].type, "int") == 0) {
-                    printf("int\n");
-                    //sprintf(comm[k].value, "%d", atoi(cmd.value));
+                    //printf("int\n");
+                    sprintf(comm[k].value, "%d", atoi(cmd.value));
                     break;
                 }
 
                 if (strcmp(cmd_arc[j].type, "float") == 0) {
-                    printf("float\n");
-                    //sprintf(comm[k].value, "%f", atof(cmd.value));
+                    //printf("float\n");
+                    sprintf(comm[k].value, "%f", atof(cmd.value));
                     break;
                 }
 
                 if (strcmp(cmd_arc[j].type, "str") == 0) {
-                    printf("str\n");
-                    //strcpy(comm[k].value, cmd.value);
+                    //printf("str\n");
+                    strcpy(comm[k].value, cmd.value);
                     break;
                 }
+                strcpy(comm[k].name, cmd.name); //Problem here
                 //to here
             }
         }
-        printf("Over\n\n");
+        //printf("Over\n\n");
         lines = strtok(NULL, "\n");
         if (lines == NULL) {
             break;

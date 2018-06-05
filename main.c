@@ -25,13 +25,17 @@ int main(int argc, char *argv[]) {
     // TODO: Qui ci va un Parser per le opzioni.
 
     command_arc comm[] = { {"-n_proc","int"},{"-port", "int"},{"-server_ip", "str"}, {"-mode","str"}};
-    options options = options_parse(argc, argv, comm, 4); // Il puntatore dentro options va liberato.
+    options opt = options_parse(argc, argv, comm, 4); // Il puntatore dentro options va liberato.
     //get_command_value((char *) comm, options);
 
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
-    parse_file("config.txt", confs, 4);
+    options fopt = parse_file("config.txt", confs, 4);
+    get_command_value("port", fopt);
 
-    command_arc credentials[] = { {"username", "string"}, {"password", "string}"} };
+
+    //command_arc credentials[] = { {"username", "string"}, {"password", "string}"} };
+
+
 
 #ifdef __unix__
     printf("Unix\n");
@@ -80,7 +84,7 @@ int main(int argc, char *argv[]) {
     printf("Windows\n");
 #endif
 
-    run_server(options);
+    run_server(opt);
 
     return 0;
 }
