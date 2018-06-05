@@ -74,8 +74,27 @@ int run_server(options c_options, options f_options) {
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
 
-    char *port = get_command_value("-port",c_options);
-    char *server_ip = get_command_value("-server_ip", c_options);
+    char *port = get_command_value("-port",c_options) != NULL
+                 ? get_command_value("-port",c_options)
+                 : get_command_value("port", f_options);
+
+    char *server_ip = get_command_value("-server_ip", c_options) != NULL
+                      ? get_command_value("-server_ip", c_options)
+                      : get_command_value("server_ip", f_options);
+
+    char *mode = get_command_value("-mode", c_options) != NULL
+                 ? get_command_value("-mode", c_options)
+                 : get_command_value("mode", f_options);
+
+    int n_proc = get_command_value("-n_proc", c_options) != NULL
+                 ? atoi(get_command_value("-n_proc", c_options))
+                 : atoi(get_command_value("n_proc", f_options));
+
+    if (n_proc <= 0) {
+        fprintf(stderr, "Error n_proc <= 0");
+        exit(EXIT_FAILURE);
+    }
+
 
     if (server_socket == -1) {
         fprintf(stderr,"Couldn't create socket\n");
@@ -117,10 +136,6 @@ int run_server(options c_options, options f_options) {
 
 
 #ifdef __unix__
-
-    char *mode = get_command_value("-mode", c_options);
-    int n_proc = atoi(get_command_value("-n_proc", c_options));
-
 
     if (strcmp(mode, "MT") == 0) {
         printf("mode = MT\n");
