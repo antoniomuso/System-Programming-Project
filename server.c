@@ -53,7 +53,7 @@ void* process_routine (void *arg) {
 
 }
 
-int run_server(options options) {
+int run_server(options c_options, options f_options) {
 
 #if _WIN32
     WSADATA wsa;
@@ -74,8 +74,8 @@ int run_server(options options) {
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
 
-    char *port = get_command_value("-port",options);
-    char *server_ip = get_command_value("-server_ip", options);
+    char *port = get_command_value("-port",c_options);
+    char *server_ip = get_command_value("-server_ip", c_options);
 
     if (server_socket == -1) {
         fprintf(stderr,"Couldn't create socket\n");
@@ -118,8 +118,8 @@ int run_server(options options) {
 
 #ifdef __unix__
 
-    char *mode = get_command_value("-mode", options);
-    int n_proc = atoi(get_command_value("-n_proc", options));
+    char *mode = get_command_value("-mode", c_options);
+    int n_proc = atoi(get_command_value("-n_proc", c_options));
 
 
     if (strcmp(mode, "MT") == 0) {
