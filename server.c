@@ -41,9 +41,7 @@
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
-    for(int i = 0; i < 10; i++) {
-        printf("%d\n", i);
-    }
+    
     int server_socket = *((int*)arg);
 
     int clientfd;
