@@ -22,6 +22,9 @@ char* get_command_value (char command[], options options) {
     return NULL;
 }
 
+void free_options (options opt) {
+    free(opt.commands);
+}
 /**
  *
  * @param argc
