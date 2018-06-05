@@ -190,17 +190,18 @@ int run_server(options c_options, options f_options) {
 
 
     if (strcmp(mode, "MT") == 0) {
-        HANDLE hThreadArray[n_proc];
-        DWORD dwThreadArray[n_proc];
+        HANDLE hThreadArray[n_proc-1];
+        DWORD dwThreadArray[n_proc-1];
 
         int *sock_pointer;
         sock_pointer = &server_socket;
 
-        for (int i = 0; i < n_proc; i++) {
-            hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
+        for (int i = 0; i < n_proc-1; i++) {
+            hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
+        process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
-
+        //if (CreateProcess("windows_process_exe", NULL, NULL, NULL, TRUE, 0, NULL, NULL))
     }
 
 
