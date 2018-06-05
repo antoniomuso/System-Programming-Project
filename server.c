@@ -29,15 +29,19 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
+#include <windows.h>
 
 #endif
 
 /*
  * Run thread function
  */
-void* process_routine (void *arg) {
+int process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
+    for(int i = 0; i < 10; i++) {
+        printf("%d\n", i);
+    }
     int server_socket = *((int*)arg);
 
     int clientfd;
@@ -47,10 +51,10 @@ void* process_routine (void *arg) {
         fflush(stdout);
         send(clientfd,"First Message",14,0);
         //close(server_socket);
-        sleep(40);
+        //sleep(40);
     }
 
-
+    return 0;
 }
 
 int run_server(options c_options, options f_options) {
@@ -179,6 +183,22 @@ int run_server(options c_options, options f_options) {
     }
 
 #elif _WIN32
+
+
+    if (strcmp(mode, "MT") == 0) {
+        HANDLE hThreadArray[n_proc];
+        DWORD dwThreadArray[n_proc];
+
+        int *sock_pointer;
+        sock_pointer = &server_socket;
+
+        for (int i = 0; i < n_proc; i++) {
+            hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
+        }
+    } else if (strcmp(mode, "MP") == 0) {
+
+    }
+
 
 #endif
 
