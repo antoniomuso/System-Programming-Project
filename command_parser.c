@@ -238,9 +238,9 @@ http_header parse_http_header_request (const char* data, int data_len) {
     char * sub_token;
 
     // Take first line
-    token = strsep(&data_copy, line_end);
+    token = strtok(data_copy, line_end);
 
-    sub_token = strsep(&token, element_separator);
+    sub_token = strtok(token, element_separator);
 
     if (strcmp(sub_token,"GET") != 0 && strcmp(sub_token,"PUT") != 0 ) {
         http_h.is_request = -1;
@@ -248,13 +248,13 @@ http_header parse_http_header_request (const char* data, int data_len) {
     }
     http_h.type_req = sub_token;
 
-    sub_token = strsep(&token, element_separator);
+    sub_token = strtok(token, element_separator);
     http_h.url = sub_token;
     http_h.protocol_type = token;
 
-    while ((token = strsep(&data_copy, line_end)) != NULL) {
+    while ((token = strtok(data_copy, line_end)) != NULL) {
 
-        sub_token = strsep(&token, attr_separator);
+        sub_token = strtok(token, attr_separator);
 
         if (strcmp(sub_token,"Authorization") == 0) {
             http_h.authorization = token;
