@@ -44,7 +44,6 @@ void* process_routine (void *arg) {
 
     while (clientfd = accept(server_socket, NULL, NULL)) {
         printf("Client Connect\n");
-
         fflush(stdout);
         send(clientfd,"First Message",14,0);
         //close(server_socket);
