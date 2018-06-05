@@ -36,7 +36,9 @@
 /*
  * Run thread function
  */
-int process_routine (void *arg) {
+
+
+void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
     for(int i = 0; i < 10; i++) {
@@ -53,7 +55,9 @@ int process_routine (void *arg) {
         //close(server_socket);
         //sleep(40);
     }
-
+}
+int w_process_routine (void *arg) {
+    process_routine(arg);
     return 0;
 }
 
