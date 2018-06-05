@@ -86,9 +86,14 @@ int run_server(options c_options, options f_options) {
                  ? get_command_value("-mode", c_options)
                  : get_command_value("mode", f_options);
 
+
+    printf("%s", get_command_value("n_proc", f_options));
+    fflush(stdout);
+
     int n_proc = get_command_value("-n_proc", c_options) != NULL
                  ? atoi(get_command_value("-n_proc", c_options))
                  : atoi(get_command_value("n_proc", f_options));
+
 
     if (n_proc <= 0) {
         fprintf(stderr, "Error n_proc <= 0");
