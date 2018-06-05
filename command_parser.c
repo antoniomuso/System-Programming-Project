@@ -16,7 +16,9 @@
  */
 char* get_command_value (char command[], options options) {
     for (int i = 0; i < options.comm_len; i++) {
-        if (strcmp(options.commands[i].name, command) == 0) return options.commands[i].value;
+        if (strcmp(options.commands[i].name, command) == 0) {
+            return options.commands[i].value;
+        }
     }
     return NULL;
 }
@@ -135,6 +137,7 @@ command extract_command(char *string) {
         strcpy(comm.name,string);
         strcpy(comm.value,ptr+1);
 
+
         return comm;
     }
 
@@ -171,15 +174,11 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
     command* comm = calloc(sizeof(command), arc_len);
 
     for (int k = 0; k < arc_len; k++) {
-        //printf("LINE (%d): %s\n", k, lines);
         command cmd = extract_command(lines);
 
-        //printf("cmd out: %s %s\n", cmd.name, cmd.value);
         for (int j = 0; j < arc_len; j++) {
             if (strcmp(cmd_arc[j].name, cmd.name) == 0) {
-                printf("%s == %s\n", cmd_arc[j].name, cmd.name);
-                //fflush(stdout);
-
+                strcpy(comm[k].name, cmd.name);
 
                 if (strcmp(cmd_arc[j].type, "null") == 0) {
                     strcpy(comm[k].value, "NOT VALUE");
@@ -188,30 +187,26 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
                 if (strcmp(cmd_arc[j].type, "int") == 0) {
                     sprintf(comm[k].value, "%d", atoi(cmd.value));
-                    printf("%s\n", comm[k].value);
                     break;
                 }
 
                 if (strcmp(cmd_arc[j].type, "float") == 0) {
-                    //printf("float\n");
                     sprintf(comm[k].value, "%f", atof(cmd.value));
                     break;
                 }
 
                 if (strcmp(cmd_arc[j].type, "str") == 0) {
-                    //printf("str\n");
                     strcpy(comm[k].value, cmd.value);
-
                     break;
                 }
-                strcpy(comm[k].name, cmd.name); //Problem here
-                //to her
+
             }
         }
         if ((lines = strtok(NULL, "\n")) == NULL) {
             break;
         }
     }
+    free(buff);
 
     options ret;
     ret.comm_len = arc_len;

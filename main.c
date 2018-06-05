@@ -30,12 +30,6 @@ int main(int argc, char *argv[]) {
 
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
-    get_command_value("port", fopt);
-
-
-    //command_arc credentials[] = { {"username", "string"}, {"password", "string}"} };
-
-
 
 #ifdef __unix__
     printf("Unix\n");
