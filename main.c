@@ -28,6 +28,10 @@ int main(int argc, char *argv[]) {
     options options = options_parse(argc, argv, comm, 4); // Il puntatore dentro options va liberato.
     //get_command_value((char *) comm, options);
 
+    command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
+    parse_file("config.txt", confs, 4);
+
+    command_arc credentials[] = { {"username", "string"}, {"password", "string}"} };
 
 #ifdef __unix__
     printf("Unix\n");

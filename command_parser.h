@@ -10,7 +10,7 @@
 
 struct command_arc {
     char name[MAX_OPTION_LEN];
-    char type[8]; // Accept type are: int, str, null, float
+    char type[8]; // Accepted types are: int, str, null, float
 };
 
 
@@ -44,6 +44,10 @@ typedef struct http_header http_header;
 
 char* get_command_value (char command[], options options);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);
+
+command extract_command(char *string);
+options parse_file(char *name, command_arc cmd_arc[], int arc_len);
+
 http_header parse_http_request (char* data, int data_len);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 

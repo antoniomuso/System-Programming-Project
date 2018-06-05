@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #ifdef __unix__
 
 #include <netdb.h>
