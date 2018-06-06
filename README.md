@@ -3,7 +3,7 @@
 ## TODO
 - [x] Creare un parser per le opzioni. (Antonio)
 - [ ] Creare server Multi-Thread Multi-processo (pre thread e pre processo, pre forkato) (Il processo sotto unix deve essere Deamon sotto windows no).
-- [ ] Creare parser per i file. (Giacomino)
+- [x] Creare parser per i file. (Giacomino)
 - [x] Trovare o Creare un decodere Base64 per il punto successivo. (Antonio)
 - [ ] Creare parser per le richieste HTTP. (Attenzione username e password sono dentro Authorization: )
 - [ ] Handler per sighup per la versione unix e per windows evento di console.

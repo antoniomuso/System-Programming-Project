@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
+//#ifdef _WIN32
+#ifndef strtok_r
 /*-
  * Copyright (c) 1998 Softweyr LLC.  All rights reserved.
  *
