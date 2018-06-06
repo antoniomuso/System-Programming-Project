@@ -215,12 +215,39 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
     return ret;
 }
 
+http_header http_attribute_parser (http_header http_h, char* data_attr) {
+    char attr_separator[] = ":";
+    char line_end[] = "\r\n";
+    char * in_pointer = NULL;
+
+    char * token = NULL;
+    char * sub_token = NULL;
+
+    while ((token = strtok_r(NULL, line_end, &data_attr )) != NULL) {
+
+        in_pointer = NULL;
+        sub_token = strtok_r(token, attr_separator, &in_pointer);
+
+        if (strcmp(sub_token,"Authorization") == 0 && in_pointer != NULL) {
+            http_h.authorization = in_pointer;
+        }
+
+        if (strcmp(sub_token,"User-Agent") == 0 && in_pointer != NULL) {
+            http_h.user_agent= in_pointer;
+        }
+
+        if (strcmp(sub_token,"Content-Length") == 0 && in_pointer != NULL) {
+            http_h.content_length =  atoi(in_pointer);
+        }
+    }
+
+    return http_h;
+}
+
 http_header parse_http_header_request (const char* data, int data_len) {
     char line_end[] = "\r\n";
     char header_end[] = "\r\n\r\n";
     char element_separator[] = " ";
-    char attr_separator[] = ":";
-
 
     http_header http_h ;
     // Copy of date
@@ -248,24 +275,8 @@ http_header parse_http_header_request (const char* data, int data_len) {
     http_h.url = sub_token;
     http_h.protocol_type = token;
 
-    while ((token = strtok_r(NULL, header_end, &ext_pointer )) != NULL) {
-
-        in_pointer = NULL;
-        sub_token = strtok_r(token, attr_separator, &in_pointer);
-
-        if (strcmp(sub_token,"Authorization") == 0) {
-            http_h.authorization = in_pointer;
-        }
-
-        if (strcmp(sub_token,"User-Agent") == 0) {
-            http_h.user_agent= in_pointer;
-        }
-
-        if (strcmp(sub_token,"Content-Length") == 0) {
-            http_h.content_length =  atoi(in_pointer);
-        }
-    }
-
+    http_h = http_attribute_parser(http_h, ext_pointer);
+    http_h.is_request = 1;
     return http_h;
 }
 
