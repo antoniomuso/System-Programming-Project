@@ -8,6 +8,15 @@ OPTIONS += -lpthread
 endif
 
 
+ifeq ($(OS),Windows_NT)
+RM = del
+TARGET += *.exe
+else
+RM = rm
+TARGET += ./main
+endif
+
+
 
 
 main: b64.c/decode.o b64.c/encode.o command_parser.o server.o windows_process_exe main.o
@@ -32,4 +41,5 @@ windows_process_exe: windows_process_exe.c
 	${CC} windows_process_exe.c -o windows_process_exe.o ${OPTIONS}
 
 clean:
-	rm ./*.o |  rm ./main
+	$(RM) *.o
+	$(RM) $(TARGET)
