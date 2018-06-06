@@ -31,6 +31,17 @@ int main(int argc, char *argv[]) {
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
 
+    char * msg= "GET / HTTP/1.1\r\n"
+                "Host: 192.241.213.46:6880\r\n"
+                "Upgrade-Insecure-Requests: 1\r\n"
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
+                "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/602.4.8 (KHTML, like Gecko) Version/10.0.3 Safari/602.4.8\r\n"
+                "Accept-Language: en-us\r\n"
+                "Accept-Encoding: gzip, deflate\r\n"
+                "Connection: keep-alive\r\n\r\n";
+    http_header http = parse_http_header_request(msg,strlen(msg));
+    printf("User-Agent: %s\n", http.user_agent);
+
 #ifdef __unix__
     printf("Unix\n");
     fflush(stdout);

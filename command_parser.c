@@ -231,10 +231,12 @@ http_header parse_http_header_request (const char* data, int data_len) {
     char * token;
     char * sub_token;
 
+    char * in_pointer = NULL;
+    char * ext_pointer = NULL;
     // Take first line
-    token = strtok(data_copy, line_end);
+    token = strtok_r(data_copy, line_end, &ext_pointer);
 
-    sub_token = strtok(token, element_separator);
+    sub_token = strtok_r(token, element_separator, &in_pointer);
 
     if (strcmp(sub_token,"GET") != 0 && strcmp(sub_token,"PUT") != 0 ) {
         http_h.is_request = -1;
@@ -242,24 +244,25 @@ http_header parse_http_header_request (const char* data, int data_len) {
     }
     http_h.type_req = sub_token;
 
-    sub_token = strtok(token, element_separator);
+    sub_token = strtok_r(data_copy, element_separator, &in_pointer);
     http_h.url = sub_token;
     http_h.protocol_type = token;
 
-    while ((token = strtok(data_copy, line_end)) != NULL) {
+    while ((token = strtok_r(NULL, header_end, &ext_pointer )) != NULL) {
 
-        sub_token = strtok(token, attr_separator);
+        in_pointer = NULL;
+        sub_token = strtok_r(token, attr_separator, &in_pointer);
 
         if (strcmp(sub_token,"Authorization") == 0) {
-            http_h.authorization = token;
+            http_h.authorization = in_pointer;
         }
 
         if (strcmp(sub_token,"User-Agent") == 0) {
-            http_h.user_agent= token;
+            http_h.user_agent= in_pointer;
         }
 
         if (strcmp(sub_token,"Content-Length") == 0) {
-            http_h.content_length =  atoi(token);
+            http_h.content_length =  atoi(in_pointer);
         }
     }
 
