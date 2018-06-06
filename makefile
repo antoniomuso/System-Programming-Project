@@ -11,9 +11,11 @@ endif
 ifeq ($(OS),Windows_NT)
 RM = del
 TARGET += *.exe
+TARGET += *.o
 else
 RM = rm
 TARGET += ./main
+TARGET += ./*.o
 endif
 
 
@@ -41,5 +43,4 @@ windows_process_exe: windows_process_exe.c
 	${CC} windows_process_exe.c -o windows_process_exe.o ${OPTIONS}
 
 clean:
-	$(RM) *.o
 	$(RM) $(TARGET)
