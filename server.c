@@ -30,7 +30,6 @@
 #include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
 #include <windows.h>
-
 #endif
 
 /*
@@ -199,7 +198,21 @@ int run_server(options c_options, options f_options) {
         }
         process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
-        //if (CreateProcess("windows_process_exe", NULL, NULL, NULL, TRUE, 0, NULL, NULL))
+        //char *buff = calloc(sizeof(char), 20);
+        char buff[50];
+        snprintf(buff, 20, "%d", server_socket);
+        STARTUPINFO startup_info = {0};
+        PROCESS_INFORMATION proc_info = {0};
+
+        if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info, &proc_info))) {
+            fprintf(stderr, "Error occurred while trying to create a process");
+            exit(EXIT_FAILURE);
+        }
+
+        WSAPROTOCOL_INFO ProtocolInfo;
+        int nStructLen = sizeof(WSAPROTOCOL_INFO);
+
+        WSADuplicateSocket(server_socket, proc_info.dwProcessId, &ProtocolInfo);
     }
 
 

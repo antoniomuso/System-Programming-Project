@@ -40,7 +40,7 @@ b64.c/encode.o: ./b64.c/encode.c
 	${CC} -c b64.c/encode.c -o b64.c/encode.o ${OPTIONS}
 
 windows_process_exe: windows_process_exe.c
-	${CC} windows_process_exe.c -o windows_process_exe.o ${OPTIONS}
+	${CC} command_parser.o server.o windows_process_exe.c -o windows_process_exe.o ${OPTIONS}
 
 clean:
 	$(RM) $(TARGET)

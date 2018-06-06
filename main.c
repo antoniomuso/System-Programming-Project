@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
 
+
     char * msg= "GET / HTTP/1.1\r\n"
                 "Host: 192.241.213.46:6880\r\n"
                 "Upgrade-Insecure-Requests: 1\r\n"
