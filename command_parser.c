@@ -340,10 +340,51 @@ http_header http_attribute_parser (http_header http_h, char* data_attr) {
         if (strcmp(sub_token,"Content-Length") == 0 && in_pointer != NULL) {
             http_h.content_length =  atoi(in_pointer);
         }
+
+        if (strcmp(sub_token,"Content-Type") == 0 && in_pointer != NULL) {
+            http_h.content_type =  in_pointer;
+        }
+
+        if (strcmp(sub_token,"Connection") == 0 && in_pointer != NULL) {
+            http_h.connection =  in_pointer;
+        }
+
     }
 
     return http_h;
 }
+
+
+http_header parser_http_header_responce (const char* data, int data_len) {
+    char line_end[] = "\r\n";
+    char header_end[] = "\r\n\r\n";
+    char element_separator[] = " ";
+
+    http_header http_h ;
+    // Copy of date
+    char * data_copy = malloc(data_len);
+    http_h.pointer_to_free = data_copy;
+    strcpy(data_copy, data);
+
+    char * token;
+    char * sub_token;
+
+    char * in_pointer = NULL;
+    char * ext_pointer = NULL;
+    // Take first line
+    token = strtok_r(data_copy, line_end, &ext_pointer);
+
+    sub_token = strtok_r(token, element_separator, &in_pointer);
+    http_h.protocol_type = sub_token;
+
+    sub_token = strtok_r(NULL, element_separator, &in_pointer);
+    http_h.code_respoce = atoi(sub_token);
+
+    http_h = http_attribute_parser(http_h, ext_pointer);
+    http_h.is_request = 0;
+    return http_h;
+}
+
 
 http_header parse_http_header_request (const char* data, int data_len) {
     char line_end[] = "\r\n";
@@ -372,9 +413,9 @@ http_header parse_http_header_request (const char* data, int data_len) {
     }
     http_h.type_req = sub_token;
 
-    sub_token = strtok_r(data_copy, element_separator, &in_pointer);
+    sub_token = strtok_r(NULL, element_separator, &in_pointer);
     http_h.url = sub_token;
-    http_h.protocol_type = token;
+    http_h.protocol_type = in_pointer;
 
     http_h = http_attribute_parser(http_h, ext_pointer);
     http_h.is_request = 1;
