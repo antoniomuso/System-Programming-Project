@@ -381,7 +381,7 @@ http_header parser_http_header_responce (const char* data, int data_len) {
     sub_token = strtok_r(token, element_separator, &in_pointer);
     http_h.protocol_type = sub_token;
 
-    if (strcmp("HTTP/1.1", http_h.protocol_type) != 0 || strcmp("HTTP/1.0", http_h.protocol_type) != 0) {
+    if (strcmp("HTTP/1.1", http_h.protocol_type) != 0 && strcmp("HTTP/1.0", http_h.protocol_type) != 0) {
         http_h.is_request = -1;
         return http_h;
     }
