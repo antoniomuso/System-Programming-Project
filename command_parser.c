@@ -361,6 +361,7 @@ http_header parser_http_header_responce (const char* data, int data_len) {
     char element_separator[] = " ";
 
     http_header http_h ;
+    http_h.is_request = 0;
     // Copy of date
     char * data_copy = malloc(data_len);
     http_h.pointer_to_free = data_copy;
@@ -381,7 +382,6 @@ http_header parser_http_header_responce (const char* data, int data_len) {
     http_h.code_respoce = atoi(sub_token);
 
     http_h = http_attribute_parser(http_h, ext_pointer);
-    http_h.is_request = 0;
     return http_h;
 }
 
@@ -392,6 +392,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
     char element_separator[] = " ";
 
     http_header http_h ;
+    http_h.is_request = 1;
     // Copy of date
     char * data_copy = malloc(data_len);
     http_h.pointer_to_free = data_copy;
@@ -418,7 +419,6 @@ http_header parse_http_header_request (const char* data, int data_len) {
     http_h.protocol_type = in_pointer;
 
     http_h = http_attribute_parser(http_h, ext_pointer);
-    http_h.is_request = 1;
     return http_h;
 }
 
