@@ -61,6 +61,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 options parse_file(char *name, command_arc cmd_arc[], int arc_len);
 void free_options(options opt);
 http_header parse_http_header_request (const char* data, int data_len);
+http_header parse_http_header_responce (const char* data, int data_len);
 void free_http_header(http_header http_h);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 

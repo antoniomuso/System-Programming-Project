@@ -40,12 +40,25 @@ int main(int argc, char *argv[]) {
                 "Accept-Language: en-us\r\n"
                 "Accept-Encoding: gzip, deflate\r\n"
                 "Connection: keep-alive\r\n\r\n";
-    http_header http = parse_http_header_request(msg,strlen(msg));
+
+    char * msgR="HTTP/1.1 200 OK\r\n"
+                "Host: 192.241.213.46:6880\r\n"
+                "Upgrade-Insecure-Requests: 1\r\n"
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
+                "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/602.4.8 (KHTML, like Gecko) Version/10.0.3 Safari/602.4.8\r\n"
+                "Accept-Language: en-us\r\n"
+                "Accept-Encoding: gzip, deflate\r\n"
+                "Connection: keep-alive\r\n\r\n";
+
+    http_header http = parse_http_header_responce(msgR,strlen(msgR));
     if (http.is_request == -1) {
         printf("Error");
+        exit(0);
     } else {
-        printf("User-Agent: %s\n Type: %s\n protocol: %s\n url: %s\n", http.attribute.user_agent, http.type_req, http.protocol_type,http.url);
+        printf("User-Agent: %s\n Type: %d\n ", http.attribute.user_agent, http.code_respoce);
+        fflush(stdout);
     }
+    free_http_header(http);
 
 #ifdef __unix__
     printf("Unix\n");
