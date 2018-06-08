@@ -82,7 +82,11 @@ void* process_routine (void *arg) {
             }
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
+#ifdef __unix__
             close(clientfd);
+#elif _WIN32
+            closesocket(clientfd);
+#endif
             break;
         }
     }
