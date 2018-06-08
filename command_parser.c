@@ -363,7 +363,7 @@ http_header parse_http_header_responce (const char* data, int data_len) {
     char header_end[] = "\r\n\r\n";
     char element_separator[] = " ";
 
-    http_header http_h ;
+    http_header http_h = {0} ;
     http_h.is_request = 0;
     // Copy of date
     char * data_copy = malloc(data_len+1);
@@ -407,7 +407,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
     char header_end[] = "\r\n\r\n";
     char element_separator[] = " ";
 
-    http_header http_h ;
+    http_header http_h = {0};
     http_h.is_request = 1;
     // Copy of date
     char * data_copy = malloc(data_len);

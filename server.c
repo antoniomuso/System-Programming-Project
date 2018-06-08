@@ -77,6 +77,9 @@ void* process_routine (void *arg) {
                 fprintf(stderr,"Error HTTP parse");
                 break;
             }
+            if (http_h.attribute.authorization != NULL) {
+                printf("Auth: %s\n", http_h.attribute.authorization);
+            }
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
             close(clientfd);
