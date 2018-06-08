@@ -43,8 +43,8 @@ struct http_attribute {
 typedef struct http_attribute http_attribute;
 
 struct http_header {
-    int is_request ; // if is_request < 0 there are a error during parsing.
-    int code_respoce; // defined only if is_request is 0
+    int is_request ; // if is_request < 0 there was an error during parsing.
+    int code_response; // defined only if is_request is 0
     char * type_req;
     char * url ;
     char * protocol_type;
@@ -61,7 +61,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 options parse_file(char *name, command_arc cmd_arc[], int arc_len);
 void free_options(options opt);
 http_header parse_http_header_request (const char* data, int data_len);
-http_header parse_http_header_responce (const char* data, int data_len);
+http_header parse_http_header_response(const char *data, int data_len);
 void free_http_header(http_header http_h);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 

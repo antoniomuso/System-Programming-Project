@@ -358,7 +358,7 @@ http_header http_attribute_parser (http_header http_h, char* data_attr) {
 }
 
 
-http_header parse_http_header_responce (const char* data, int data_len) {
+http_header parse_http_header_response(const char *data, int data_len) {
     char line_end[] = "\r\n";
     char header_end[] = "\r\n\r\n";
     char element_separator[] = " ";
@@ -392,7 +392,7 @@ http_header parse_http_header_responce (const char* data, int data_len) {
     http_h.protocol_type = sub_token;
 
     if ( ((sub_token = strtok_r(NULL, element_separator, &in_pointer)) == NULL)
-                        || (http_h.code_respoce = atoi(sub_token)) == 0) {
+                        || (http_h.code_response = atoi(sub_token)) == 0) {
         http_h.is_request = -1;
         return http_h;
     }
