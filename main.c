@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
                 "Accept-Encoding: gzip, deflate\r\n"
                 "Connection: keep-alive\r\n\r\n";
     http_header http = parse_http_header_request(msg,strlen(msg));
-    printf("User-Agent: %s\n Type: %s\n protocol: %s\n url: %s\n", http.user_agent, http.type_req, http.protocol_type,http.url);
+    if (http.is_request == -1) printf("Error");
+    printf("User-Agent: %s\n Type: %s\n protocol: %s\n url: %s\n", http.attribute.user_agent, http.type_req, http.protocol_type,http.url);
 
 #ifdef __unix__
     printf("Unix\n");

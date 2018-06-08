@@ -323,30 +323,33 @@ http_header http_attribute_parser (http_header http_h, char* data_attr) {
 
     char * token = NULL;
     char * sub_token = NULL;
+    char * attr_value = NULL;
 
     while ((token = strtok_r(NULL, line_end, &data_attr )) != NULL) {
 
         in_pointer = NULL;
+
         sub_token = strtok_r(token, attr_separator, &in_pointer);
+        attr_value = strtok_r(NULL, attr_separator, &in_pointer);
 
-        if (strcmp(sub_token,"Authorization") == 0 && in_pointer != NULL) {
-            http_h.authorization = in_pointer;
+        if (strcmp(sub_token,"Authorization") == 0 && attr_value != NULL) {
+            http_h.attribute.authorization = attr_value;
         }
 
-        if (strcmp(sub_token,"User-Agent") == 0 && in_pointer != NULL) {
-            http_h.user_agent= in_pointer;
+        if (strcmp(sub_token,"User-Agent") == 0 && attr_value != NULL) {
+            http_h.attribute.user_agent = attr_value;
         }
 
-        if (strcmp(sub_token,"Content-Length") == 0 && in_pointer != NULL) {
-            http_h.content_length =  atoi(in_pointer);
+        if (strcmp(sub_token,"Content-Length") == 0 && attr_value != NULL) {
+            http_h.attribute.content_length =  atoi(attr_value);
         }
 
-        if (strcmp(sub_token,"Content-Type") == 0 && in_pointer != NULL) {
-            http_h.content_type =  in_pointer;
+        if (strcmp(sub_token,"Content-Type") == 0 && attr_value != NULL) {
+            http_h.attribute.content_type =  attr_value;
         }
 
-        if (strcmp(sub_token,"Connection") == 0 && in_pointer != NULL) {
-            http_h.connection =  in_pointer;
+        if (strcmp(sub_token,"Connection") == 0 && attr_value != NULL) {
+            http_h.attribute.connection =  attr_value;
         }
 
     }
@@ -378,8 +381,18 @@ http_header parser_http_header_responce (const char* data, int data_len) {
     sub_token = strtok_r(token, element_separator, &in_pointer);
     http_h.protocol_type = sub_token;
 
+    if (strcmp("HTTP/1.1", http_h.protocol_type) != 0 || strcmp("HTTP/1.0", http_h.protocol_type) != 0) {
+        http_h.is_request = -1;
+        return http_h;
+    }
+
     sub_token = strtok_r(NULL, element_separator, &in_pointer);
     http_h.code_respoce = atoi(sub_token);
+
+    if (http_h.code_respoce == 0) {
+        http_h.is_request = -1;
+        return http_h;
+    }
 
     http_h = http_attribute_parser(http_h, ext_pointer);
     return http_h;
@@ -416,9 +429,17 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     sub_token = strtok_r(NULL, element_separator, &in_pointer);
     http_h.url = sub_token;
-    http_h.protocol_type = in_pointer;
+
+    sub_token = strtok_r(NULL, element_separator, &in_pointer);
+    http_h.protocol_type = sub_token;
+
+    if (strcmp("HTTP/1.1", http_h.protocol_type) != 0 && strcmp("HTTP/1.0", http_h.protocol_type) != 0) {
+        http_h.is_request = -1;
+        return http_h;
+    }
 
     http_h = http_attribute_parser(http_h, ext_pointer);
+
     return http_h;
 }
 

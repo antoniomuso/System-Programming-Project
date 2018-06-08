@@ -32,17 +32,23 @@ struct options {
 };
 typedef struct options options;
 
+struct http_attribute {
+    char * authorization; //example, Authorization: Basic am9lYjp4eDEyMw==
+    char * user_agent; //example, User-Agent:
+    int content_length; //example, Content-Length: 45033
+    char * content_type;
+    char * connection;
+};
+
+typedef struct http_attribute http_attribute;
+
 struct http_header {
     int is_request ; // if is_request < 0 there are a error during parsing.
     int code_respoce; // defined only if is_request is 0
     char * type_req;
     char * url ;
     char * protocol_type;
-    char * authorization; //example, Authorization: Basic am9lYjp4eDEyMw==
-    char * user_agent; //example, User-Agent:
-    int content_length; //example, Content-Length: 45033
-    char * content_type;
-    char * connection;
+    http_attribute attribute;
     char * pointer_to_free;
 };
 typedef struct http_header http_header;
