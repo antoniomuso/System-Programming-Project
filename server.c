@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define BUFF_READ_LEN 8000
 
 #ifdef __unix__
 
@@ -44,13 +45,43 @@ void* process_routine (void *arg) {
     int server_socket = *((int*)arg);
 
     int clientfd;
+    //char * header_buffer = malloc(BUFF_READ_LEN);
+    char * buffer = malloc(BUFF_READ_LEN);
 
     while (clientfd = accept(server_socket, NULL, NULL)) {
         printf("Client Connect\n");
         fflush(stdout);
-        send(clientfd,"First Message",14,0);
-        //close(server_socket);
-        //sleep(40);
+
+        int read_len;
+        int date_reade = 0;
+        http_header http_h;
+
+        while (read_len = recv(clientfd, (void *)(buffer + date_reade),(BUFF_READ_LEN-1) - date_reade,0)) {
+
+            buffer[read_len + date_reade] = '\0';
+
+            char * pointer = strstr(buffer,"\r\n\r\n");
+
+            if (pointer == NULL) {
+                printf("Is NULL");
+                fflush(stdout);
+                date_reade += read_len;
+                continue;
+            }
+            pointer += 4;
+            int header_len = pointer - buffer;
+
+            http_h = parse_http_header_request(buffer, header_len);
+
+            if (http_h.is_request < 0) {
+                fprintf(stderr,"Error HTTP parse");
+                break;
+            }
+            printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
+            fflush(stdout);
+            close(clientfd);
+            break;
+        }
     }
 }
 int w_process_routine (void *arg) {
