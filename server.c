@@ -45,6 +45,8 @@ void* process_routine (void *arg) {
 
     int server_socket = *((int*)arg);
 
+    printf("sock = %d", server_socket);
+fflush(stdout);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
@@ -244,7 +246,7 @@ int run_server(options c_options, options f_options) {
 
 
         char buff[50];
-        snprintf(buff, 20, "%d %d", server_socket, GetCurrentProcessId());
+        snprintf(buff, 49, "%d %d Hello \0", server_socket, GetCurrentProcessId());
 
         STARTUPINFO startup_info[n_proc-1];
         PROCESS_INFORMATION proc_info[n_proc-1];
@@ -252,15 +254,65 @@ int run_server(options c_options, options f_options) {
         STARTUPINFO startup_info1 = {0};
         PROCESS_INFORMATION proc_info1 = {0};
 
+        int buf_size = 50;
+
+        LPTSTR pipe_name = TEXT("\\\\.\\pipe\\testpipe");
+
+
+
         for (int i = 0; i < n_proc-1; i++) {
             printf("%d\n", i);
             fflush(stdout);
+
+            HANDLE pipe_h = CreateNamedPipe(
+                    pipe_name,
+                    PIPE_ACCESS_OUTBOUND,
+                    PIPE_TYPE_MESSAGE |
+                    PIPE_READMODE_MESSAGE |
+                    PIPE_WAIT,
+                    PIPE_UNLIMITED_INSTANCES,
+                    1*sizeof(WSAPROTOCOL_INFO),
+                    1*sizeof(WSAPROTOCOL_INFO),
+                    0,
+                    NULL);
+
+
+            if (pipe_h == INVALID_HANDLE_VALUE) {
+                printf("Couldn't create Pipe\n");
+                exit(EXIT_FAILURE);
+            }
+
+            DWORD written = 0;
+
+
 
             if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info1, &proc_info1 ))) {
                 fprintf(stderr, "Error occurred while trying to create a process");
                 fflush(stderr);
                 exit(EXIT_FAILURE);
             }
+
+            DWORD pid = proc_info1.dwProcessId;
+
+            //printf("pid = %d\n", pid);
+
+            WSAPROTOCOL_INFO pri;
+            int k = WSADuplicateSocket(server_socket, pid, &pri);
+
+
+            BOOL fc = FALSE;
+            fc = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
+
+            if (fc) {
+                printf("Connect Success\n");
+                } else {
+                printf("%d\n", GetLastError());
+            }
+            fflush(stdout);
+
+            WriteFile(pipe_h, &pri, sizeof(WSAPROTOCOL_INFO), &written, NULL);
+
+            printf("wr = %d size = %d \n", written, sizeof(WSAPROTOCOL_INFO));
             break;
 
         }
