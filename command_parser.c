@@ -262,7 +262,7 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
     char *buff = malloc(fsize + 2);
 
-    if(fread(buff, fsize, 1, fname) != 1) {
+    if(fread(buff, 1, fsize, fname) < fsize) {
         fprintf(stderr, "Unable to read from %s\n", name);
         exit(EXIT_FAILURE);
     }
