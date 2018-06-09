@@ -198,6 +198,7 @@ int run_server(options c_options, options f_options) {
         process_routine(sock_pointer);
 
     } else if (strcmp(mode, "MP") == 0) {
+        //TODO Riordarsi di uccidere i figli quando finiscono o in caso di fallimento di qualsiasi operazione.
         printf("mode = MP\n");
         fflush(stdout);
 
@@ -237,21 +238,32 @@ int run_server(options c_options, options f_options) {
         }
         process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
-        //char *buff = calloc(sizeof(char), 20);
+        /**
+         * TODO: Ricordarsi di chiudere i processi una volta finito o in caso di fallimento di qualsiasi operazione
+         */
+
+
         char buff[50];
-        snprintf(buff, 20, "%d", server_socket);
-        STARTUPINFO startup_info = {0};
-        PROCESS_INFORMATION proc_info = {0};
+        snprintf(buff, 20, "%d %d", server_socket, GetCurrentProcessId());
 
-        if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info, &proc_info))) {
-            fprintf(stderr, "Error occurred while trying to create a process");
-            exit(EXIT_FAILURE);
+        STARTUPINFO startup_info[n_proc-1];
+        PROCESS_INFORMATION proc_info[n_proc-1];
+
+        STARTUPINFO startup_info1 = {0};
+        PROCESS_INFORMATION proc_info1 = {0};
+
+        for (int i = 0; i < n_proc-1; i++) {
+            printf("%d\n", i);
+            fflush(stdout);
+
+            if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info1, &proc_info1 ))) {
+                fprintf(stderr, "Error occurred while trying to create a process");
+                fflush(stderr);
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         }
-
-        WSAPROTOCOL_INFO ProtocolInfo;
-        int nStructLen = sizeof(WSAPROTOCOL_INFO);
-
-        WSADuplicateSocket(server_socket, proc_info.dwProcessId, &ProtocolInfo);
     }
 
 
