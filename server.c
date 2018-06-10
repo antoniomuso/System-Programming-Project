@@ -45,8 +45,6 @@ void* process_routine (void *arg) {
 
     int server_socket = *((int*)arg);
 
-    printf("sock = %d", server_socket);
-    fflush(stdout);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
@@ -244,25 +242,25 @@ int run_server(options c_options, options f_options) {
          * TODO: Ricordarsi di chiudere i processi una volta finito o in caso di fallimento di qualsiasi operazione
          */
 
+        int buf_size = 30;
 
-        char buff[50];
-        snprintf(buff, 49, "%d %d Hello \0", server_socket, GetCurrentProcessId());
+        char buff[buf_size];
+
 
         STARTUPINFO startup_info[n_proc-1];
         PROCESS_INFORMATION proc_info[n_proc-1];
 
-        STARTUPINFO startup_info1 = {0};
-        PROCESS_INFORMATION proc_info1 = {0};
-
-        int buf_size = 50;
-
-        LPTSTR pipe_name = TEXT("\\\\.\\pipe\\testpipe"); //Inserire nel for e appendere <i> per distinguerle? (SI-> Passare il numero tramite il buffer)
-
-
+        char *pipe_n = "\\\\.\\pipe\\testpipe";
 
         for (int i = 0; i < n_proc-1; i++) {
-            printf("%d\n", i);
-            fflush(stdout);
+
+            snprintf(buff, buf_size, "%d", i);
+
+            int len_name = strlen(pipe_n)+strlen(buff)+1;
+            char buffer_name[len_name];
+            snprintf(buffer_name, len_name, "%s%d", pipe_n, i);
+
+            LPTSTR pipe_name = TEXT(buffer_name);
 
             HANDLE pipe_h = CreateNamedPipe(
                     pipe_name,
@@ -282,13 +280,13 @@ int run_server(options c_options, options f_options) {
                 exit(EXIT_FAILURE);
             }
 
-            if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info1, &proc_info1 ))) {
+            if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &(startup_info[i]), &(proc_info[i]) ))) {
                 fprintf(stderr, "Error occurred while trying to create a process\n");
                 fflush(stderr);
                 exit(EXIT_FAILURE);
             }
 
-            DWORD proc_pid = proc_info1.dwProcessId;
+            DWORD proc_pid = proc_info[i].dwProcessId;
 
 
             WSAPROTOCOL_INFO wsa_prot_info;
@@ -299,25 +297,19 @@ int run_server(options c_options, options f_options) {
                 fprintf(stderr, "Error occurred while trying to duplicate socket %d for process %d (%d))\n", server_socket, proc_pid, WSAGetLastError());
                 exit(EXIT_FAILURE);
             }
-            printf("Socket %d successfully duplicated for process %d\n", server_socket, proc_pid);
 
             BOOL fSuccess = FALSE;
             //Wait for child to connect to pipe
             fSuccess = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
-            if (fSuccess)
-                printf("Received connection request from child process\n");
-            fflush(stdout);
-
+            if (!fSuccess) {
+                fprintf(stderr, "No incoming child connection\n");
+                exit(EXIT_FAILURE);
+            }
             DWORD written = 0;
             if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
-            printf("WSAPROTOCOL_INFO structure was written to the pipe (size written %d, sizeof structure = %d)\n", written, sizeof(WSAPROTOCOL_INFO));
-
-
-
-
-            break;
         }
+        process_routine(&server_socket);
     }
 
 
