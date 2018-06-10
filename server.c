@@ -97,27 +97,40 @@ int w_process_routine (void *arg) {
     return 0;
 }
 
-int infanticide(void *children_array, int len, int mode, int return_code) {
+int infanticide(void *children_array, int len, int mode, int exit_code) {
     /**
      * Mode: 0 = MT, 1 = MP.
      */
-     int i;
+     int i = 0;
 #ifdef _WIN32
     HANDLE *array = (HANDLE *) children_array;
     if (mode == 0) {
         for (i = 0; i < len; i++) {
-            if(!TerminateThread(array[i], return_code))
+            if(!TerminateThread(array[i], exit_code))
                 return i;
         }
     } else if (mode == 1) {
         for (i = 0; i < len; i++) {
-            if(!TerminateProcess(array[i], return_code))
+            if(!TerminateProcess(array[i], exit_code))
                 return i;
         }
-    } else {
-        return 0;
     }
 #elif __unix__
+    int *pids = (int *) children_array;
+
+    if (mode == 0) {
+        for (i = 0; i < len; i++) {
+            if (pthread_kill(pids[i], exit_code) != 0) {
+                return i;
+            }
+        }
+    } else if (mode == 1) {
+        for (i = 0; i < len; i++) {
+            if (kill(pids[i], exit_code) == -1) {
+                return i;
+            }
+        }
+    }
     
 #endif
     return i;
