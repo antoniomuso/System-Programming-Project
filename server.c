@@ -282,39 +282,35 @@ int run_server(options c_options, options f_options) {
                 exit(EXIT_FAILURE);
             }
 
-            DWORD written = 0;
-
-
-
             if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &startup_info1, &proc_info1 ))) {
-                fprintf(stderr, "Error occurred while trying to create a process");
+                fprintf(stderr, "Error occurred while trying to create a process\n");
                 fflush(stderr);
                 exit(EXIT_FAILURE);
             }
 
-            DWORD pid = proc_info1.dwProcessId;
-
-            //printf("pid = %d\n", pid);
-
-            WSAPROTOCOL_INFO pri;
-            int k = WSADuplicateSocket(server_socket, pid, &pri);
+            DWORD proc_pid = proc_info1.dwProcessId;
 
 
-            BOOL fc = FALSE;
-            fc = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
+            WSAPROTOCOL_INFO wsa_prot_info;
 
-            if (fc) {
-                printf("Connect Success\n");
-                } else {
-                printf("%d\n", GetLastError());
+            int wsa_err;
+            if (wsa_err = WSADuplicateSocket(server_socket, proc_pid, &wsa_prot_info) == SOCKET_ERROR) {
+                fprintf(stderr, "Error occurred while trying to duplicate socket %d for process %d (%d))\n", server_socket, proc_pid, WSAGetLastError());
+                exit(EXIT_FAILURE);
             }
+            printf("Socket %d successfully duplicated for process %d\n", server_socket, proc_pid);
+
+            BOOL fSuccess = FALSE;
+            fSuccess = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
+            if (fSuccess)
+                printf("Received connection request from child process\n");
             fflush(stdout);
 
-            WriteFile(pipe_h, &pri, sizeof(WSAPROTOCOL_INFO), &written, NULL);
-
-            printf("wr = %d size = %d \n", written, sizeof(WSAPROTOCOL_INFO));
+            DWORD written = 0;
+            if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
+                fprintf(stderr, "Couldn't write to pipe\n");
+            printf("WSAPROTOCOL_INFO structure was written to the pipe (size written %d, sizeof structure = %d)\n", written, sizeof(WSAPROTOCOL_INFO));
             break;
-
         }
     }
 

@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     WSADATA wsa;
 
-    printf("Initialising Winsock...\n");
+    printf("Initialising Child Winsock...\n");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
     {
         fprintf(stderr,"Failed. Error Code : %d",WSAGetLastError());
@@ -54,82 +54,55 @@ int main(int argc, char* argv[]) {
     //printf("%d\n", *sock_ptr);
     //fflush(stdout);
 
+
+
     LPTSTR pipe_name = TEXT("\\\\.\\pipe\\testpipe");
-    HANDLE hPipe;
+    HANDLE pipe_h;
 
     while (1) {
-        //printf("Entered Loop\n");
-        //fflush(stdout);
-        hPipe = CreateFile(
-                pipe_name,
-                GENERIC_READ,
-                0,
-                0,
-                OPEN_EXISTING,
-                0,
-               NULL);
-        if (hPipe != INVALID_HANDLE_VALUE) break;
-        //printf("%d", GetLastError());
+        pipe_h = CreateFile(pipe_name, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, NULL);
+        if (pipe_h != INVALID_HANDLE_VALUE) break;
     }
 
-    BOOL fSuccess;
-
+    //Initialize and allocate WSAPROTOCOL_INFO struct
     WSAPROTOCOL_INFO *lpProtocolBuf = NULL;
     DWORD dwBufLen = 0;
     int nRet;
     DWORD dwErr;
     nRet = WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen);
-    printf("The buffer size is %d bytes...\n", dwBufLen);
+    printf("The needed buffer size is %d bytes...\n", dwBufLen);
     if (nRet != SOCKET_ERROR)
         printf("WSAEnumProtocols() no SOCKET_ERROR! \n");
-    else if ((dwErr = WSAGetLastError()) != WSAENOBUFS)
-        printf("Big problemos\n");
+    else if ((dwErr = WSAGetLastError()) != WSAENOBUFS) {
+        printf("Critical Problem Occurred\n");
+        exit(EXIT_FAILURE);
+        }
     else {
-        printf("Error >expected< %d\n", WSAGetLastError());
+        printf("Error >expected< %d\nNow allocation space for the structure...\n", WSAGetLastError());
         lpProtocolBuf = (WSAPROTOCOL_INFO *)malloc(dwBufLen);
-        nRet = WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen);
-        if (nRet == SOCKET_ERROR)
-            printf("HUGE PROBLEM\n");
+        if (nRet = WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen) == SOCKET_ERROR) {
+            fprintf(stderr, "Couldn't allocate space for WSAPROTOCOL_INFO structure\n");
+            exit(EXIT_FAILURE);
+        }
     }
-
     fflush(stdout);
 
     DWORD cbRead;
+    BOOL fSuccess;
+    if (fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLen, &cbRead, NULL) == FALSE)
+        fprintf(stderr, "Couldn't Read from Pipe\n");
+    printf("READ Success! read=%d (buf_size=%d)\n", cbRead, dwBufLen); // NB: Leggo la stessa qnt che ho scritto in server.c
 
-    fSuccess = ReadFile(
-            hPipe,
-            (void *) lpProtocolBuf,
-            1*dwBufLen,
-            &cbRead,
-            NULL);
-
-
-    if (fSuccess) printf("READ Success! read=%d (size=%d)\n", cbRead, dwBufLen); // NB: Leggo la stessa qnt che ho scritto in server.c
-    //printf("%s\n", buff);
     SOCKET sock_fd;
-    sock_fd = WSASocket(
-            FROM_PROTOCOL_INFO,
-            FROM_PROTOCOL_INFO,
-            FROM_PROTOCOL_INFO,
-            lpProtocolBuf,
-            0,
-            WSA_FLAG_OVERLAPPED);
+    sock_fd = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, lpProtocolBuf, 0, WSA_FLAG_OVERLAPPED);
 
-    printf("HERE\n");
-    printf("sock_res = %d\n", sock_fd);
-
-
+    printf("SOCKET INFO: sock_fd=%d, address_family=%d, protocol=%d\n", sock_fd, lpProtocolBuf->iAddressFamily, lpProtocolBuf->iProtocol);
+    //Family = 2 => AF_INET; PROTOCOL = 6 => TCP
     fflush(stdout);
-
-    /*
-     * Problema da qui
-     */
-    //int *sock_tr;
-    //*sock_tr = (int) sock_fd;
 
     printf("Now trying to invoke routine\n");
     fflush(stdout);
-    CloseHandle(hPipe);
+    CloseHandle(pipe_h);
     process_routine((void *) &sock_fd);
 #endif
     return 0;
