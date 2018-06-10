@@ -46,7 +46,7 @@ void* process_routine (void *arg) {
     int server_socket = *((int*)arg);
 
     printf("sock = %d", server_socket);
-fflush(stdout);
+    fflush(stdout);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
@@ -256,7 +256,7 @@ int run_server(options c_options, options f_options) {
 
         int buf_size = 50;
 
-        LPTSTR pipe_name = TEXT("\\\\.\\pipe\\testpipe");
+        LPTSTR pipe_name = TEXT("\\\\.\\pipe\\testpipe"); //Inserire nel for e appendere <i> per distinguerle? (SI-> Passare il numero tramite il buffer)
 
 
 
@@ -294,6 +294,7 @@ int run_server(options c_options, options f_options) {
             WSAPROTOCOL_INFO wsa_prot_info;
 
             int wsa_err;
+            //Duplicate socket
             if (wsa_err = WSADuplicateSocket(server_socket, proc_pid, &wsa_prot_info) == SOCKET_ERROR) {
                 fprintf(stderr, "Error occurred while trying to duplicate socket %d for process %d (%d))\n", server_socket, proc_pid, WSAGetLastError());
                 exit(EXIT_FAILURE);
@@ -301,6 +302,7 @@ int run_server(options c_options, options f_options) {
             printf("Socket %d successfully duplicated for process %d\n", server_socket, proc_pid);
 
             BOOL fSuccess = FALSE;
+            //Wait for child to connect to pipe
             fSuccess = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
             if (fSuccess)
                 printf("Received connection request from child process\n");
@@ -310,6 +312,10 @@ int run_server(options c_options, options f_options) {
             if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
             printf("WSAPROTOCOL_INFO structure was written to the pipe (size written %d, sizeof structure = %d)\n", written, sizeof(WSAPROTOCOL_INFO));
+
+
+
+
             break;
         }
     }

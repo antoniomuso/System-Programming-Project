@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
     HANDLE pipe_h;
 
     while (1) {
+        //Try to connect to Pipe
         pipe_h = CreateFile(pipe_name, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, NULL);
         if (pipe_h != INVALID_HANDLE_VALUE) break;
     }
@@ -69,6 +70,7 @@ int main(int argc, char* argv[]) {
     DWORD dwBufLen = 0;
     int nRet;
     DWORD dwErr;
+
     nRet = WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen);
     printf("The needed buffer size is %d bytes...\n", dwBufLen);
     if (nRet != SOCKET_ERROR)
@@ -89,21 +91,23 @@ int main(int argc, char* argv[]) {
 
     DWORD cbRead;
     BOOL fSuccess;
+
+    //Read from Pipe and store result in WSAPROTOCOL_INFO struct
     if (fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLen, &cbRead, NULL) == FALSE)
         fprintf(stderr, "Couldn't Read from Pipe\n");
     printf("READ Success! read=%d (buf_size=%d)\n", cbRead, dwBufLen); // NB: Leggo la stessa qnt che ho scritto in server.c
 
     SOCKET sock_fd;
+    //Re-create socket using info from WSAPROTOCOL_INFO
     sock_fd = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, lpProtocolBuf, 0, WSA_FLAG_OVERLAPPED);
 
     printf("SOCKET INFO: sock_fd=%d, address_family=%d, protocol=%d\n", sock_fd, lpProtocolBuf->iAddressFamily, lpProtocolBuf->iProtocol);
-    //Family = 2 => AF_INET; PROTOCOL = 6 => TCP
     fflush(stdout);
 
-    printf("Now trying to invoke routine\n");
-    fflush(stdout);
     CloseHandle(pipe_h);
     process_routine((void *) &sock_fd);
+    //ToDo Disallocare spazio di lpProtocolBuf
+
 #endif
     return 0;
 }
