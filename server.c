@@ -19,6 +19,8 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <signal.h>
+#include <errno.h>
+#include <string.h>
 
 
 
@@ -117,17 +119,23 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
         }
     }
 #elif __unix__
-    int *pids = (int *) children_array;
 
     if (mode == 0) {
+        pthread_t *tids = (pthread_t *) children_array;
+
         for (i = 0; i < len; i++) {
-            if (pthread_kill(pids[i], exit_code) != 0) {
+            int err = 0;
+            if (err = pthread_kill(tids[i], exit_code) != 0) {
+                fprintf(stderr,"%s\n", strerror(err));
                 return i;
             }
         }
     } else if (mode == 1) {
+        int *pids = (int *) children_array;
+
         for (i = 0; i < len; i++) {
             if (kill(pids[i], exit_code) == -1) {
+                fprintf(stderr,"%s\n", strerror(errno));
                 return i;
             }
         }
@@ -251,12 +259,13 @@ int run_server(options c_options, options f_options) {
             int pid = fork();
             if (pid > 0) {
                 pids[i] = pid;
+            } else if (pid == 0) {
                 process_routine((void *)sock_pointer);
-
-            } else if (pid < 0) {
-                fprintf(stderr, "Fork Error %i", pid);
-                exit(EXIT_FAILURE);
+            } else {
+                    fprintf(stderr, "Fork Error %i", pid);
+                    exit(EXIT_FAILURE);
             }
+
         }
 
         process_routine(sock_pointer);
@@ -276,9 +285,7 @@ int run_server(options c_options, options f_options) {
         for (int i = 0; i < n_proc-1; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
-//        if(TerminateThread(hThreadArray[4], 0))
-//            printf("YAHA\n");
-//        fflush(stdout);
+
         process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
         /**
@@ -358,10 +365,6 @@ int run_server(options c_options, options f_options) {
             if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
         }
-//        BOOL success = FALSE;
-//        if(TerminateProcess(children_handle[4], 0))
-//            printf("YUHU\n");
-        fflush(stdout);
 
         process_routine(&server_socket);
     }
