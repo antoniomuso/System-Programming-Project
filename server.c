@@ -97,6 +97,32 @@ int w_process_routine (void *arg) {
     return 0;
 }
 
+int infanticide(void *children_array, int len, int mode, int return_code) {
+    /**
+     * Mode: 0 = MT, 1 = MP.
+     */
+     int i;
+#ifdef _WIN32
+    HANDLE *array = (HANDLE *) children_array;
+    if (mode == 0) {
+        for (i = 0; i < len; i++) {
+            if(!TerminateThread(array[i], return_code))
+                return i;
+        }
+    } else if (mode == 1) {
+        for (i = 0; i < len; i++) {
+            if(!TerminateProcess(array[i], return_code))
+                return i;
+        }
+    } else {
+        return 0;
+    }
+#elif __unix__
+    
+#endif
+    return i;
+}
+
 int run_server(options c_options, options f_options) {
 
 #if _WIN32
@@ -202,7 +228,7 @@ int run_server(options c_options, options f_options) {
         printf("mode = MP\n");
         fflush(stdout);
 
-        int tid[n_proc - 1];
+        int pids[n_proc - 1];
 
         int *sock_pointer;
         sock_pointer = &server_socket;
@@ -210,7 +236,7 @@ int run_server(options c_options, options f_options) {
         for (int i = 0; i < n_proc-1; i++) {
             int pid = fork();
             if (pid > 0) {
-                tid[i] = pid;
+                pids[i] = pid;
                 process_routine((void *)sock_pointer);
 
             } else if (pid < 0) {
@@ -236,6 +262,9 @@ int run_server(options c_options, options f_options) {
         for (int i = 0; i < n_proc-1; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
+//        if(TerminateThread(hThreadArray[4], 0))
+//            printf("YAHA\n");
+//        fflush(stdout);
         process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
         /**
@@ -247,8 +276,13 @@ int run_server(options c_options, options f_options) {
         char buff[buf_size];
 
 
-        STARTUPINFO startup_info[n_proc-1];
-        PROCESS_INFORMATION proc_info[n_proc-1];
+        //STARTUPINFO startup_info[n_proc-1];
+        //PROCESS_INFORMATION proc_info[n_proc-1];
+
+        STARTUPINFO startup_info = {0};
+        PROCESS_INFORMATION proc_info = {0};
+
+        HANDLE children_handle[n_proc-1];
 
         char *pipe_n = "\\\\.\\pipe\\testpipe";
 
@@ -280,14 +314,15 @@ int run_server(options c_options, options f_options) {
                 exit(EXIT_FAILURE);
             }
 
-            if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, TRUE, 0, NULL, NULL, &(startup_info[i]), &(proc_info[i]) ))) {
+            if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, FALSE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
                 fprintf(stderr, "Error occurred while trying to create a process\n");
                 fflush(stderr);
                 exit(EXIT_FAILURE);
             }
 
-            DWORD proc_pid = proc_info[i].dwProcessId;
+            DWORD proc_pid = proc_info.dwProcessId;
 
+            children_handle[i] = proc_info.hProcess;
 
             WSAPROTOCOL_INFO wsa_prot_info;
 
@@ -309,6 +344,11 @@ int run_server(options c_options, options f_options) {
             if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
         }
+//        BOOL success = FALSE;
+//        if(TerminateProcess(children_handle[4], 0))
+//            printf("YUHU\n");
+        fflush(stdout);
+
         process_routine(&server_socket);
     }
 
