@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
     nRet = WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen);
     printf("The buffer size is %d bytes...\n", dwBufLen);
     if (nRet != SOCKET_ERROR)
-        printf("WSAEnumProtocols() no SOCKET_ERROR! \n"); //n operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full.
+        printf("WSAEnumProtocols() no SOCKET_ERROR! \n");
     else if ((dwErr = WSAGetLastError()) != WSAENOBUFS)
         printf("Big problemos\n");
     else {
@@ -99,12 +99,12 @@ int main(int argc, char* argv[]) {
     fSuccess = ReadFile(
             hPipe,
             (void *) lpProtocolBuf,
-            1*dwBufLen, // Probabile problema qui, però leggo la stessa qnt inviata
+            1*dwBufLen,
             &cbRead,
             NULL);
 
 
-    if (fSuccess) printf("READ Success! read=%d (size=%d)\n", cbRead, dwBufLen);
+    if (fSuccess) printf("READ Success! read=%d (size=%d)\n", cbRead, dwBufLen); // NB: Leggo la stessa qnt che ho scritto in server.c
     //printf("%s\n", buff);
     SOCKET sock_fd;
     sock_fd = WSASocket(
