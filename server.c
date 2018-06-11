@@ -22,6 +22,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
+
 
 
 
@@ -67,7 +69,29 @@ void* process_routine (void *arg) {
     set_blocking(server_socket, 0);
     set_blocking(server_socket_chiper, 0);
 
-    while (clientfd = accept(server_socket, NULL, NULL)) {
+    fd_set fds;
+    FD_ZERO(&fds);
+
+    int maxfdp1 ;
+    maxfdp1 = server_socket > server_socket_chiper ?  server_socket +1 : server_socket_chiper +1;
+
+    int rc = 0;
+    while ((rc = select(maxfdp1, &fds, NULL, NULL, NULL) ) != -1) {
+
+        printf("Select active\n");
+        fflush(stdout);
+        FD_SET(server_socket,&fds);
+        FD_SET(server_socket_chiper,&fds);
+
+        if (clientfd = accept(server_socket, NULL, NULL) > 0) {
+
+        } else if (clientfd = accept(server_socket_chiper, NULL, NULL) > 0 ) {
+
+        } else {
+            continue;
+        }
+
+
         printf("Client Connect\n");
         fflush(stdout);
 
