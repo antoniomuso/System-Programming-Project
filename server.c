@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 
 
@@ -41,6 +42,15 @@
  * Run thread function
  */
 
+int set_blocking(int sockfd, int blocking) {
+    int nonblock = blocking == 0 ? 1 : 0;
+#ifdef __unix__
+    return ioctl(sockfd, FIONBIO, &nonblock);
+#elif _WIN32
+    return ioctlsocket(sockfd, FIONBIO, &nonblock);
+#endif
+}
+
 
 void* process_routine (void *arg) {
     printf("Thread Start\n");
@@ -53,10 +63,8 @@ void* process_routine (void *arg) {
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
 
-    // set Socket NON BLOCK
-    fcntl(server_socket, F_SETFL, SOCK_NONBLOCK);
-    fcntl(server_socket_chiper, F_SETFL, SOCK_NONBLOCK);
-
+    set_blocking(server_socket, 0);
+    set_blocking(server_socket_chiper, 0);
 
     while (clientfd = accept(server_socket, NULL, NULL)) {
         printf("Client Connect\n");
