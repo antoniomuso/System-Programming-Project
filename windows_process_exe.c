@@ -78,6 +78,7 @@ int main(int argc, char* argv[]) {
     sock_fd = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, lpProtocolBuf, 0, WSA_FLAG_OVERLAPPED);
 
     fflush(stdout);
+    free(lpProtocolBuf);
 
     CloseHandle(pipe_h);
     process_routine((void *) &sock_fd);

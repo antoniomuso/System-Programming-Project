@@ -47,31 +47,39 @@ void* process_routine (void *arg) {
     fflush(stdout);
 
     int server_socket = *((int*)arg);
+    int server_socket_chiper = *( ((int*)arg) + 1 );
 
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
+
+    // set Socket NON BLOCK
+    fcntl(server_socket, F_SETFL, SOCK_NONBLOCK);
+    fcntl(server_socket_chiper, F_SETFL, SOCK_NONBLOCK);
+
 
     while (clientfd = accept(server_socket, NULL, NULL)) {
         printf("Client Connect\n");
         fflush(stdout);
 
         int read_len;
-        int date_reade = 0;
+        int data_read = 0;
+
         http_header http_h;
 
-        while (read_len = recv(clientfd, (void *)(buffer + date_reade),(BUFF_READ_LEN-1) - date_reade,0)) {
+        while (read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) {
 
-            buffer[read_len + date_reade] = '\0';
+            buffer[read_len + data_read] = '\0';
 
             char * pointer = strstr(buffer,"\r\n\r\n");
 
             if (pointer == NULL) {
                 printf("Is NULL");
                 fflush(stdout);
-                date_reade += read_len;
+                data_read += read_len;
                 continue;
             }
+
             pointer += 4;
             int header_len = pointer - buffer;
 
@@ -162,8 +170,10 @@ int run_server(options c_options, options f_options) {
 #endif
 
     struct addrinfo *addr_info;
+    struct addrinfo *addr_info_chipher;
 
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket_cipher = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
 
     char *port = get_command_value("-port",c_options) != NULL
@@ -181,7 +191,8 @@ int run_server(options c_options, options f_options) {
     int n_proc = get_command_value("-n_proc", c_options) != NULL
                  ? atoi(get_command_value("-n_proc", c_options))
                  : atoi(get_command_value("n_proc", f_options));
-
+    char chiper_port[MAX_OPTION_LEN];
+    snprintf(chiper_port, MAX_OPTION_LEN, "%d", atoi(port) + 1);
 
     if (n_proc <= 0) {
         fprintf(stderr, "Error n_proc <= 0");
@@ -189,12 +200,13 @@ int run_server(options c_options, options f_options) {
     }
 
 
-    if (server_socket == -1) {
+    if (server_socket == -1 || server_socket_cipher == -1) {
         fprintf(stderr,"Couldn't create socket\n");
         exit(EXIT_FAILURE);
     }
 
-    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1) {
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1
+        || setsockopt(server_socket_cipher, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1) {
         fprintf(stderr,"Couldn't setsockopt\n");
         exit(EXIT_FAILURE);
     }
@@ -202,28 +214,33 @@ int run_server(options c_options, options f_options) {
     /* Fill the address info struct (host + port) -- getaddrinfo(3) */
 
 
-    if (getaddrinfo(server_ip, port, NULL, &addr_info) != 0) {
+    if (getaddrinfo(server_ip, port, NULL, &addr_info) != 0
+        || getaddrinfo(server_ip, chiper_port, NULL, &addr_info_chipher) != 0 ) {
         fprintf(stderr,"Couldn't get address\n");
         exit(EXIT_FAILURE);
 
     }
 
-    if (bind(server_socket, addr_info->ai_addr, addr_info->ai_addrlen) != 0) {
-        fprintf(stderr,"Couldn't bind socket to address\n");
+    if (bind(server_socket, addr_info->ai_addr, addr_info->ai_addrlen) != 0
+        || bind(server_socket_cipher, addr_info_chipher->ai_addr, addr_info_chipher->ai_addrlen) != 0) {
+        fprintf(stderr,"Couldn't bind sockets to address\n");
         exit(EXIT_FAILURE);
     }
 
     /* Free the memory used by our address info struct */
     freeaddrinfo(addr_info);
+    freeaddrinfo(addr_info_chipher);
 
 
-    if (listen(server_socket, 10) == -1) {
-        fprintf(stderr,"Couldn't make socket listen\n");
+    if (listen(server_socket, 10) == -1
+        || listen(server_socket_cipher, 10) == -1 ) {
+        fprintf(stderr,"Couldn't make sockets listen\n");
         exit(EXIT_FAILURE);
     }
 
 
-    printf("Server Listen on %s:%s\n", server_ip, port);
+    printf("Server listening on %s:%s\n", server_ip, port);
+    printf("Server chiper listening on %s:%s\n", server_ip, chiper_port);
     fflush(stdout);
 
 
@@ -236,8 +253,12 @@ int run_server(options c_options, options f_options) {
 
         pthread_t tid[n_proc - 1];
 
+        int sockets[2];
+        sockets[0] = server_socket;
+        sockets[1] = server_socket_cipher;
+
         int *sock_pointer;
-        sock_pointer = &server_socket;
+        sock_pointer = sockets;
 
         for (int i = 0; i < n_proc - 1; i++) {
             pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
