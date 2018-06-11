@@ -47,7 +47,8 @@ int set_blocking(int sockfd, int blocking) {
 #ifdef __unix__
     return ioctl(sockfd, FIONBIO, &nonblock);
 #elif _WIN32
-    return ioctlsocket(sockfd, FIONBIO, &nonblock);
+    u_long wnonblock = (u_long) nonblock;
+    return ioctlsocket(sockfd, FIONBIO, &wnonblock);
 #endif
 }
 
