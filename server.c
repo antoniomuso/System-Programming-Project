@@ -80,19 +80,18 @@ void* process_routine (void *arg) {
     int rc = 0;
     while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, NULL) ) != -1) {
 
-        printf("Select active\n");
-        fflush(stdout);
+        //printf("Select active\n");
+        //fflush(stdout);
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
 
-        if (clientfd = accept(server_socket_chiper, NULL, NULL) > 0) {
+        if ((clientfd = accept(server_socket_chiper, NULL, NULL)) > 1) {
 
-        } else if (clientfd = accept(server_socket, NULL, NULL) > 0 ) {
+        } else if ( (clientfd = accept(server_socket, NULL, NULL)) > 1 ) {
 
         } else {
             continue;
         }
-
 
         printf("Client Connect\n");
         fflush(stdout);
@@ -109,9 +108,10 @@ void* process_routine (void *arg) {
             char * pointer = strstr(buffer,"\r\n\r\n");
 
             if (pointer == NULL) {
-                printf("Is NULL");
+                printf("pointer is: NULL");
                 fflush(stdout);
                 data_read += read_len;
+                break;
                 continue;
             }
 
