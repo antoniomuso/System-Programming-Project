@@ -298,6 +298,8 @@ int run_server(options c_options, options f_options) {
             pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
         }
 
+        free_options(c_options);
+        free_options(f_options);
         process_routine(sock_pointer);
 
     } else if (strcmp(mode, "MP") == 0) {
@@ -323,6 +325,8 @@ int run_server(options c_options, options f_options) {
 
         }
 
+        free_options(c_options);
+        free_options(f_options);
         process_routine(sock_pointer);
 
     }
@@ -341,6 +345,8 @@ int run_server(options c_options, options f_options) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
 
+        free_options(c_options);
+        free_options(f_options);
         process_routine(sock_pointer);
     } else if (strcmp(mode, "MP") == 0) {
         /**
@@ -421,6 +427,8 @@ int run_server(options c_options, options f_options) {
                 fprintf(stderr, "Couldn't write to pipe\n");
         }
 
+        free_options(c_options);
+        free_options(f_options);
         process_routine(&server_socket);
     }
 
