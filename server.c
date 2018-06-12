@@ -111,7 +111,6 @@ void* process_routine (void *arg) {
                 printf("pointer is: NULL");
                 fflush(stdout);
                 data_read += read_len;
-                break;
                 continue;
             }
 
