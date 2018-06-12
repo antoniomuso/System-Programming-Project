@@ -72,20 +72,22 @@ void* process_routine (void *arg) {
     fd_set fds;
     FD_ZERO(&fds);
 
-    int maxfdp1 ;
-    maxfdp1 = server_socket > server_socket_chiper ?  server_socket +1 : server_socket_chiper +1;
+    FD_SET(server_socket,&fds);
+    FD_SET(server_socket_chiper,&fds);
+
+    int maxfdp = server_socket > server_socket_chiper ?  server_socket  : server_socket_chiper;
 
     int rc = 0;
-    while ((rc = select(maxfdp1, &fds, NULL, NULL, NULL) ) != -1) {
+    while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, NULL) ) != -1) {
 
         printf("Select active\n");
         fflush(stdout);
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
 
-        if (clientfd = accept(server_socket, NULL, NULL) > 0) {
+        if (clientfd = accept(server_socket_chiper, NULL, NULL) > 0) {
 
-        } else if (clientfd = accept(server_socket_chiper, NULL, NULL) > 0 ) {
+        } else if (clientfd = accept(server_socket, NULL, NULL) > 0 ) {
 
         } else {
             continue;
