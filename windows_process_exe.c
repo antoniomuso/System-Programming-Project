@@ -20,8 +20,6 @@
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
-
-#endif
     WSADATA wsa;
 
     //printf("Initialising Child Winsock...\n");
@@ -102,5 +100,6 @@ int main(int argc, char* argv[]) {
     sock_fd_ptr = sock_fd;
     process_routine((void *) sock_fd_ptr);
     //ToDo Disallocare spazio di lpProtocolBuf
+#endif
     return 0;
 }

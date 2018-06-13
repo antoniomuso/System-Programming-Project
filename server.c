@@ -102,9 +102,6 @@ void* process_routine (void *arg) {
         http_header http_h;
 
         while ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len) {
-        //while ((read_len = recv(clientfd, (void *) (buffer),(BUFF_READ_LEN-1),MSG_WAITALL)) == -1) {
-            if (read_len == -1)
-                printf("errno=%d\n", GetLastError());
             buffer[read_len + data_read] = '\0';
 
             printf("read %d\n", read_len);
