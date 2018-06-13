@@ -93,7 +93,7 @@ void* process_routine (void *arg) {
             continue;
         }
 
-        printf("Client Connect\n");
+        printf("Client Connect clientfd=%d\n",clientfd);
         fflush(stdout);
 
         int read_len;
@@ -101,17 +101,22 @@ void* process_routine (void *arg) {
 
         http_header http_h;
 
-        while (read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) {
-
+        while ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len) {
+        //while ((read_len = recv(clientfd, (void *) (buffer),(BUFF_READ_LEN-1),MSG_WAITALL)) == -1) {
+            if (read_len == -1)
+                printf("errno=%d\n", GetLastError());
             buffer[read_len + data_read] = '\0';
 
+            printf("read %d\n", read_len);
+            fflush(stdout);
             char * pointer = strstr(buffer,"\r\n\r\n");
 
             if (pointer == NULL) {
-                printf("pointer is: NULL");
+                printf("pointer is: NULL\n");
                 fflush(stdout);
                 data_read += read_len;
                 continue;
+                //break;
             }
 
             pointer += 4;
@@ -389,11 +394,12 @@ int run_server(options c_options, options f_options) {
                     PIPE_READMODE_MESSAGE |
                     PIPE_WAIT,
                     PIPE_UNLIMITED_INSTANCES,
-                    1*sizeof(WSAPROTOCOL_INFO),
-                    1*sizeof(WSAPROTOCOL_INFO),
+                    2*sizeof(WSAPROTOCOL_INFO),
+                    0,
                     0,
                     NULL);
 
+            printf("ALL: %d", 2*sizeof(WSAPROTOCOL_INFO));
 
             if (pipe_h == INVALID_HANDLE_VALUE) {
                 printf("Couldn't create Pipe\n");
@@ -407,17 +413,20 @@ int run_server(options c_options, options f_options) {
             }
 
             DWORD proc_pid = proc_info.dwProcessId;
-
             children_handle[i] = proc_info.hProcess;
 
-            WSAPROTOCOL_INFO wsa_prot_info;
+            WSAPROTOCOL_INFO wsa_prot_info[2];
 
-            int wsa_err;
+            WSAPROTOCOL_INFO wsa_prot_info_1;
+            WSAPROTOCOL_INFO wsa_prot_info_2;
+
             //Duplicate socket
-            if (wsa_err = WSADuplicateSocket(server_socket, proc_pid, &wsa_prot_info) == SOCKET_ERROR) {
+            if ((WSADuplicateSocket(server_socket, proc_pid, &(wsa_prot_info_1) ) == SOCKET_ERROR)
+                    || WSADuplicateSocket(server_socket_cipher, proc_pid, &(wsa_prot_info_2) ) == SOCKET_ERROR) {
                 fprintf(stderr, "Error occurred while trying to duplicate socket %d for process %d (%d))\n", server_socket, proc_pid, WSAGetLastError());
                 exit(EXIT_FAILURE);
             }
+
 
             BOOL fSuccess = FALSE;
             //Wait for child to connect to pipe
@@ -427,13 +436,24 @@ int run_server(options c_options, options f_options) {
                 exit(EXIT_FAILURE);
             }
             DWORD written = 0;
-            if (WriteFile(pipe_h, &wsa_prot_info, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
+            if (WriteFile(pipe_h, &wsa_prot_info_1, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
+            printf("W1: %d\n", written);
+            if (WriteFile(pipe_h, &wsa_prot_info_2, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
+                fprintf(stderr, "Couldn't write to pipe\n");
+            printf("W2: %d\n", written);
+            fflush(stdout);
         }
 
         free_options(c_options);
         free_options(f_options);
-        process_routine(&server_socket);
+
+        int server_socket_arr[2];
+        server_socket_arr[0] = server_socket;
+        server_socket_arr[1] = server_socket_cipher;
+        int *server_socket_ptr;
+        server_socket_ptr = server_socket_arr;
+        process_routine((void *) server_socket_ptr);
     }
 
 
