@@ -63,6 +63,31 @@ int close_socket(int socketfd) {
 #endif
 }
 
+void handle_signal(int signal) {
+
+}
+
+void set_signal_handler() {
+    struct sigaction sa;
+    // Print pid, so that we can send signals from other shells
+    printf("My pid is: %d\n", getpid());
+
+    // Setup the sighub handler
+    sa.sa_handler = &handle_signal;
+
+    // Restart the system call, if at all possible
+    sa.sa_flags = SA_RESTART;
+
+    // Block every signal during the handler
+    sigfillset(&sa.sa_mask);
+
+    if (sigaction(SIGHUP, &sa, NULL) == -1) {
+        fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
+        exit(EXIT_FAILURE);
+    }
+
+}
+
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
@@ -178,7 +203,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 
         for (i = 0; i < len; i++) {
             int err = 0;
-            if (err = pthread_kill(tids[i], exit_code) != 0) {
+            if (err = pthread_cancel(tids[i]) != 0) {
                 fprintf(stderr,"%s\n", strerror(err));
                 return i;
             }
@@ -310,7 +335,7 @@ int run_server(options c_options, options f_options) {
 
         free_options(c_options);
         free_options(f_options);
-        process_routine(sock_pointer);
+        infanticide(tid,n_proc-1, 0, SIGKILL);
 
     } else if (strcmp(mode, "MP") == 0) {
         //TODO Riordarsi di uccidere i figli quando finiscono o in caso di fallimento di qualsiasi operazione.
@@ -343,7 +368,6 @@ int run_server(options c_options, options f_options) {
 
         free_options(c_options);
         free_options(f_options);
-        process_routine(sock_pointer);
 
     } else {
         fprintf(stderr, "Error invalid mode");
@@ -369,7 +393,7 @@ int run_server(options c_options, options f_options) {
 
         free_options(c_options);
         free_options(f_options);
-        process_routine(sock_pointer);
+
     } else if (strcmp(mode, "MP") == 0) {
         /**
          * TODO: Ricordarsi di chiudere i processi una volta finito o in caso di fallimento di qualsiasi operazione
@@ -463,14 +487,18 @@ int run_server(options c_options, options f_options) {
         server_socket_arr[1] = server_socket_cipher;
 
         sock_pointer = server_socket_arr;
-        process_routine((void *) sock_pointer);
+
     } else {
         fprintf(stderr, "Error invalid mode");
         exit(EXIT_FAILURE);
     }
 
 
+
+
 #endif
+
+    process_routine((void *) sock_pointer);
 
 }
 
