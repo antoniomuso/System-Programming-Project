@@ -332,6 +332,9 @@ int run_server(options c_options, options f_options) {
             if (pid > 0) {
                 pids[i] = pid;
             } else if (pid == 0) {
+                free_options(c_options);
+                free_options(f_options);
+
                 process_routine((void *)sock_pointer);
             } else {
                     fprintf(stderr, "Fork Error %i", pid);
