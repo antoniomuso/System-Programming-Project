@@ -5,7 +5,7 @@
 #ifndef SYSTEM_PROGRAMMING_PROJECT_SERVER_H
 #define SYSTEM_PROGRAMMING_PROJECT_SERVER_H
 
-int run_server(options c_options, options f_options);
+int run_server(options *c_opt, options *f_opt);
 void* process_routine (void *arg);
 
 #endif //SYSTEM_PROGRAMMING_PROJECT_SERVER_H

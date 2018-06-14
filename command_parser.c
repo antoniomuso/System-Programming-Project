@@ -108,14 +108,14 @@ cont:
 /**
  *
  * @param command Command String
- * @param options Commands data struct
+ * @param opt Commands data struct
  * @return NULL if command isn't contained inside options,
  *         Pointer to a string that it contain the command value.
  */
-char* get_command_value (char command[], options options) {
-    for (int i = 0; i < options.comm_len; i++) {
-        if (strcmp(options.commands[i].name, command) == 0) {
-            return options.commands[i].value;
+char* get_command_value (char command[], options opt) {
+    for (int i = 0; i < opt.comm_len; i++) {
+        if (strcmp(opt.commands[i].name, command) == 0) {
+            return opt.commands[i].value;
         }
     }
     return NULL;

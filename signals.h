@@ -1,0 +1,11 @@
+//
+// Created by anotoniomusolino on 14/06/18.
+//
+
+#ifndef SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
+#define SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
+
+
+
+
+#endif //SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H

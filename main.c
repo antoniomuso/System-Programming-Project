@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
     printf("Windows\n");
 #endif
 
-    run_server(opt, fopt);
+    run_server(&opt, &fopt);
 
     return 0;
 }

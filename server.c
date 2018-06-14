@@ -63,31 +63,6 @@ int close_socket(int socketfd) {
 #endif
 }
 
-void handle_signal(int signal) {
-
-}
-
-void set_signal_handler() {
-    struct sigaction sa;
-    // Print pid, so that we can send signals from other shells
-    printf("My pid is: %d\n", getpid());
-
-    // Setup the sighub handler
-    sa.sa_handler = &handle_signal;
-
-    // Restart the system call, if at all possible
-    sa.sa_flags = SA_RESTART;
-
-    // Block every signal during the handler
-    sigfillset(&sa.sa_mask);
-
-    if (sigaction(SIGHUP, &sa, NULL) == -1) {
-        fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
-        exit(EXIT_FAILURE);
-    }
-
-}
-
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
@@ -178,52 +153,7 @@ int w_process_routine (void *arg) {
     return 0;
 }
 
-int infanticide(void *children_array, int len, int mode, int exit_code) {
-    /**
-     * Mode: 0 = MT, 1 = MP.
-     */
-     int i = 0;
-#ifdef _WIN32
-    HANDLE *array = (HANDLE *) children_array;
-    if (mode == 0) {
-        for (i = 0; i < len; i++) {
-            if(!TerminateThread(array[i], exit_code))
-                return i;
-        }
-    } else if (mode == 1) {
-        for (i = 0; i < len; i++) {
-            if(!TerminateProcess(array[i], exit_code))
-                return i;
-        }
-    }
-#elif __unix__
-
-    if (mode == 0) {
-        pthread_t *tids = (pthread_t *) children_array;
-
-        for (i = 0; i < len; i++) {
-            int err = 0;
-            if (err = pthread_cancel(tids[i]) != 0) {
-                fprintf(stderr,"%s\n", strerror(err));
-                return i;
-            }
-        }
-    } else if (mode == 1) {
-        int *pids = (int *) children_array;
-
-        for (i = 0; i < len; i++) {
-            if (kill(pids[i], exit_code) == -1) {
-                fprintf(stderr,"%s\n", strerror(errno));
-                return i;
-            }
-        }
-    }
-    
-#endif
-    return i;
-}
-
-int run_server(options c_options, options f_options) {
+int run_server(options *c_opt, options *f_opt) {
 
 #if _WIN32
     WSADATA wsa;
@@ -238,6 +168,10 @@ int run_server(options c_options, options f_options) {
     printf("Initialised.\n");
 
 #endif
+    //if (c_opt == NULL)
+    options c_options = *c_opt;
+    options f_options = *f_opt;
+
 
     struct addrinfo *addr_info;
     struct addrinfo *addr_info_chipher;
