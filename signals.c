@@ -5,13 +5,13 @@
 #include "signals.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include "server.h"
 #include <errno.h>
 #include <string.h>
 #include "command_parser.h"
 
 #ifdef __unix__
+#include <pthread.h>
 #include <signal.h>
 #elif _WIN32
 #include <windows.h>
