@@ -93,6 +93,8 @@ void* process_routine (void *arg) {
             continue;
         }
 
+        set_blocking(clientfd, 1);
+
         printf("Client Connect clientfd=%d\n",clientfd);
         fflush(stdout);
 
