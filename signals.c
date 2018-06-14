@@ -5,7 +5,10 @@
 #include "signals.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 #include "server.h"
+#include <errno.h>
+#include <string.h>
 #include "command_parser.h"
 
 #ifdef __unix__
@@ -84,8 +87,6 @@ void set_signal_handler(void *arr_proc, int arr_len, int mod) {
     len = arr_len;
 
     struct sigaction sa;
-    // Print pid, so that we can send signals from other shells
-    printf("My pid is: %d\n", getpid());
 
     // Setup the sighub handler
     sa.sa_handler = &handle_signal;
