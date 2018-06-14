@@ -335,7 +335,6 @@ int run_server(options c_options, options f_options) {
 
         free_options(c_options);
         free_options(f_options);
-        infanticide(tid,n_proc-1, 0, SIGKILL);
 
     } else if (strcmp(mode, "MP") == 0) {
         //TODO Riordarsi di uccidere i figli quando finiscono o in caso di fallimento di qualsiasi operazione.
