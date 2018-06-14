@@ -55,6 +55,14 @@ int set_blocking(int sockfd, int blocking) {
 }
 
 
+int close_socket(int socketfd) {
+#ifdef __unix__
+    return close(socketfd);
+#elif _WIN32
+    return closesocket(socketfd);
+#endif
+}
+
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
@@ -101,7 +109,13 @@ void* process_routine (void *arg) {
 
         http_header http_h;
 
-        while ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len) {
+        for (;;) {
+
+            if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
+                close_socket(clientfd);
+                break;
+            }
+
             buffer[read_len + data_read] = '\0';
 
             char * pointer = strstr(buffer,"\r\n\r\n");
@@ -111,7 +125,6 @@ void* process_routine (void *arg) {
                 fflush(stdout);
                 data_read += read_len;
                 continue;
-                //break;
             }
 
             pointer += 4;
@@ -128,11 +141,8 @@ void* process_routine (void *arg) {
             }
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
-#ifdef __unix__
-            close(clientfd);
-#elif _WIN32
-            closesocket(clientfd);
-#endif
+
+            close_socket(clientfd);
             break;
         }
     }
