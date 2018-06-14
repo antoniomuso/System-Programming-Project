@@ -352,8 +352,12 @@ int run_server(options c_options, options f_options) {
         HANDLE hThreadArray[n_proc-1];
         DWORD dwThreadArray[n_proc-1];
 
+        int sockets[2];
+        sockets[0] = server_socket;
+        sockets[1] = server_socket_cipher;
+
         int *sock_pointer;
-        sock_pointer = &server_socket;
+        sock_pointer = sockets;
 
         for (int i = 0; i < n_proc-1; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
