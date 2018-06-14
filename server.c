@@ -106,7 +106,6 @@ void* process_routine (void *arg) {
         while ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len) {
             buffer[read_len + data_read] = '\0';
 
-            printf("read %d\n", read_len);
             fflush(stdout);
             char * pointer = strstr(buffer,"\r\n\r\n");
 
@@ -398,7 +397,6 @@ int run_server(options c_options, options f_options) {
                     0,
                     NULL);
 
-            printf("ALL: %d", 2*sizeof(WSAPROTOCOL_INFO));
 
             if (pipe_h == INVALID_HANDLE_VALUE) {
                 printf("Couldn't create Pipe\n");
@@ -437,10 +435,8 @@ int run_server(options c_options, options f_options) {
             DWORD written = 0;
             if (WriteFile(pipe_h, &wsa_prot_info_1, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
-            printf("W1: %d\n", written);
             if (WriteFile(pipe_h, &wsa_prot_info_2, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
                 fprintf(stderr, "Couldn't write to pipe\n");
-            printf("W2: %d\n", written);
             fflush(stdout);
         }
 
