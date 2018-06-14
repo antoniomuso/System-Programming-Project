@@ -288,7 +288,7 @@ int run_server(options c_options, options f_options) {
     printf("Server chiper listening on %s:%s\n", server_ip, chiper_port);
     fflush(stdout);
 
-
+    int *sock_pointer = NULL;
 
 #ifdef __unix__
 
@@ -302,7 +302,6 @@ int run_server(options c_options, options f_options) {
         sockets[0] = server_socket;
         sockets[1] = server_socket_cipher;
 
-        int *sock_pointer;
         sock_pointer = sockets;
 
         for (int i = 0; i < n_proc - 1; i++) {
@@ -324,7 +323,6 @@ int run_server(options c_options, options f_options) {
         sockets[0] = server_socket;
         sockets[1] = server_socket_cipher;
 
-        int *sock_pointer;
         sock_pointer = sockets;
 
         for (int i = 0; i < n_proc-1; i++) {
@@ -347,6 +345,9 @@ int run_server(options c_options, options f_options) {
         free_options(f_options);
         process_routine(sock_pointer);
 
+    } else {
+        fprintf(stderr, "Error invalid mode");
+        exit(EXIT_FAILURE);
     }
 
 #elif _WIN32
@@ -360,7 +361,6 @@ int run_server(options c_options, options f_options) {
         sockets[0] = server_socket;
         sockets[1] = server_socket_cipher;
 
-        int *sock_pointer;
         sock_pointer = sockets;
 
         for (int i = 0; i < n_proc-1; i++) {
@@ -461,9 +461,12 @@ int run_server(options c_options, options f_options) {
         int server_socket_arr[2];
         server_socket_arr[0] = server_socket;
         server_socket_arr[1] = server_socket_cipher;
-        int *server_socket_ptr;
-        server_socket_ptr = server_socket_arr;
-        process_routine((void *) server_socket_ptr);
+
+        sock_pointer = server_socket_arr;
+        process_routine((void *) sock_pointer);
+    } else {
+        fprintf(stderr, "Error invalid mode");
+        exit(EXIT_FAILURE);
     }
 
 
