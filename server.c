@@ -95,8 +95,6 @@ void* process_routine (void *arg) {
 
         set_blocking(clientfd, 1);
 
-        printf("Client Connect clientfd=%d\n",clientfd);
-        fflush(stdout);
 
         int read_len;
         int data_read = 0;
@@ -106,7 +104,6 @@ void* process_routine (void *arg) {
         while ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len) {
             buffer[read_len + data_read] = '\0';
 
-            fflush(stdout);
             char * pointer = strstr(buffer,"\r\n\r\n");
 
             if (pointer == NULL) {
