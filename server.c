@@ -95,7 +95,7 @@ void* process_routine (void *arg) {
 
         if ((clientfd = accept(server_socket_chiper, NULL, NULL)) > 1) {
 
-        } else if ( (clientfd = accept(server_socket, NULL, NULL)) > 1 ) {
+        } else if ((clientfd = accept(server_socket, NULL, NULL)) > 1 ) {
 
         } else {
             continue;
@@ -142,6 +142,7 @@ void* process_routine (void *arg) {
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
 
+            free_http_header(http_h);
             close_socket(clientfd);
             break;
         }

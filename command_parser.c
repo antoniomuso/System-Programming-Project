@@ -363,9 +363,10 @@ http_header parse_http_header_response(const char *data, int data_len) {
     http_header http_h = {0} ;
     http_h.is_request = 0;
     // Copy of date
-    char * data_copy = malloc(data_len);
+    char * data_copy = malloc(data_len+1);
     http_h.pointer_to_free = data_copy;
     memcpy(data_copy, data, data_len);
+    data_copy[data_len] = '\0';
 
     char * token;
     char * sub_token;
@@ -407,9 +408,10 @@ http_header parse_http_header_request (const char* data, int data_len) {
     http_header http_h = {0};
     http_h.is_request = 1;
     // Copy of date
-    char * data_copy = malloc(data_len);
+    char * data_copy = malloc(data_len+1);
     http_h.pointer_to_free = data_copy;
     memcpy(data_copy, data, data_len);
+    data_copy[data_len] = '\0';
 
     char * token;
     char * sub_token;
