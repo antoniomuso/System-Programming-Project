@@ -4,12 +4,13 @@
 #include <stddef.h>
 #include "b64.c/b64.h"
 
-
+#include "signals.h"
 #include "command_parser.h"
 #include "server.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define BUFF_READ_LEN 8000
 
 #ifdef __unix__
@@ -262,6 +263,8 @@ int run_server(options *c_options, options *f_options) {
             pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
         }
 
+        set_signal_handler(tid, sizeof(pthread_t), n_proc-1, 0);
+
         free_options(c_options);
         free_options(f_options);
 
@@ -282,6 +285,7 @@ int run_server(options *c_options, options *f_options) {
             int pid = fork();
             if (pid > 0) {
                 pids[i] = pid;
+                printf("fork pid: %d\n",pid);
             } else if (pid == 0) {
                 free_options(c_options);
                 free_options(f_options);
@@ -293,7 +297,7 @@ int run_server(options *c_options, options *f_options) {
             }
 
         }
-
+        set_signal_handler(pids, sizeof(int), n_proc-1, 1);
         free_options(c_options);
         free_options(f_options);
 
@@ -425,8 +429,10 @@ int run_server(options *c_options, options *f_options) {
 
 
 #endif
-
-    process_routine((void *) sock_pointer);
+    close_socket(server_socket);
+    close_socket(server_socket_cipher);
+    //process_routine((void *) sock_pointer);
+    while(1){}
 
 }
 

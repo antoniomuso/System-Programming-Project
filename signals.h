@@ -4,9 +4,10 @@
 
 #ifndef SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
 #define SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
-
-void set_signal_handler(void *arr_proc, int arr_len, int mod);
-
 #include "command_parser.h"
+
+void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
+
+
 
 #endif //SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
