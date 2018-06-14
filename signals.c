@@ -64,7 +64,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     return i;
 }
 
-void set_signal_handler(void *arr_proc, int arr_len);
+void set_signal_handler(void *arr_proc, int arr_len, int mod);
 
 
 
