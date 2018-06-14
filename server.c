@@ -153,7 +153,7 @@ int w_process_routine (void *arg) {
     return 0;
 }
 
-int run_server(options *c_opt, options *f_opt) {
+int run_server(options *c_options, options *f_options) {
 
 #if _WIN32
     WSADATA wsa;
@@ -168,11 +168,6 @@ int run_server(options *c_opt, options *f_opt) {
     printf("Initialised.\n");
 
 #endif
-    //if (c_opt == NULL)
-    options c_options = *c_opt;
-    options f_options = *f_opt;
-
-
     struct addrinfo *addr_info;
     struct addrinfo *addr_info_chipher;
 
