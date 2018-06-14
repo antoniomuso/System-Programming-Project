@@ -11,6 +11,7 @@
 #ifdef __unix__
 #include <signal.h>
 #elif _WIN32
+#include <windows.h>
 #endif
 
 void * arr_process; // array of process
@@ -97,6 +98,8 @@ void set_signal_handler(void *arr_proc, int arr_len) {
 
 }
 #elif _WIN32
+
+
 
 
 #endif

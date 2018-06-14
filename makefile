@@ -21,7 +21,7 @@ endif
 
 
 
-main: b64.c/decode.o b64.c/encode.o command_parser.o server.o windows_process_exe main.o
+main: b64.c/decode.o b64.c/encode.o command_parser.o server.o signals.o windows_process_exe main.o
 	${CC} server.o command_parser.o main.o -o main ${OPTIONS}
 
 main.o: main.c
@@ -42,5 +42,7 @@ b64.c/encode.o: ./b64.c/encode.c
 windows_process_exe: windows_process_exe.c
 	${CC} command_parser.o server.o windows_process_exe.c -o windows_process_exe.o ${OPTIONS}
 
+signals.o: signals.c
+	${CC} -c command_parser.o server.o signals.c -o signals.o ${OPTIONS}
 clean:
 	$(RM) $(TARGET)
