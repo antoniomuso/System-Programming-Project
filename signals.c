@@ -15,6 +15,8 @@
 #endif
 
 void * arr_process; // array of process
+int len = 0;
+int mode = 0;
 
 
 int infanticide(void *children_array, int len, int mode, int exit_code) {
@@ -70,14 +72,17 @@ void set_signal_handler(void *arr_proc, int arr_len);
 
 #ifdef __unix__
 void handle_signal(int signal) {
-    infanticide(arr_process);
+    infanticide(arr_process, len, mode, SIGKILL);
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
     run_server(NULL, &fopt);
 }
 
-void set_signal_handler(void *arr_proc, int arr_len) {
+void set_signal_handler(void *arr_proc, int arr_len, int mod) {
     arr_process = arr_proc;
+    mode = mod;
+    len = arr_len;
+
     struct sigaction sa;
     // Print pid, so that we can send signals from other shells
     printf("My pid is: %d\n", getpid());

@@ -5,7 +5,7 @@
 #ifndef SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
 #define SYSTEM_PROGRAMMING_PROJECT_SIGNALS_H
 
-void set_signal_handler(void *arr_proc, int arr_len);
+void set_signal_handler(void *arr_proc, int arr_len, int mode);
 
 
 
