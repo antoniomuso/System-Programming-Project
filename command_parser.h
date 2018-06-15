@@ -10,6 +10,8 @@
 
 #define MAX_HTTP_FIELD_LEN 60
 
+#define ATTRIBUTES_NUMBER 5
+
 struct command_arc {
     char name[MAX_OPTION_LEN];
     char type[8]; // Accepted types are: int, str, null, float
@@ -53,7 +55,12 @@ struct http_header {
 };
 typedef struct http_header http_header;
 
-
+struct http_response {
+    http_header header;
+    char *response_type; //File, String (in case of listing the content of a directory), ...
+    char *response;
+};
+typedef struct http_response http_response;
 
 char* get_command_value (char command[], options *opt);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);

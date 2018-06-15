@@ -364,7 +364,7 @@ http_header parse_http_header_response(const char *data, int data_len) {
 
     http_header http_h = {0} ;
     http_h.is_request = 0;
-    // Copy of date
+    // Copy of data
     char * data_copy = malloc(data_len+1);
     http_h.pointer_to_free = data_copy;
     memcpy(data_copy, data, data_len);
@@ -455,6 +455,36 @@ http_header parse_http_header_request (const char* data, int data_len) {
     http_h = http_attribute_parser(http_h, ext_pointer);
 
     return http_h;
+}
+
+
+http_response create_http_response(int resp_code, char *req_type, char *dest, char *protocol_type, http_attribute attr, char *resp_type, char *resp, int resp_len) {
+    http_response http_r = {0};
+    http_header http_h = {0};
+    http_h.is_request = 0;
+
+
+    http_h.code_response = resp_code;
+    http_h.type_req = req_type;
+    http_h.url = dest;
+    http_h.protocol_type = "HTTP/1.0";
+
+    //Uso operatore Elvis per rendere più semplici modifiche future (es: mettere "" invece di NULL)
+    for (int i = 0; i < ATTRIBUTES_NUMBER; i++) {
+        http_h.attribute.user_agent = attr.user_agent == NULL ? NULL : attr.user_agent;
+        http_h.attribute.authorization = attr.authorization == NULL ? NULL : attr.authorization;
+        http_h.attribute.connection = attr.connection == NULL ? NULL : attr.connection;
+        http_h.attribute.content_length = attr.content_length;
+        http_h.attribute.content_type = attr.content_type == NULL ? NULL : attr.content_type;
+    }
+
+    http_r.header = http_h;
+    http_r.response_type = resp_type;
+    http_r.response = resp;
+
+    //http_h.pointer_to_free = resp;
+
+    return http_r;
 }
 
 void free_http_header(http_header http_h) {

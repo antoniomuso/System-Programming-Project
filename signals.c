@@ -85,6 +85,7 @@ void handle_signal(int signal) {
     options fopt = parse_file("config.txt", confs, 4);
 
     // TODO: La run server non va lanciata da qua. Dobbiamo fare in modo che qui venga cambiato un flag al padre che gli fa rilanciare tutto.
+            //Idea: Mettere il padre in while(1) per controllare il flag (oppure controllarlo periodicamente)
     run_server(NULL, &fopt);
 }
 
