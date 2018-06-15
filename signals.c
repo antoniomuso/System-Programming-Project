@@ -89,6 +89,20 @@ void handle_signal(int signal) {
     run_server(NULL, &fopt);
 }
 
+
+#elif _WIN32
+BOOL ctrl_handler(DWORD ctrl_type) {
+    if (ctrl_type == CTRL_BREAK_EVENT) { // CTRL+Break triggers the operation
+        infanticide(arr_process, len, mode, 0);
+        command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
+        options fopt = parse_file("config.txt", confs, 4);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+#endif
+
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
 
     arr_process = calloc(arr_len, type_size);
@@ -97,6 +111,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
 
     memcpy(arr_process,arr_proc,arr_len*type_size);
 
+#ifdef __unix__
     struct sigaction sa;
 
     printf("proc id: %d\n", getpid());
@@ -115,10 +130,11 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
         exit(EXIT_FAILURE);
     }
 
-}
 #elif _WIN32
-
-
-
-
+    if( !(SetConsoleCtrlHandler( (PHANDLER_ROUTINE) ctrl_handler, TRUE )) ) {
+        fprintf(stderr,"Error: couldn't set control handler"); // Should not happen
+        exit(EXIT_FAILURE);
+    }
 #endif
+
+}
