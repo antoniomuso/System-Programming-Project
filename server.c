@@ -146,10 +146,6 @@ void* process_routine (void *arg) {
             fflush(stdout);
 
 
-
-
-
-
             free_http_header(http_h);
             close_socket(clientfd);
             break;
