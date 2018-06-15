@@ -23,6 +23,9 @@ void * arr_process = NULL; // array of process
 int len = 0;
 int mode = 0;
 
+int flag_restart = 0;
+
+
 
 int infanticide(void *children_array, int len, int mode, int exit_code) {
     /**
@@ -81,12 +84,13 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 void handle_signal(int signal) {
 
     infanticide(arr_process, len, mode, SIGKILL);
-    command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
-    options fopt = parse_file("config.txt", confs, 4);
+
+    flag_restart = 1;
 
     // TODO: La run server non va lanciata da qua. Dobbiamo fare in modo che qui venga cambiato un flag al padre che gli fa rilanciare tutto.
             //Idea: Mettere il padre in while(1) per controllare il flag (oppure controllarlo periodicamente)
-    run_server(NULL, &fopt);
+    //run_server(NULL, &fopt);
+
 }
 
 

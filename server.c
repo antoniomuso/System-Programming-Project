@@ -432,10 +432,16 @@ int run_server(options *c_options, options *f_options) {
 
 
 #endif
-    //close_socket(server_socket);
-    //close_socket(server_socket_cipher);
+
     //process_routine((void *) sock_pointer);
-    while(1){}
+    while(flag_restart == 0) {}
+
+    flag_restart = 0;
+
+    close_socket(server_socket);
+    close_socket(server_socket_cipher);
+    return 0;
+
 
 }
 
