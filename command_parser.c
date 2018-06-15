@@ -124,7 +124,7 @@ char* get_command_value (char command[], options *opt) {
 }
 
 void free_options (options *opt) {
-    free(opt->commands);
+    if (opt != NULL) free(opt->commands);
 }
 /**
  *

@@ -106,6 +106,7 @@ BOOL ctrl_handler(DWORD ctrl_type) {
         command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
         options fopt = parse_file("config.txt", confs, 4);
 
+        flag_restart = 1;
         return TRUE;
     }
     return FALSE;

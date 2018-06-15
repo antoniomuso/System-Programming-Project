@@ -84,8 +84,8 @@ int main(int argc, char *argv[]) {
 
     while (run_server(p_opt, p_fopt) == 0) {
         fopt = parse_file("config.txt", confs, 4);
-        p_fopt = &fopt;
 
+        p_fopt = &fopt;
         p_opt = NULL;
     }
 

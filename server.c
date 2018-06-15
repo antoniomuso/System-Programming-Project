@@ -432,14 +432,16 @@ int run_server(options *c_options, options *f_options) {
 
 
 #endif
+    printf("End\n");
+    fflush(stdout);
 
     //process_routine((void *) sock_pointer);
     while(flag_restart == 0) {}
-
     flag_restart = 0;
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);
+    sleep(2);
     return 0;
 
 
