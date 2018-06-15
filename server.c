@@ -324,7 +324,7 @@ int run_server(options *c_options, options *f_options) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
 
-        //set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc-1, 0);
+        set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc-1, 0);
         free_options(c_options);
         free_options(f_options);
 

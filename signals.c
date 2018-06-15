@@ -101,6 +101,7 @@ BOOL ctrl_handler(DWORD ctrl_type) {
         infanticide(arr_process, len, mode, 0);
         command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
         options fopt = parse_file("config.txt", confs, 4);
+
         return TRUE;
     }
     return FALSE;
