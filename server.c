@@ -252,7 +252,7 @@ int run_server(options *c_options, options *f_options) {
         printf("mode = MT\n");
         fflush(stdout);
 
-        pthread_t tid[n_proc - 1];
+        pthread_t tid[n_proc ];
 
         int sockets[2];
         sockets[0] = server_socket;
@@ -260,11 +260,11 @@ int run_server(options *c_options, options *f_options) {
 
         sock_pointer = sockets;
 
-        for (int i = 0; i < n_proc - 1; i++) {
+        for (int i = 0; i < n_proc ; i++) {
             pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
         }
 
-        set_signal_handler(tid, sizeof(pthread_t), n_proc-1, 0);
+        set_signal_handler(tid, sizeof(pthread_t), n_proc, 0);
 
         free_options(c_options);
         free_options(f_options);
@@ -274,7 +274,7 @@ int run_server(options *c_options, options *f_options) {
         printf("mode = MP\n");
         fflush(stdout);
 
-        int pids[n_proc - 1];
+        int pids[n_proc ];
 
         int sockets[2];
         sockets[0] = server_socket;
@@ -282,7 +282,7 @@ int run_server(options *c_options, options *f_options) {
 
         sock_pointer = sockets;
 
-        for (int i = 0; i < n_proc-1; i++) {
+        for (int i = 0; i < n_proc; i++) {
             int pid = fork();
             if (pid > 0) {
                 pids[i] = pid;
@@ -298,7 +298,7 @@ int run_server(options *c_options, options *f_options) {
             }
 
         }
-        set_signal_handler(pids, sizeof(int), n_proc-1, 1);
+        set_signal_handler(pids, sizeof(int), n_proc, 1);
         free_options(c_options);
         free_options(f_options);
 
@@ -311,8 +311,8 @@ int run_server(options *c_options, options *f_options) {
 
 
     if (strcmp(mode, "MT") == 0) {
-        HANDLE hThreadArray[n_proc-1];
-        DWORD dwThreadArray[n_proc-1];
+        HANDLE hThreadArray[n_proc];
+        DWORD dwThreadArray[n_proc];
 
         int sockets[2];
         sockets[0] = server_socket;
@@ -320,11 +320,11 @@ int run_server(options *c_options, options *f_options) {
 
         sock_pointer = sockets;
 
-        for (int i = 0; i < n_proc-1; i++) {
+        for (int i = 0; i < n_proc; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
 
-        set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc-1, 0);
+        set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
         free_options(c_options);
         free_options(f_options);
 
@@ -344,11 +344,11 @@ int run_server(options *c_options, options *f_options) {
         STARTUPINFO startup_info = {0};
         PROCESS_INFORMATION proc_info = {0};
 
-        HANDLE children_handle[n_proc-1];
+        HANDLE children_handle[n_proc];
 
         char *pipe_n = "\\\\.\\pipe\\testpipe";
 
-        for (int i = 0; i < n_proc-1; i++) {
+        for (int i = 0; i < n_proc; i++) {
 
             snprintf(buff, buf_size, "%d", i);
 
@@ -413,7 +413,7 @@ int run_server(options *c_options, options *f_options) {
             fflush(stdout);
         }
 
-        set_signal_handler(children_handle, sizeof(HANDLE), n_proc-1, 1);
+        set_signal_handler(children_handle, sizeof(HANDLE), n_proc, 1);
         free_options(c_options);
         free_options(f_options);
 
@@ -436,7 +436,14 @@ int run_server(options *c_options, options *f_options) {
     fflush(stdout);
 
     //process_routine((void *) sock_pointer);
-    while(flag_restart == 0) {}
+    while(flag_restart == 0) {
+#ifdef __unix__
+        sleep(1);
+#elif _WIN32
+        Sleep(1000);
+#endif
+
+    }
     flag_restart = 0;
 
     close_socket(server_socket);
