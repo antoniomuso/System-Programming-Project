@@ -431,6 +431,7 @@ http_header parse_http_header_response(const char *data, int data_len) {
                         || ((sub_token = strtok_r(token, element_separator, &in_pointer)) == NULL)
                         || (strcmp("HTTP/1.1", sub_token) != 0 && strcmp("HTTP/1.0", sub_token) != 0) ) {
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
@@ -441,6 +442,7 @@ http_header parse_http_header_response(const char *data, int data_len) {
     if ( ((sub_token = strtok_r(NULL, element_separator, &in_pointer)) == NULL)
                         || (http_h.code_response = atoi(sub_token)) == 0) {
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
@@ -475,6 +477,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
                     || (strcmp(sub_token,"GET") != 0 && strcmp(sub_token,"PUT") != 0) ) {
 
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
@@ -482,6 +485,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     if ((sub_token = strtok_r(NULL, element_separator, &in_pointer)) == NULL) {
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
@@ -489,6 +493,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     if ((sub_token = strtok_r(NULL, element_separator, &in_pointer)) == NULL) {
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
@@ -496,6 +501,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     if (strcmp("HTTP/1.1", http_h.protocol_type) != 0 && strcmp("HTTP/1.0", http_h.protocol_type) != 0) {
         http_h.is_request = -1;
+        free(data_copy);
         return http_h;
     }
 
