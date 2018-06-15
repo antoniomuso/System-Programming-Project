@@ -71,6 +71,7 @@ void* process_routine (void *arg) {
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
+    printf("%d %d \n", server_socket, server_socket_chiper);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
@@ -323,6 +324,7 @@ int run_server(options *c_options, options *f_options) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
         }
 
+        //set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc-1, 0);
         free_options(c_options);
         free_options(f_options);
 
@@ -411,6 +413,7 @@ int run_server(options *c_options, options *f_options) {
             fflush(stdout);
         }
 
+        set_signal_handler(children_handle, sizeof(HANDLE), n_proc-1, 1);
         free_options(c_options);
         free_options(f_options);
 
@@ -429,8 +432,8 @@ int run_server(options *c_options, options *f_options) {
 
 
 #endif
-    close_socket(server_socket);
-    close_socket(server_socket_cipher);
+    //close_socket(server_socket);
+    //close_socket(server_socket_cipher);
     //process_routine((void *) sock_pointer);
     while(1){}
 
