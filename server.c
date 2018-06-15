@@ -441,7 +441,11 @@ int run_server(options *c_options, options *f_options) {
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);
+#ifdef __unix__
     sleep(2);
+#elif _WIN32
+    Sleep(2000);
+#endif
     return 0;
 
 
