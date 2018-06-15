@@ -266,9 +266,6 @@ int run_server(options c_options, options f_options) {
 
         set_signal_handler(tid, sizeof(pthread_t), n_proc, 0);
 
-        free_options(c_options);
-        free_options(f_options);
-
     } else if (strcmp(mode, "MP") == 0) {
         //TODO Riordarsi di uccidere i figli quando finiscono o in caso di fallimento di qualsiasi operazione.
         printf("mode = MP\n");
@@ -299,8 +296,6 @@ int run_server(options c_options, options f_options) {
 
         }
         set_signal_handler(pids, sizeof(int), n_proc, 1);
-        free_options(c_options);
-        free_options(f_options);
 
     } else {
         fprintf(stderr, "Error invalid mode");
@@ -325,8 +320,6 @@ int run_server(options c_options, options f_options) {
         }
 
         set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
-        free_options(c_options);
-        free_options(f_options);
 
     } else if (strcmp(mode, "MP") == 0) {
         /**
@@ -414,8 +407,6 @@ int run_server(options c_options, options f_options) {
         }
 
         set_signal_handler(children_handle, sizeof(HANDLE), n_proc, 1);
-        free_options(c_options);
-        free_options(f_options);
 
         int server_socket_arr[2];
         server_socket_arr[0] = server_socket;
@@ -432,8 +423,11 @@ int run_server(options c_options, options f_options) {
 
 
 #endif
-    printf("End\n");
+    printf("Father is entering in Loop\n");
     fflush(stdout);
+
+    free_options(c_options);
+    free_options(f_options);
 
     //process_routine((void *) sock_pointer);
     while(flag_restart == 0) {

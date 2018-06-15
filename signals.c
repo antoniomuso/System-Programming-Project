@@ -130,7 +130,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
     sa.sa_flags = SA_RESTART;
 
     // Block every signal during the handler
-    //sigfillset(&sa.sa_mask);
+    sigfillset(&sa.sa_mask);
 
     if (sigaction(SIGHUP, &sa, NULL) == -1) {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
