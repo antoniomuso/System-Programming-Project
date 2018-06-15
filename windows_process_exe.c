@@ -1,3 +1,5 @@
+#include "stddef.h"
+#include "b64.c/b64.h"
 #include "command_parser.h"
 #include "server.h"
 

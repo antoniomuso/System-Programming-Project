@@ -1,8 +1,6 @@
 //
 // Created by anotoniomusolino on 31/05/18.
 //
-#include <stddef.h>
-#include "b64.c/b64.h"
 
 #include "signals.h"
 #include "command_parser.h"
@@ -140,9 +138,17 @@ void* process_routine (void *arg) {
             }
             if (http_h.attribute.authorization != NULL) {
                 printf("Auth: %s\n", http_h.attribute.authorization);
+                authorization auth = parse_authorization(http_h.attribute.authorization);
+                printf("name: %s, password: %s", auth.name, auth.password);
+                free(auth.free_pointer);
             }
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
+
+
+
+
+
 
             free_http_header(http_h);
             close_socket(clientfd);

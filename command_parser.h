@@ -1,6 +1,9 @@
 //
 // Created by anotoniomusolino on 02/06/18.
 //
+#include <stddef.h>
+#include "b64.c/b64.h"
+
 
 #ifndef SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 #define SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
@@ -61,6 +64,16 @@ struct http_response {
     char *response;
 };
 typedef struct http_response http_response;
+
+struct authorization {
+    char  * name;
+    char * password;
+    char * free_pointer;
+};
+
+typedef struct authorization authorization;
+
+authorization parse_authorization (const char * src);
 
 char* get_command_value (char command[], options opt);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);

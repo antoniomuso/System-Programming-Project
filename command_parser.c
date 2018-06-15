@@ -126,6 +126,50 @@ char* get_command_value (char command[], options opt) {
 void free_options (options opt) {
     free(opt.commands);
 }
+
+/**
+ *
+ * @param src on form: Basic am9lYjp4eDEyMw==
+ * @param res Struct: Username, Password
+ */
+authorization parse_authorization (const char * src) {
+    char buff[strlen(src)];
+    strcpy(buff,src);
+
+    authorization auth;
+    auth.free_pointer = NULL;
+
+    char * pointer;
+    char * token = NULL;
+    if ( ((token = strtok_r(buff, " ", &pointer)) == NULL)
+            || ((token = strtok_r(NULL, " ", &pointer)) == NULL)) {
+        return auth;
+    }
+
+
+    unsigned char * decode = b64_decode(token, strlen(token));
+
+    if (decode == NULL) return auth;
+
+    pointer = NULL;
+
+    if ( ((token = strtok_r(decode, ":", &pointer)) == NULL)) {
+        free(decode);
+        return auth;
+    }
+    auth.name = token;
+
+    if ( ((token = strtok_r(NULL, ":", &pointer)) == NULL)) {
+        free(decode);
+        return auth;
+    }
+    auth.password = token;
+
+    auth.free_pointer = decode;
+
+    return auth;
+}
+
 /**
  *
  * @param argc
@@ -314,6 +358,8 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
     return ret;
 }
+
+
 
 http_header http_attribute_parser (http_header http_h, char* data_attr) {
     char attr_separator[] = ":";
