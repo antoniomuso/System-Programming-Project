@@ -62,11 +62,11 @@ struct http_response {
 };
 typedef struct http_response http_response;
 
-char* get_command_value (char command[], options *opt);
+char* get_command_value (char command[], options opt);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);
 
 options parse_file(char *name, command_arc cmd_arc[], int arc_len);
-void free_options(options *opt);
+void free_options(options opt);
 http_header parse_http_header_request (const char* data, int data_len);
 http_header parse_http_header_response(const char *data, int data_len);
 void free_http_header(http_header http_h);

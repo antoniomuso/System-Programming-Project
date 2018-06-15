@@ -8,7 +8,6 @@
 #include "server.h"
 #include <errno.h>
 #include <string.h>
-#include "command_parser.h"
 
 #ifdef __unix__
 
@@ -101,10 +100,7 @@ BOOL ctrl_handler(DWORD ctrl_type) {
     if (ctrl_type == CTRL_BREAK_EVENT) { // CTRL+Break triggers the operation
         printf("entering handler for %d \n", ctrl_type);
         fflush(stdout);
-
         infanticide(arr_process, len, mode, 0);
-        command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
-        options fopt = parse_file("config.txt", confs, 4);
 
         flag_restart = 1;
         return TRUE;

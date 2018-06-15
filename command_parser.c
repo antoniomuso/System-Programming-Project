@@ -112,19 +112,19 @@ cont:
  * @return NULL if command isn't contained inside options,
  *         Pointer to a string that it contain the command value.
  */
-char* get_command_value (char command[], options *opt) {
-    if (opt == NULL) return NULL;
+char* get_command_value (char command[], options opt) {
+    if (opt.commands == NULL) return NULL;
 
-    for (int i = 0; i < opt->comm_len; i++) {
-        if (strcmp(opt->commands[i].name, command) == 0) {
-            return opt->commands[i].value;
+    for (int i = 0; i < opt.comm_len; i++) {
+        if (strcmp(opt.commands[i].name, command) == 0) {
+            return opt.commands[i].value;
         }
     }
     return NULL;
 }
 
-void free_options (options *opt) {
-    if (opt != NULL) free(opt->commands);
+void free_options (options opt) {
+    free(opt.commands);
 }
 /**
  *

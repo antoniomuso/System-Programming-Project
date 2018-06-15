@@ -31,8 +31,6 @@ int main(int argc, char *argv[]) {
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
 
-    options *p_fopt = &fopt;
-    options *p_opt = &opt;
 
 
 #ifdef __unix__
@@ -82,11 +80,9 @@ int main(int argc, char *argv[]) {
     printf("Windows\n");
 #endif
 
-    while (run_server(p_opt, p_fopt) == 0) {
+    while (run_server(opt, fopt) == 0) {
         fopt = parse_file("config.txt", confs, 4);
-
-        p_fopt = &fopt;
-        p_opt = NULL;
+        opt.commands = NULL;
     }
 
     return 1;

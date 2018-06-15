@@ -155,7 +155,7 @@ int w_process_routine (void *arg) {
     return 0;
 }
 
-int run_server(options *c_options, options *f_options) {
+int run_server(options c_options, options f_options) {
 
 #if _WIN32
     WSADATA wsa;
