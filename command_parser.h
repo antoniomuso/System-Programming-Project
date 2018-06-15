@@ -58,13 +58,6 @@ struct http_header {
 };
 typedef struct http_header http_header;
 
-struct http_response {
-    http_header header;
-    char *response_type; //File, String (in case of listing the content of a directory), ...
-    char *response;
-};
-typedef struct http_response http_response;
-
 struct authorization {
     char  * name;
     char * password;
@@ -82,6 +75,8 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len);
 void free_options(options opt);
 http_header parse_http_header_request (const char* data, int data_len);
 http_header parse_http_header_response(const char *data, int data_len);
+
+char *create_http_response(int response_code, int content_len, int content_type, char *location);
 void free_http_header(http_header http_h);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 

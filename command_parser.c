@@ -104,6 +104,7 @@ cont:
 }
 #endif
 
+#define MAX_BUFF_LEN 4000
 
 /**
  *
@@ -503,34 +504,67 @@ http_header parse_http_header_request (const char* data, int data_len) {
     return http_h;
 }
 
+char *code_to_message(int code) {
+    switch (code){
+        case 100:
+            return "Continue";
+        case 200:
+            return "OK";
+        case 201:
+            return "Created";
+        case 202:
+            return "Accepted";
+        case 204:
+            return "No Content";
+        case 205:
+            return "Reset Content";
+        case 206:
+            return "Partial Content";
+        case 302:
+            return "Found";
+        case 400:
+            return "Bad Request";
+        case 401:
+            return "Unauthorized";
+        case 403:
+            return "Forbidden";
+        case 404:
+            return "Not Found";
+        case 500:
+            return "Internal Server Error";
+        case 501:
+            return "Not Implemented";
+    }
+}
 
-http_response create_http_response(int resp_code, char *req_type, char *dest, char *protocol_type, http_attribute attr, char *resp_type, char *resp, int resp_len) {
-    http_response http_r = {0};
-    http_header http_h = {0};
-    http_h.is_request = 0;
+char *create_http_response(int response_code, int content_len, int content_type, char *location) {
+    //NB: Still need to handle the translation of content_type
+    char *response = calloc(MAX_BUFF_LEN, 1);
 
-
-    http_h.code_response = resp_code;
-    http_h.type_req = req_type;
-    http_h.url = dest;
-    http_h.protocol_type = "HTTP/1.0";
-
-    //Uso operatore Elvis per rendere più semplici modifiche future (es: mettere "" invece di NULL)
-    for (int i = 0; i < ATTRIBUTES_NUMBER; i++) {
-        http_h.attribute.user_agent = attr.user_agent == NULL ? NULL : attr.user_agent;
-        http_h.attribute.authorization = attr.authorization == NULL ? NULL : attr.authorization;
-        http_h.attribute.connection = attr.connection == NULL ? NULL : attr.connection;
-        http_h.attribute.content_length = attr.content_length;
-        http_h.attribute.content_type = attr.content_type == NULL ? NULL : attr.content_type;
+    char *content = "";
+    if (content_len != -1) {
+        content = calloc(MAX_BUFF_LEN, 1);
+        snprintf(content, MAX_BUFF_LEN, "Accept-Ranges: bytes\r\nContent-Length: %d\r\nContent Type: %d\r\n",
+                 content_len, content_type);
     }
 
-    http_r.header = http_h;
-    http_r.response_type = resp_type;
-    http_r.response = resp;
+    char *loc = "";
+    if (location != NULL) {
+        loc = calloc(MAX_BUFF_LEN, 1);
+        snprintf(loc, MAX_BUFF_LEN, "Location: %s\r\n", location);
+    }
 
-    //http_h.pointer_to_free = resp;
+    unsigned int len = snprintf(response, MAX_BUFF_LEN, "HTTP/1.0 %d %s\r\n"
+                                     "%s%s", response_code, code_to_message(response_code), content, loc);
 
-    return http_r;
+    char *final_response = calloc(MAX_BUFF_LEN, 1);
+    strncpy(final_response, response, len); //This way, final_response should not be null-terminated.
+
+    free(content);
+    free(loc);
+    free(response);
+
+    return final_response;
 }
 
 void free_http_header(http_header http_h) {
