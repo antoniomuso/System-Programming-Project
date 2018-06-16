@@ -27,19 +27,16 @@
 
 
 #elif _WIN32
-
+#define getpid GetProcessId
 # undef  _WIN32_WINNT
 # define _WIN32_WINNT _WIN32_WINNT_WINXP
 # undef  WINVER
 # define WINVER       _WIN32_WINNT_WINXP
 
-
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
 #include <windows.h>
-
-#define getpid GetCurrentProcessId
 #endif
 
 
@@ -73,7 +70,7 @@ void* process_routine (void *arg) {
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
-    printf("%d %d \n", server_socket, server_socket_chiper);
+    //printf("%d %d \n", server_socket, server_socket_chiper);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
     char * buffer = malloc(BUFF_READ_LEN);
@@ -104,7 +101,6 @@ void* process_routine (void *arg) {
         } else {
             continue;
         }
-
 
         printf("Pid Accept Request: %d\n",getpid());
         printf("Client Connect\n");
