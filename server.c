@@ -70,6 +70,8 @@ void* process_routine (void *arg) {
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
+    options credentials = parse_file("passwordFile.txt", NULL, 0);
+
     //printf("%d %d \n", server_socket, server_socket_chiper);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
@@ -153,12 +155,28 @@ void* process_routine (void *arg) {
                 free(resp);
                 break;
             }
+            // gestire la richiesta se authorization è NULL con una risposta 401
             if (http_h.attribute.authorization != NULL) {
                 printf("Auth: %s\n", http_h.attribute.authorization);
                 authorization auth = parse_authorization(http_h.attribute.authorization);
-                printf("name: %s, password: %s", auth.name, auth.password);
+                printf("name: %s, password: %s\n", auth.name, auth.password);
+
+                if (strlen(auth.name) < MAX_OPTION_LEN
+                    && strlen(auth.password) < MAX_OPTION_LEN
+                    && contains(auth.name,auth.password,credentials) == 1 ) {
+
+                    printf("Credentials correct\n");
+                } else {
+                    printf("Credentials mismatch\n");
+                    char *resp = create_http_response(401,0,NULL,NULL);
+                    send(clientfd,resp,strlen(resp),0);
+                    close_socket(clientfd);
+                    break;
+                }
+
                 free(auth.free_pointer);
             }
+
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
 

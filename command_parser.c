@@ -142,6 +142,16 @@ char* get_command_value (char command[], options opt) {
     return NULL;
 }
 
+int contains (const char name[MAX_OPTION_LEN],const char value[MAX_OPTION_LEN], options opt) {
+    for (int i = 0; i < opt.comm_len; i++ ) {
+        if (strcmp(opt.commands[i].name, name) == 0
+            && strcmp(opt.commands[i].value , value) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void free_options (options opt) {
     free(opt.commands);
 }
@@ -308,7 +318,7 @@ command extract_command(char *string) {
     exit(EXIT_FAILURE);
 }
 
-options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
+options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     /**
      * Parses a file following the chosen format.
      */
@@ -334,15 +344,39 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
     char * pointer = NULL;
 
-    char *lines = strtok_r(buff, "\n", &pointer);
+    int len = 20;
 
-    command* comm = calloc(sizeof(command), arc_len);
+    command* comm = calloc(sizeof(command), len);
 
-    for (int k = 0; k < arc_len; k++) {
+    char * p = buff;
+
+    char * lines;
+
+    int k = 0;
+    while ((lines = strtok_r(p, "\n", &pointer)) != NULL) {
+        p = NULL;
         command cmd = extract_command(lines);
 
+        if (k >= len) {
+            len+= REALLOC_INC_SIZE;
+            comm = (command*) realloc(comm, sizeof(command) * len);
+
+            if (comm == NULL) {
+                fprintf(stderr,"Realloc Failed\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        if (cmd_arc == NULL){
+            strcpy(comm[k].value, cmd.value);
+            strcpy(comm[k].name, cmd.name);
+            k++;
+            continue;
+        }
+
         for (int j = 0; j < arc_len; j++) {
-            if (strcmp(cmd_arc[j].name, cmd.name) == 0) {
+
+             if (strcmp(cmd_arc[j].name, cmd.name) == 0) {
                 strcpy(comm[k].name, cmd.name);
 
                 if (strcmp(cmd_arc[j].type, "null") == 0) {
@@ -367,14 +401,12 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
             }
         }
-        if ((lines = strtok_r(NULL, "\n", &pointer)) == NULL) {
-            break;
-        }
+        k++;
     }
     free(buff);
 
     options ret;
-    ret.comm_len = arc_len;
+    ret.comm_len = k;
     ret.commands = comm;
 
     return ret;
