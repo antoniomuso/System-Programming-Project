@@ -246,6 +246,8 @@ int run_server(options c_options, options f_options) {
     printf("Server chiper listening on %s:%s\n", server_ip, chiper_port);
     fflush(stdout);
 
+    create_http_response(200, 0, -1, "/ciao/ototot");
+
     int *sock_pointer = NULL;
 
 #ifdef __unix__

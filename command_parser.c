@@ -6,6 +6,24 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+
+
+#ifdef _WIN32
+#include <windows.h>
+
+#elif __unix__
+#include <linux/limits.h>
+
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+
+
 //#ifdef _WIN32
 #ifndef strtok_r
 /*-
@@ -545,6 +563,12 @@ char *code_to_message(int code) {
 
 char *create_http_response(int response_code, int content_len, int content_type, char *location) {
     //NB: Still need to handle the translation of content_type
+
+    // Max path len
+    if (strlen(location) > PATH_MAX) {
+        return NULL;
+    }
+
     char *response = calloc(MAX_BUFF_LEN, 1);
 
     char *content = "";
@@ -564,7 +588,7 @@ char *create_http_response(int response_code, int content_len, int content_type,
                                      "%s%s", response_code, code_to_message(response_code), content, loc);
 
     char *final_response = calloc(MAX_BUFF_LEN, 1);
-    strncpy(final_response, response, len); //This way, final_response should not be null-terminated.
+    memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
 
     free(content);
     free(loc);
