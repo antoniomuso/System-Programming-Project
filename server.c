@@ -22,6 +22,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 
@@ -98,9 +100,12 @@ void* process_routine (void *arg) {
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
 
-        if ((clientfd = accept(server_socket_chiper, NULL, NULL)) > 1) {
+        struct sockaddr_in s_addr;
+        size_t addr_len = sizeof(s_addr);
 
-        } else if ((clientfd = accept(server_socket, NULL, NULL)) > 1 ) {
+        if ((clientfd = accept(server_socket_chiper,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1) {
+
+        } else if ((clientfd = accept(server_socket,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1 ) {
 
         } else {
             continue;
@@ -109,6 +114,9 @@ void* process_routine (void *arg) {
         printf("Pid Accept Request: %d\n",getpid());
         printf("Client Connect\n");
         fflush(stdout);
+
+        printf("%s\n",inet_ntoa(s_addr.sin_addr));
+
 
         set_blocking(clientfd, 1);
 
@@ -157,6 +165,7 @@ void* process_routine (void *arg) {
                 free(resp);
                 break;
             }
+
             // gestire la richiesta se authorization è NULL con una risposta 401
             if (http_h.attribute.authorization != NULL) {
                 printf("Auth: %s\n", http_h.attribute.authorization);
