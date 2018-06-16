@@ -27,7 +27,7 @@
 
 
 #elif _WIN32
-#define getpid GetProcessId
+
 # undef  _WIN32_WINNT
 # define _WIN32_WINNT _WIN32_WINNT_WINXP
 # undef  WINVER
@@ -37,6 +37,8 @@
 #include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
 #include <windows.h>
+
+#define getpid GetCurrentProcessId
 #endif
 
 
