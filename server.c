@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define BUFF_READ_LEN 8000
-
+#define MAX_READ_COUNTER 2
 #ifdef __unix__
 
 #include <netdb.h>
@@ -27,6 +27,7 @@
 
 
 #elif _WIN32
+#define getpid GetProcessId
 # undef  _WIN32_WINNT
 # define _WIN32_WINNT _WIN32_WINNT_WINXP
 # undef  WINVER
@@ -101,6 +102,11 @@ void* process_routine (void *arg) {
             continue;
         }
 
+
+        printf("Pid Accept Request: %d\n",getpid());
+        printf("Client Connect\n");
+        fflush(stdout);
+
         set_blocking(clientfd, 1);
 
 
@@ -108,21 +114,30 @@ void* process_routine (void *arg) {
         int data_read = 0;
 
         http_header http_h;
+        int read_counter = 0;
 
         for (;;) {
 
             if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
                 close_socket(clientfd);
+                printf("exit\n");
+                fflush(stdout);
                 break;
             }
+            printf("HTTP PID Accept Request: %d\n",getpid());
+
 
             buffer[read_len + data_read] = '\0';
 
             char * pointer = strstr(buffer,"\r\n\r\n");
 
             if (pointer == NULL) {
-                printf("pointer is: NULL\n");
-                fflush(stdout);
+                if ( ++read_counter >= MAX_READ_COUNTER ) {
+                    char * resp = create_http_response(400,-1, NULL, NULL);
+                    send(clientfd, resp,strlen(resp), 0);
+                    close_socket(clientfd);
+                    free(resp);
+                }
                 data_read += read_len;
                 continue;
             }

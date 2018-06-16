@@ -332,7 +332,9 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
     buff[fsize+1] = '\0';
 
-    char *lines = strtok(buff, "\n");
+    char * pointer = NULL;
+
+    char *lines = strtok_r(buff, "\n", &pointer);
 
     command* comm = calloc(sizeof(command), arc_len);
 
@@ -365,7 +367,7 @@ options parse_file(char *name, command_arc cmd_arc[], int arc_len) {
 
             }
         }
-        if ((lines = strtok(NULL, "\n")) == NULL) {
+        if ((lines = strtok_r(NULL, "\n", &pointer)) == NULL) {
             break;
         }
     }
