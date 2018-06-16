@@ -295,9 +295,6 @@ command extract_command(char *string) {
     char delimiter = '=';
     char *ptr = strchr(string, delimiter);
 
-    printf("%s\n", ptr);
-    fflush(stdout);
-
     if (ptr != NULL) {
         //int index = ptr - string;
         command comm;
@@ -341,7 +338,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     }
     fclose(fname);
 
-    buff[fsize+1] = '\0';
+    buff[fsize] = '\0';
 
     char * pointer = NULL;
 
@@ -355,7 +352,6 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
 
     int k = 0;
     while ((lines = strtok_r(p, "\n", &pointer)) != NULL) {
-        printf("line:   %s\n", lines);
         fflush(stdout);
         p = NULL;
         command cmd = extract_command(lines);
