@@ -103,10 +103,12 @@ void* process_routine (void *arg) {
         struct sockaddr_in s_addr;
         size_t addr_len = sizeof(s_addr);
 
+        int is_chipher = 0;
+
         if ((clientfd = accept(server_socket_chiper,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1) {
-
+            is_chipher = 1;
         } else if ((clientfd = accept(server_socket,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1 ) {
-
+            is_chipher = 0;
         } else {
             continue;
         }
@@ -186,7 +188,11 @@ void* process_routine (void *arg) {
                 }
 
                 free(auth.free_pointer);
-            }
+            } else {}
+
+
+
+
 
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
