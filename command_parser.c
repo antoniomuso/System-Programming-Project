@@ -122,7 +122,7 @@ cont:
 }
 #endif
 
-#define MAX_BUFF_LEN 4000
+#define MAX_BUFF_LEN 8000
 
 /**
  *
@@ -429,6 +429,11 @@ http_header parse_http_header_response(const char *data, int data_len) {
 
     http_header http_h = {0} ;
     http_h.is_request = 0;
+
+    if (data_len > MAX_BUFF_LEN) {
+        http_h.is_request = -1;
+        return http_h;
+    }
     // Copy of data
     char * data_copy = malloc(data_len+1);
     http_h.pointer_to_free = data_copy;
@@ -476,6 +481,12 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     http_header http_h = {0};
     http_h.is_request = 1;
+
+    if (data_len > MAX_BUFF_LEN) {
+        http_h.is_request = -1;
+        return http_h;
+    }
+
     // Copy of date
     char * data_copy = malloc(data_len+1);
     http_h.pointer_to_free = data_copy;
@@ -561,33 +572,55 @@ char *code_to_message(int code) {
     }
 }
 
-char *create_http_response(int response_code, int content_len, int content_type, char *location) {
+char *create_http_response(int response_code, unsigned long content_len, char * content_type, char *location) {
     //NB: Still need to handle the translation of content_type
+    const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
     // Max path len
-    if (strlen(location) > PATH_MAX) {
+    if ( (content_type != NULL && strlen(location) > PATH_MAX)
+         || (location != NULL && strlen(content_type) > MAX_HTTP_FIELD_LEN)) {
         return NULL;
     }
 
-    char *response = calloc(MAX_BUFF_LEN, 1);
+    char *response = calloc(MAX_CONTENT_LEN + PATH_MAX + 100, 1);
 
-    char *content = "";
-    if (content_len != -1) {
-        content = calloc(MAX_BUFF_LEN, 1);
-        snprintf(content, MAX_BUFF_LEN, "Accept-Ranges: bytes\r\nContent-Length: %d\r\nContent Type: %d\r\n",
+    char *content = NULL;
+    if (content_len != -1 && content_type != NULL) {
+        content = malloc(MAX_CONTENT_LEN);
+        int err = snprintf(content, MAX_CONTENT_LEN, "Accept-Ranges: bytes\r\n"
+                                        "Content-Length: %ld\r\n"
+                                        "Content Type: %s\r\n",
                  content_len, content_type);
+
+        if (err == -1) {
+            free(content);
+            free(response);
+            return NULL;
+        }
     }
 
-    char *loc = "";
+
+    char *loc = NULL;
     if (location != NULL) {
-        loc = calloc(MAX_BUFF_LEN, 1);
-        snprintf(loc, MAX_BUFF_LEN, "Location: %s\r\n", location);
+        loc = malloc(PATH_MAX + 13);
+        snprintf(loc, PATH_MAX + 13, "Location: %s\r\n", location);
     }
 
-    unsigned int len = snprintf(response, MAX_BUFF_LEN, "HTTP/1.0 %d %s\r\n"
-                                     "%s%s", response_code, code_to_message(response_code), content, loc);
+    int len = snprintf(response, MAX_CONTENT_LEN + PATH_MAX + 100, "HTTP/1.0 %d %s\r\n"
+                                                                  "%s%s"
+                                                                  "\r\n"
+                                                      , response_code, code_to_message(response_code), content, loc);
 
-    char *final_response = calloc(MAX_BUFF_LEN, 1);
+
+    if (len == -1) {
+        free(content);
+        free(response);
+        return NULL;
+    }
+
+
+
+    char *final_response = calloc(strlen(response), 1);
     memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
 
     free(content);

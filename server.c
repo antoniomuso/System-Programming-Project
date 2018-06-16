@@ -134,6 +134,9 @@ void* process_routine (void *arg) {
 
             if (http_h.is_request < 0) {
                 fprintf(stderr,"Error HTTP parse");
+                char * resp = create_http_response(400,-1, NULL, NULL);
+                send(clientfd, resp,strlen(resp), 0);
+                free(resp);
                 break;
             }
             if (http_h.attribute.authorization != NULL) {
@@ -145,7 +148,13 @@ void* process_routine (void *arg) {
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
             fflush(stdout);
 
+            char * resp = create_http_response(200,-1, NULL, NULL);
+            if (resp == NULL)
+                break;
 
+            send(clientfd, resp,strlen(resp), 0);
+
+            free(resp);
             free_http_header(http_h);
             close_socket(clientfd);
             break;
@@ -245,8 +254,6 @@ int run_server(options c_options, options f_options) {
     printf("Server listening on %s:%s\n", server_ip, port);
     printf("Server chiper listening on %s:%s\n", server_ip, chiper_port);
     fflush(stdout);
-
-    create_http_response(200, 0, -1, "/ciao/ototot");
 
     int *sock_pointer = NULL;
 

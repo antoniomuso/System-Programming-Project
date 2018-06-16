@@ -76,7 +76,7 @@ void free_options(options opt);
 http_header parse_http_header_request (const char* data, int data_len);
 http_header parse_http_header_response(const char *data, int data_len);
 
-char *create_http_response(int response_code, int content_len, int content_type, char *location);
+char *create_http_response(int response_code, unsigned long content_len, char * content_type, char * location);
 void free_http_header(http_header http_h);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 
