@@ -100,14 +100,14 @@ void* process_routine (void *arg) {
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
 
-        struct sockaddr_in s_addr;
-        size_t addr_len = sizeof(s_addr);
+        struct sockaddr_in saddr = {0};
+        size_t addr_len = sizeof(saddr);
 
         int is_chipher = 0;
 
-        if ((clientfd = accept(server_socket_chiper,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1) {
+        if ((clientfd = accept(server_socket_chiper,(struct sockaddr *) &saddr,(socklen_t *) &addr_len )) > 1) {
             is_chipher = 1;
-        } else if ((clientfd = accept(server_socket,(struct sockaddr *) &s_addr,(socklen_t*) &addr_len)) > 1 ) {
+        } else if ((clientfd = accept(server_socket,(struct sockaddr *) &saddr,(socklen_t*) &addr_len)) > 1 ) {
             is_chipher = 0;
         } else {
             continue;
@@ -117,7 +117,7 @@ void* process_routine (void *arg) {
         printf("Client Connect\n");
         fflush(stdout);
 
-        printf("%s\n",inet_ntoa(s_addr.sin_addr));
+        printf("%s\n",inet_ntoa(saddr.sin_addr));
 
 
         set_blocking(clientfd, 1);
