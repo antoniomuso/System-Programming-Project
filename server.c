@@ -48,6 +48,13 @@
  * Run thread function
  */
 
+int startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+            lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
 int set_blocking(int sockfd, int blocking) {
     int nonblock = blocking == 0 ? 1 : 0;
 #ifdef __unix__
@@ -65,6 +72,10 @@ int close_socket(int socketfd) {
 #elif _WIN32
     return closesocket(socketfd);
 #endif
+}
+
+int read_and_send(int fd, char * path) {
+
 }
 
 void* process_routine (void *arg) {
@@ -192,6 +203,26 @@ void* process_routine (void *arg) {
 
 
 
+            if (strcmp(http_h.type_req, "GET") == 0) {
+
+                if (is_chipher == 1 ) {
+
+                } else if (startsWith("/command/", http_h.url) == 0) {
+                    // Run command
+
+                } else {
+
+
+
+
+                }
+
+
+            } else {
+
+
+
+            }
 
 
             printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
