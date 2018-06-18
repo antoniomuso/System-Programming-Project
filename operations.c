@@ -6,11 +6,13 @@
 #include "command_parser.h"
 #include <stdlib.h>
 #include <string.h>
+#define TIME_WAIT 6000
 
 #ifdef __unix__
 
 #include <pthread.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #elif _WIN32
 
@@ -31,9 +33,14 @@ struct data_args {
     char * command;
     char ** args;
     int argc;
+
+    int * error_out;
     char * out;
+
 #ifdef _WIN32
     HANDLE event;
+#elif __unix__
+    pthread_cond_t cond_var;
 #endif
 };
 
@@ -69,16 +76,37 @@ int execCommand(int socket, const char * command, const char ** args, const int 
 
 
 #ifdef __unix__
+    pthread_cond_init(&(data_arguments->cond_var),NULL);
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    struct timespec timer;
+    timer.tv_sec = TIME_WAIT / 1000;
+    timer.tv_nsec = (TIME_WAIT % 1000) * 1000000;
+
     pthread_t tid;
     if (pthread_create(&tid, NULL, &thread, (void *) data_arguments) != 0) {
         return 1;
     }
+
+    if (pthread_cond_timedwait(&data_arguments->cond_var, &mutex, &timer) != 0) {
+        return 1;
+    }
+
 #elif _WIN32
+    if (data_arguments->event = CreateEvent(NULL, TRUE, FALSE, NULL) == NULL) {
+        return 1;
+    }
     DWORD thr;
-    if (CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) data_arguments, 0, &thr) == NULL) {
+    HANDLE thread;
+    if (thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) data_arguments, 0, &thr) == NULL) {
+        return 1;
+    }
+    DWORD out = WaitForSingleObject(data_arguments->event, TIME_WAIT);
+
+    if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         return 1;
     }
 #endif
+
 
     return 0;
 }
