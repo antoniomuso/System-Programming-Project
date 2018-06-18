@@ -47,6 +47,19 @@ struct data_args {
 void* thread (void *arg) {
     struct data_args * arguments = (struct data_args*)  arg;
 
+#ifdef _WIN32
+    STARTUPINFO startup_info = {0};
+    PROCESS_INFORMATION proc_info = {0};
+
+    if (!(CreateProcess("windows_process_exe.o", arguments->args, NULL, NULL, FALSE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
+        fprintf(stderr, "Error occurred while trying to create a process\n");
+        fflush(stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    DWORD proc_pid = proc_info.dwProcessId;
+#elif __unix__
+#endif
 
 }
 
