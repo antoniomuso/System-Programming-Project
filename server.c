@@ -49,12 +49,7 @@
  * Run thread function
  */
 
-int startsWith(const char *pre, const char *str)
-{
-    size_t lenpre = strlen(pre),
-            lenstr = strlen(str);
-    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
-}
+
 
 int set_blocking(int sockfd, int blocking) {
     int nonblock = blocking == 0 ? 1 : 0;
@@ -209,7 +204,7 @@ void* process_routine (void *arg) {
                     //if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
                     //    fprintf(stderr, "execCommand Error\n");
                     //}
-                    execCommand(clientfd,"ls", "ls -l");
+                    execCommand(clientfd,"ls", "ls ddwewer 4");
 
                 } else {
 

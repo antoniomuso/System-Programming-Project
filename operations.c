@@ -214,6 +214,7 @@ void* thread (void *arg) {
         char ** args = build_arguments(arguments->args);
         close(fd[0]);
         dup2(fd[1],1);
+        dup2(fd[1],2);
         execvp(arguments->command, args);
 
         exit(127);
@@ -393,8 +394,6 @@ int execCommand(int socket, const char * command, const char * args) {
     //data_arguments->out[data_arguments->out_size] = '\0';
     printf("creating respn\n");
     fflush(stdout);
-
-
 
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
 

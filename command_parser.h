@@ -66,6 +66,11 @@ struct authorization {
 
 typedef struct authorization authorization;
 
+struct operation_command {
+    char * comm;
+    char * args;
+};
+
 authorization parse_authorization (const char * src);
 
 char* get_command_value (char command[], options opt);
@@ -79,6 +84,8 @@ http_header parse_http_header_response(const char *data, int data_len);
 
 char *create_http_response(int response_code, unsigned long content_len, char * content_type, char * location);
 void free_http_header(http_header http_h);
+int startsWith(const char *pre, const char *str);
+struct operation_command parser_operation (char * url);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 
 

@@ -667,3 +667,18 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
 void free_http_header(http_header http_h) {
     free(http_h.pointer_to_free);
 }
+
+int startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+            lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
+struct operation_command parser_operation (char * url) {
+    struct operation_command out;
+    out.args = NULL;
+    out.comm = NULL;
+    if (!startsWith("/command/", url)) return out;
+
+}
