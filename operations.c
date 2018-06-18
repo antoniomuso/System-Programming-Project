@@ -145,8 +145,9 @@ void* thread (void *arg) {
 
 
     arguments->error_out = 0;
-    arguments->out_size = buff_out_s;
+    arguments->out_size = read;
     arguments->out = buff_out;
+
     if (SetEvent(arguments->event) == FALSE) {
         fprintf(stderr, "SetEvent Failed");
         arguments->error_out = 1;
@@ -266,11 +267,19 @@ int execCommand(int socket, const char * command, const char * args) {
     //data_arguments->out[data_arguments->out_size] = '\0';
     printf("creating respn\n");
     fflush(stdout);
-    char * response = create_http_response(200, data_arguments->out_size, "text", NULL);
-    printf("%s\n", response);
+
+
+
+    char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
+
+    char output[strlen(response)+data_arguments->out_size];
+    memcpy(output, response, strlen(response));
+    memcpy(output+strlen(response), data_arguments->out, data_arguments->out_size);
+
+    printf("%s\n", output);
     fflush(stdout);
-    send(socket, response, strlen(response), 0);
-    send(socket, data_arguments->out, data_arguments->out_size, 0);
+    send(socket, output, strlen(response)+data_arguments->out_size, 0);
+    //send(socket, data_arguments->out, data_arguments->out_size, 0);
 
 
     free(cpy_command);

@@ -610,8 +610,8 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
     // Max path len
-    if ( (content_type != NULL && strlen(location) > PATH_MAX)
-         || (location != NULL && strlen(content_type) > MAX_HTTP_FIELD_LEN)) {
+    if ( (content_type != NULL && strlen(content_type) > PATH_MAX)
+         || (location != NULL && strlen(location) > MAX_HTTP_FIELD_LEN)) {
         return NULL;
     }
 
@@ -623,7 +623,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
         int err = snprintf(content, MAX_CONTENT_LEN, "Accept-Ranges: bytes\r\n"
                                         "Content-Length: %ld\r\n"
                                         "Content Type: %s\r\n",
-                 content_len, content_type);
+                 content_len, content_type == NULL ? "" : content_type);
 
         if (err == -1) {
             free(content);
@@ -642,7 +642,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     int len = snprintf(response, MAX_CONTENT_LEN + PATH_MAX + 100, "HTTP/1.0 %d %s\r\n"
                                                                   "%s%s"
                                                                   "\r\n"
-                                                      , response_code, code_to_message(response_code), content, loc);
+                                                      , response_code, code_to_message(response_code), content, loc == NULL ? "" : loc);
 
 
     if (len == -1) {
