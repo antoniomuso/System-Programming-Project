@@ -6,7 +6,7 @@ OPTIONS += -lws2_32
 else
 OPTIONS += -lpthread
 endif
-
+OPTIONS += -g3
 
 ifeq ($(OS),Windows_NT)
 RM = del
