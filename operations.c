@@ -48,13 +48,13 @@ struct data_args {
 #ifdef _WIN32
     HANDLE event;
 #elif __unix__
+    pthread_mutex_t mutex;
     pthread_cond_t cond_var;
 #endif
 };
 
 #ifdef __unix__
 char ** build_arguments(char * args) {
-    printf("%s\n", args);
     char * pointer = args;
     char * mem_point = NULL;
     int pos = 0;
@@ -63,7 +63,7 @@ char ** build_arguments(char * args) {
 
     char * token = NULL;
     while ((token = strtok_r(pointer, " ", &mem_point)) != NULL) {
-        printf("%s", token);
+        //printf("%s", token);
         pointer = NULL;
         if (pos >= max_len) {
             max_len += 5;
@@ -86,7 +86,7 @@ char ** build_arguments(char * args) {
 
 void* thread (void *arg) {
     struct data_args * arguments = (struct data_args*)  arg;
-    printf("Entering Thread %s\n", arguments->args);
+    printf("Entering Thread\n");
     fflush(stdout);
 #ifdef _WIN32
 
@@ -207,8 +207,7 @@ void* thread (void *arg) {
         return NULL;
     }  else if (pid == 0) {
         char ** args = build_arguments(arguments->args);
-        printf("esecuzione: %s %s\n", args[0], args[1]);
-        fflush(stdout);
+
         close(1);
         dup2(fd[1],1);
         close(fd[0]);
@@ -227,8 +226,6 @@ void* thread (void *arg) {
         return NULL;
     }
 
-
-    int dwRead;
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
     char *buff_out = malloc(BUFSIZE);
@@ -253,7 +250,7 @@ void* thread (void *arg) {
         }
 
         memcpy(buff_out+all_read_data, buff, n_read);
-        all_read_data += dwRead;
+        all_read_data += n_read;
         if(n_read == 0 || n_read < BUFSIZE) break;
     }
 
@@ -261,7 +258,6 @@ void* thread (void *arg) {
     arguments->out_size = all_read_data;
     arguments->out = buff_out;
     if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
-
     close(fd[0]);
 
 #endif
@@ -301,20 +297,27 @@ int execCommand(int socket, const char * command, const char * args) {
 #ifdef __unix__
 
     if (pthread_cond_init(&(data_arguments->cond_var),NULL) != 0) {
-        fprintf(stderr,"pthread init failed");
+        fprintf(stderr,"pthread init failed\n");
         free(cpy_command);
         free(cpy_args);
         free(data_arguments);
         return 1;
     }
 
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    if (pthread_mutex_init(&(data_arguments->mutex), NULL) != 0) {
+        fprintf(stderr,"pthread init failed\n");
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments);
+        return 1;
+    }
+    //pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     struct timespec timer;
     timer.tv_sec = TIME_WAIT / 1000;
     timer.tv_nsec = (TIME_WAIT % 1000) * 1000000;
 
-    printf("%s\n", data_arguments->args);
     pthread_t tid;
+
     if (pthread_create(&tid, NULL, &thread, (void *) data_arguments) != 0) {
         free(cpy_command);
         free(cpy_args);
@@ -322,13 +325,20 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    if (pthread_cond_timedwait(&(data_arguments->cond_var), &mutex, &timer) != 0) {
+    pthread_mutex_lock(&(data_arguments->mutex));
+    if (pthread_cond_timedwait(&(data_arguments->cond_var), &(data_arguments->mutex), &timer) != 0) {
         fprintf(stderr,"%s\n",strerror(errno));
+        int err;
+        if (err = pthread_cancel(tid) != 0) {
+            fprintf(stderr,"%s\n", strerror(err));
+        }
+
         free(cpy_command);
         free(cpy_args);
         free(data_arguments);
         return 1;
     }
+
 
 #elif _WIN32
     if ((data_arguments->event = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
