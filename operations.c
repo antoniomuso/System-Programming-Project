@@ -15,6 +15,12 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
 
 #elif _WIN32
 
@@ -46,10 +52,41 @@ struct data_args {
 #endif
 };
 
+#ifdef __unix__
+char ** build_arguments(char * args) {
+    printf("%s\n", args);
+    char * pointer = args;
+    char * mem_point = NULL;
+    int pos = 0;
+    int max_len = 5;
+    char ** out_arr = calloc(max_len, sizeof(char*));
+
+    char * token = NULL;
+    while ((token = strtok_r(pointer, " ", &mem_point)) != NULL) {
+        printf("%s", token);
+        pointer = NULL;
+        if (pos >= max_len) {
+            max_len += 5;
+            out_arr = realloc(out_arr, max_len * sizeof(char*));
+        }
+        char * arg = malloc(strlen(token)+1);
+        strcpy(arg, token);
+        out_arr[pos] = arg;
+        pos++;
+    }
+    if (pos >= max_len) {
+        max_len += 1;
+        out_arr = realloc(out_arr, max_len * sizeof(char*));
+    }
+    out_arr[pos] = NULL;
+    return out_arr;
+}
+
+#endif
+
 void* thread (void *arg) {
     struct data_args * arguments = (struct data_args*)  arg;
-
-    printf("Entering Thread\n");
+    printf("Entering Thread %s\n", arguments->args);
     fflush(stdout);
 #ifdef _WIN32
 
@@ -129,13 +166,12 @@ void* thread (void *arg) {
 
         printf("Starting to read\n");
         fflush(stdout);
-        fflush(stdout);
         bSuccess = ReadFile(pipe_read, buff, BUFSIZE, &dwRead, NULL);
 
         fflush(stdout);
         if (read+dwRead >= buff_out_s) {
-            buff_out = realloc(buff_out, buff_out_s*2);
             buff_out_s *= 2;
+            buff_out = realloc(buff_out, buff_out_s);
         }
 
         memcpy(buff_out+read, buff, dwRead);
@@ -159,6 +195,75 @@ void* thread (void *arg) {
     CloseHandle(pipe_read);
     CloseHandle(child_write);
 #elif __unix__
+
+    int fd[2];
+    pipe(fd);
+    int pid = fork();
+
+    if (pid == -1) {
+        fprintf(stderr, "Error during fork of commands");
+        arguments->error_out = 1;
+        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        return NULL;
+    }  else if (pid == 0) {
+        char ** args = build_arguments(arguments->args);
+        printf("esecuzione: %s %s\n", args[0], args[1]);
+        fflush(stdout);
+        close(1);
+        dup2(fd[1],1);
+        close(fd[0]);
+
+        execv(arguments->command, args);
+        exit(127);
+    }
+
+    close(fd[1]);
+    int status;
+    if (waitpid(pid,&status,0) == -1 ) {
+        fprintf(stderr, "Error in waitpid");
+        arguments->error_out = 1;
+        close(fd[0]);
+        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        return NULL;
+    }
+
+
+    int dwRead;
+    char buff[BUFSIZE];
+    int buff_out_s = BUFSIZE;
+    char *buff_out = malloc(BUFSIZE);
+    int all_read_data = 0;
+
+    fcntl(fd[0], F_SETFL, O_NONBLOCK);
+
+    for (;;) {
+
+        printf("Starting to read\n");
+        fflush(stdout);
+        int n_read = read(fd[0], buff, BUFSIZE);
+
+        if (n_read == -1 && (errno != EAGAIN && errno != EWOULDBLOCK)) {
+            break;
+        }
+
+        if (all_read_data+n_read >= buff_out_s) {
+            buff_out_s *= 2;
+            buff_out = realloc(buff_out, buff_out_s);
+
+        }
+
+        memcpy(buff_out+all_read_data, buff, n_read);
+        all_read_data += dwRead;
+        if(n_read == 0 || n_read < BUFSIZE) break;
+    }
+
+    arguments->error_out = 0;
+    arguments->out_size = all_read_data;
+    arguments->out = buff_out;
+    if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+
+    close(fd[0]);
+
 #endif
     return NULL;
 }
@@ -175,9 +280,6 @@ int execCommand(int socket, const char * command, const char * args) {
     char * cpy_command = malloc(strlen(command) + 1);
     strcpy(cpy_command, command);
 
-    printf("strcpy cpyargs1\n");
-    fflush(stdout);
-
     char *cpy_args = NULL;
     if (args != NULL) {
         cpy_args = malloc(strlen(args) + 1);
@@ -189,13 +291,6 @@ int execCommand(int socket, const char * command, const char * args) {
         }
     }
 
-
-
-
-    printf("strcpy cpyargs2\n");
-    fflush(stdout);
-
-
     struct data_args * data_arguments = malloc(sizeof(struct data_args));
 
     data_arguments->fd = socket;
@@ -204,12 +299,21 @@ int execCommand(int socket, const char * command, const char * args) {
 
 
 #ifdef __unix__
-    pthread_cond_init(&(data_arguments->cond_var),NULL);
+
+    if (pthread_cond_init(&(data_arguments->cond_var),NULL) != 0) {
+        fprintf(stderr,"pthread init failed");
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments);
+        return 1;
+    }
+
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     struct timespec timer;
     timer.tv_sec = TIME_WAIT / 1000;
     timer.tv_nsec = (TIME_WAIT % 1000) * 1000000;
 
+    printf("%s\n", data_arguments->args);
     pthread_t tid;
     if (pthread_create(&tid, NULL, &thread, (void *) data_arguments) != 0) {
         free(cpy_command);
@@ -218,7 +322,8 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    if (pthread_cond_timedwait(&data_arguments->cond_var, &mutex, &timer) != 0) {
+    if (pthread_cond_timedwait(&(data_arguments->cond_var), &mutex, &timer) != 0) {
+        fprintf(stderr,"%s\n",strerror(errno));
         free(cpy_command);
         free(cpy_args);
         free(data_arguments);

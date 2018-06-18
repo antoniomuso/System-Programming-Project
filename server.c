@@ -204,10 +204,13 @@ void* process_routine (void *arg) {
 
                 if (is_chipher == 1 ) {
 
-                } else if (startsWith("/command/", http_h.url) == 0) {
+                } else if (startsWith("/command/", http_h.url)) {
                     // Run command
                     //execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
-                    execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig");
+                    //execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig");
+                    if (execCommand(clientfd, "/bin/ls", "ls -l") == 1) {
+                        fprintf(stderr, "execCommand Error\n");
+                    }
 
                 } else {
 
