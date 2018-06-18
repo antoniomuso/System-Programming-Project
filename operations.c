@@ -54,7 +54,7 @@ struct data_args {
 };
 
 #ifdef __unix__
-char **  (char * args) {
+char **  build_arguments(char * args) {
     char * pointer = args;
     char * mem_point = NULL;
     int pos = 0;
