@@ -40,7 +40,7 @@ b64.c/encode.o: ./b64.c/encode.c
 	${CC} -c b64.c/encode.c -o b64.c/encode.o ${OPTIONS}
 
 windows_process_exe: windows_process_exe.c
-	${CC} b64.c/decode.o command_parser.o server.o signals.o windows_process_exe.c  -o windows_process_exe.o ${OPTIONS}
+	${CC} operations.o b64.c/decode.o command_parser.o server.o signals.o windows_process_exe.c  -o windows_process_exe.o ${OPTIONS}
 
 signals.o: signals.c
 	${CC} -c signals.c -o signals.o ${OPTIONS}

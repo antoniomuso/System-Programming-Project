@@ -5,6 +5,7 @@
 #include "signals.h"
 #include "command_parser.h"
 #include "server.h"
+#include "operations.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,6 +206,7 @@ void* process_routine (void *arg) {
 
                 } else if (startsWith("/command/", http_h.url) == 0) {
                     // Run command
+                    execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
 
                 } else {
 
