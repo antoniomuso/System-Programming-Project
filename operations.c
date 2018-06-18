@@ -56,7 +56,13 @@ void* thread (void *arg) {
     HANDLE pipe_read = NULL;
     HANDLE child_write = NULL;
 
-    if (!CreatePipe(&pipe_read, &child_write, NULL , 0)) {
+    SECURITY_ATTRIBUTES sattr;
+
+    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sattr.bInheritHandle = TRUE;
+    sattr.lpSecurityDescriptor = NULL;
+
+    if (!CreatePipe(&pipe_read, &child_write, &sattr , 0)) {
         fprintf(stderr, "Error occurred while creating pipe\n");
         fflush(stderr);
         arguments->error_out = 1;
@@ -73,11 +79,14 @@ void* thread (void *arg) {
         return NULL;
     }
 
-    STARTUPINFO startup_info = {0};
-    PROCESS_INFORMATION proc_info = {0};
+    STARTUPINFO startup_info;
+    PROCESS_INFORMATION proc_info;
+    ZeroMemory(&startup_info, sizeof(STARTUPINFO));
+    ZeroMemory(&proc_info, sizeof(PROCESS_INFORMATION));
 
     startup_info.cb = sizeof(STARTUPINFO);
     startup_info.hStdOutput = child_write;
+    startup_info.hStdError = child_write;
     startup_info.dwFlags |= STARTF_USESTDHANDLES;
 
     if (!(CreateProcess(arguments->command, arguments->args, NULL, NULL, TRUE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
@@ -90,9 +99,11 @@ void* thread (void *arg) {
             fprintf(stderr, "SetEvent Failed");
         return NULL;
     }
+
+
+
     DWORD proc_pid = proc_info.dwProcessId;
     HANDLE proc_handle = proc_info.hProcess;
-
 
     DWORD out = WaitForSingleObject(proc_handle, TIME_WAIT);
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
@@ -115,24 +126,22 @@ void* thread (void *arg) {
     int read = 0;
 
     for (;;) {
-        if (read >= buff_out_s) {
+
+        printf("Starting to read\n");
+        fflush(stdout);
+        fflush(stdout);
+        bSuccess = ReadFile(pipe_read, buff, BUFSIZE, &dwRead, NULL);
+
+        fflush(stdout);
+        if (read+dwRead >= buff_out_s) {
             buff_out = realloc(buff_out, buff_out_s*2);
             buff_out_s *= 2;
         }
-        bSuccess = ReadFile(pipe_read, buff, BUFSIZE, &dwRead, NULL);
 
-        printf("Read: %s (%d)\n", buff, dwRead);
-        fflush(stdout);
-        if (dwRead == BUFSIZE) {
-            read += dwRead;
-            memcpy(buff_out+read, buff, BUFSIZE);
-            continue;
-        }
-        if( ! bSuccess || dwRead == 0 ) break;
+        memcpy(buff_out+read, buff, dwRead);
+        read += dwRead;
+        if( ! bSuccess || dwRead == 0 || dwRead < BUFSIZE) break;
     }
-
-    printf("Finished Reading\n");
-    fflush(stdout);
 
 
     arguments->error_out = 0;
@@ -254,9 +263,15 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    data_arguments->out[data_arguments->out_size] = '\0';
-    printf("%s\n", data_arguments->out);
+    //data_arguments->out[data_arguments->out_size] = '\0';
+    printf("creating respn\n");
     fflush(stdout);
+    char * response = create_http_response(200, data_arguments->out_size, "text", NULL);
+    printf("%s\n", response);
+    fflush(stdout);
+    send(socket, response, strlen(response), 0);
+    send(socket, data_arguments->out, data_arguments->out_size, 0);
+
 
     free(cpy_command);
     free(cpy_args);

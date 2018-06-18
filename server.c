@@ -206,7 +206,8 @@ void* process_routine (void *arg) {
 
                 } else if (startsWith("/command/", http_h.url) == 0) {
                     // Run command
-                    execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
+                    //execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
+                    execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig");
 
                 } else {
 
