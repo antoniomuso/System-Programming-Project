@@ -31,8 +31,7 @@
 struct data_args {
     int fd;
     char * command;
-    char ** args;
-    int argc;
+    char * args;
 
     int * error_out;
     char * out;
@@ -68,24 +67,20 @@ int windows_thread (void *arg) {
     return 0;
 }
 
-int execCommand(int socket, const char * command, const char ** args, const int argc ) {
+int execCommand(int socket, const char * command, const char * args) {
 
     char * cpy_command = malloc(strlen(command) + 1);
     strcpy(cpy_command, command);
 
-    char ** cpy_args = calloc(argc ,sizeof(char*));
+    char * cpy_args = malloc(strlen(args)+1);
+    strcpy(cpy_args, args);
 
-    for (int i = 0; i < argc; i++) {
-        cpy_args[i] = malloc( strlen(args[i]) + 1);
-        strcpy(cpy_args[i], args[i]);
-    }
 
     struct data_args * data_arguments = malloc(sizeof(struct data_args));
 
     data_arguments->fd = socket;
     data_arguments->command = cpy_command;
     data_arguments->args = cpy_args;
-    data_arguments->argc = argc;
 
 
 #ifdef __unix__
