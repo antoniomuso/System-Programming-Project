@@ -74,10 +74,6 @@ int close_socket(int socketfd) {
 #endif
 }
 
-int read_and_send(int fd, char * path) {
-
-}
-
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
@@ -352,7 +348,10 @@ int run_server(options c_options, options f_options) {
         sock_pointer = sockets;
 
         for (int i = 0; i < n_proc ; i++) {
-            pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer);
+            if (pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer) != 0) {
+                fprintf(stderr, "Error during threads creation");
+                exit(EXIT_FAILURE);
+            }
         }
 
         set_signal_handler(tid, sizeof(pthread_t), n_proc, 0);
@@ -408,6 +407,10 @@ int run_server(options c_options, options f_options) {
 
         for (int i = 0; i < n_proc; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
+            if (hThreadArray[i] == NULL) {
+                fprintf(stderr, "Error during threads creation");
+                exit(EXIT_FAILURE);
+            }
         }
 
         set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
