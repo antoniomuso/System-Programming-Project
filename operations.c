@@ -92,12 +92,12 @@ int execCommand(int socket, const char * command, const char ** args, const int 
     }
 
 #elif _WIN32
-    if (data_arguments->event = CreateEvent(NULL, TRUE, FALSE, NULL) == NULL) {
+    if ((data_arguments->event = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
         return 1;
     }
     DWORD thr;
     HANDLE thread;
-    if (thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) data_arguments, 0, &thr) == NULL) {
+    if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) data_arguments, 0, &thr)) == NULL) {
         return 1;
     }
     DWORD out = WaitForSingleObject(data_arguments->event, TIME_WAIT);
