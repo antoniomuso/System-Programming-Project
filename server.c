@@ -208,7 +208,7 @@ void* process_routine (void *arg) {
                     // Run command
                     //execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
                     //execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig");
-                    if (execCommand(clientfd, "/bin/ls", "ls -l") == 1) {
+                    if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
                         fprintf(stderr, "execCommand Error\n");
                     }
 
