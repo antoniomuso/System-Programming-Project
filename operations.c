@@ -43,11 +43,13 @@ struct data_args {
 
     int error_out;
     int out_size;
+
     char * out;
 
 #ifdef _WIN32
     HANDLE event;
 #elif __unix__
+    int done;
     pthread_mutex_t mutex;
     pthread_cond_t cond_var;
 #endif
@@ -203,28 +205,35 @@ void* thread (void *arg) {
     if (pid == -1) {
         fprintf(stderr, "Error during fork of commands");
         arguments->error_out = 1;
+        pthread_mutex_lock(&arguments->mutex);
+        arguments->done = 1;
         if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        pthread_mutex_unlock(&arguments->mutex);
         return NULL;
     }  else if (pid == 0) {
         char ** args = build_arguments(arguments->args);
-
-        close(1);
-        dup2(fd[1],1);
         close(fd[0]);
+        dup2(fd[1],1);
+        execvp(arguments->command, args);
 
-        execv(arguments->command, args);
         exit(127);
     }
 
     close(fd[1]);
-    int status;
+    int status = 0;
     if (waitpid(pid,&status,0) == -1 ) {
         fprintf(stderr, "Error in waitpid");
         arguments->error_out = 1;
         close(fd[0]);
+        pthread_mutex_lock(&arguments->mutex);
+        arguments->done = 1;
         if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        pthread_mutex_unlock(&arguments->mutex);
+
         return NULL;
     }
+    printf("status: %d\n",status);
+    fflush(stdout);
 
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
@@ -243,6 +252,9 @@ void* thread (void *arg) {
             break;
         }
 
+        printf("n_read %d\n", n_read);
+        fflush(stdout);
+
         if (all_read_data+n_read >= buff_out_s) {
             buff_out_s *= 2;
             buff_out = realloc(buff_out, buff_out_s);
@@ -251,13 +263,18 @@ void* thread (void *arg) {
 
         memcpy(buff_out+all_read_data, buff, n_read);
         all_read_data += n_read;
+
         if(n_read == 0 || n_read < BUFSIZE) break;
+
     }
 
     arguments->error_out = 0;
     arguments->out_size = all_read_data;
     arguments->out = buff_out;
+    pthread_mutex_lock(&arguments->mutex);
+    arguments->done = 1;
     if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+    pthread_mutex_unlock(&arguments->mutex);
     close(fd[0]);
 
 #endif
@@ -326,18 +343,12 @@ int execCommand(int socket, const char * command, const char * args) {
     }
 
     pthread_mutex_lock(&(data_arguments->mutex));
-    if (pthread_cond_timedwait(&(data_arguments->cond_var), &(data_arguments->mutex), &timer) != 0) {
-        fprintf(stderr,"%s\n",strerror(errno));
-        int err;
-        if (err = pthread_cancel(tid) != 0) {
-            fprintf(stderr,"%s\n", strerror(err));
-        }
-
-        free(cpy_command);
-        free(cpy_args);
-        free(data_arguments);
-        return 1;
+    data_arguments->done = 0;
+    while (data_arguments->done == 0) {
+        pthread_cond_wait(&(data_arguments->cond_var), &(data_arguments->mutex));
     }
+    pthread_mutex_unlock(&(data_arguments->mutex));
+
 
 
 #elif _WIN32

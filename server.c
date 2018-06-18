@@ -206,11 +206,10 @@ void* process_routine (void *arg) {
 
                 } else if (startsWith("/command/", http_h.url)) {
                     // Run command
-                    //execCommand(clientfd, "C:\\Users\\kron\\Desktop\\Coding\\Python\\Pyexe\\Pyexetest\\dist\\testfile.exe", NULL);
-                    //execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig");
-                    if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
-                        fprintf(stderr, "execCommand Error\n");
-                    }
+                    //if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
+                    //    fprintf(stderr, "execCommand Error\n");
+                    //}
+                    execCommand(clientfd,"ls", "ls -l");
 
                 } else {
 
