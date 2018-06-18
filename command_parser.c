@@ -621,6 +621,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     if (content_len != -1 && content_type != NULL) {
         content = malloc(MAX_CONTENT_LEN);
         int err = snprintf(content, MAX_CONTENT_LEN, "Accept-Ranges: bytes\r\n"
+                                                     "Connection: keep-alive\r\n"
                                         "Content-Length: %ld\r\n"
                                         "Content Type: %s\r\n",
                  content_len, content_type == NULL ? "" : content_type);

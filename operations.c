@@ -270,7 +270,7 @@ int execCommand(int socket, const char * command, const char * args) {
 
 
 
-    char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
+    char * response = create_http_response(200, data_arguments->out_size-200, "text/html; charset=utf-8", NULL);
 
     char output[strlen(response)+data_arguments->out_size];
     memcpy(output, response, strlen(response));
