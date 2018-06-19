@@ -389,6 +389,7 @@ int execCommand(int socket, const char * command, const char * args) {
 }
 
 int is_dir(char * url) {
+    printf("path %s\n", url);
 #ifdef __unix__
     struct stat st;
     stat(url, &st);
@@ -397,11 +398,22 @@ int is_dir(char * url) {
     }
 #elif _WIN32
     DWORD attr = GetFileAttributes((LPCTSTR) url );
-    if (attr == FILE_ATTRIBUTE_DIRECTORY) return 1;
+    printf("%d\n", attr);
+    if (attr == INVALID_FILE_ATTRIBUTES) {
+        printf("No dir %d\n", GetLastError());
+        LPSTR messageBuffer = NULL;
+        size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+        printf("%s\n", messageBuffer);
+    }
+    if (attr != INVALID_FILE_ATTRIBUTES &&
+         (attr & FILE_ATTRIBUTE_DIRECTORY)) return 1;
 #endif
     return 0;
 }
 
 void send_file (int socket, char * url) {
-    printf("E' una direcotry: %d\n", is_dir(url));
+    printf("E' una directory: %d\n", is_dir(url));
+
+    printf("E' una directory: %d\n", is_dir("b64.c"));
 }
