@@ -397,14 +397,10 @@ int execCommand(int socket, const char * command, const char * args) {
 
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
 
-    char output[strlen(response)+data_arguments->out_size];
-    memcpy(output, response, strlen(response));
-    memcpy(output+strlen(response), data_arguments->out, data_arguments->out_size);
-
-    printf("%s\n", output);
-    fflush(stdout);
-    send(socket, output, strlen(response)+data_arguments->out_size, 0);
-    //send(socket, data_arguments->out, data_arguments->out_size, 0);
+    //printf("%s\n", output);
+    //fflush(stdout);
+    send(socket, response, strlen(response), 0);
+    send(socket, data_arguments->out, data_arguments->out_size, 0);
 
 
     free(cpy_command);

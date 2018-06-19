@@ -206,15 +206,23 @@ void* process_routine (void *arg) {
                     //}
                     struct operation_command op = parser_operation(http_h.url);
                     if (op.comm != NULL) {
-                        execCommand(clientfd, op.comm, op.args);
+
+                        if(execCommand(clientfd, op.comm, op.args) == 1) {
+                            char * resp = create_http_response(500,-1, NULL, NULL);
+                            send(clientfd, resp,strlen(resp), 0);
+                            free(resp);
+                        }
+
                     } else {
                         fprintf(stderr, "Command not passed\n");
+                        char * resp = create_http_response(400,-1, NULL, NULL);
+                        send(clientfd, resp,strlen(resp), 0);
+                        free(resp);
                     }
                     free_operation_command(op);
 
 
                 } else {
-
 
 
 
@@ -228,16 +236,16 @@ void* process_routine (void *arg) {
             }
 
 
-            printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
-            fflush(stdout);
+            //printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
+            //fflush(stdout);
 
-            char * resp = create_http_response(200,-1, NULL, NULL);
-            if (resp == NULL)
-                break;
+            //char * resp = create_http_response(200,-1, NULL, NULL);
+            //if (resp == NULL)
+            //    break;
 
-            send(clientfd, resp,strlen(resp), 0);
+            //send(clientfd, resp,strlen(resp), 0);
 
-            free(resp);
+            //free(resp);
             free_http_header(http_h);
             close_socket(clientfd);
             break;
