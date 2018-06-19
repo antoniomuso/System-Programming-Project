@@ -218,7 +218,9 @@ void* process_routine (void *arg) {
 
                 } else {
 
-
+                    // gestire i path relativi
+                    printf("url: %s\n", http_h.url);
+                    send_file(clientfd,http_h.url);
 
                 }
 

@@ -4,5 +4,6 @@
 
 #ifndef SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H
 #define SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H
-int execCommand(int socket, const char * command, const char * args) ;
+int execCommand(int socket, const char * command, const char * args);
+void send_file (int socket, char * url);
 #endif //SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H

@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 
 #elif _WIN32
@@ -385,4 +386,22 @@ int execCommand(int socket, const char * command, const char * args) {
     free(data_arguments);
 
     return 0;
+}
+
+int is_dir(char * url) {
+#ifdef __unix__
+    struct stat st;
+    stat(url, &st);
+    if (S_IFDIR & st.st_mode) {
+        return 1;
+    }
+#elif _WIN32
+    DWORD attr = GetFileAttributes((LPCTSTR) url );
+    if (attr == FILE_ATTRIBUTE_DIRECTORY) return 1;
+#endif
+    return 0;
+}
+
+void send_file (int socket, char * url) {
+    printf("E' una direcotry: %d\n", is_dir(url));
 }
