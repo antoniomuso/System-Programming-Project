@@ -727,7 +727,6 @@ struct operation_command parser_operation (char * url) {
     while ((token = strtok_r(NULL, "?", &mem_point)) != NULL) {
         *(token-1) = ' ';
     }
-    printf("command: %s\nargs: %s\n", out.comm,out.args);
 
     return out;
 }

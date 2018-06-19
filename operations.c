@@ -88,8 +88,6 @@ char **  build_arguments(char * args) {
 
 void* thread (void *arg) {
     struct data_args * arguments = (struct data_args*)  arg;
-    printf("Entering Thread\n");
-    fflush(stdout);
 #ifdef _WIN32
 
     HANDLE pipe_read = NULL;
@@ -233,8 +231,6 @@ void* thread (void *arg) {
 
         return NULL;
     }
-    printf("status: %d\n",status);
-    fflush(stdout);
 
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
@@ -244,17 +240,11 @@ void* thread (void *arg) {
     fcntl(fd[0], F_SETFL, O_NONBLOCK);
 
     for (;;) {
-
-        printf("Starting to read\n");
-        fflush(stdout);
         int n_read = read(fd[0], buff, BUFSIZE);
 
         if (n_read == -1 && (errno != EAGAIN && errno != EWOULDBLOCK)) {
             break;
         }
-
-        printf("n_read %d\n", n_read);
-        fflush(stdout);
 
         if (all_read_data+n_read >= buff_out_s) {
             buff_out_s *= 2;
@@ -288,9 +278,6 @@ int windows_thread (void *arg) {
 }
 
 int execCommand(int socket, const char * command, const char * args) {
-
-    printf("Entering execCommand\n");
-    fflush(stdout);
     char * cpy_command = malloc(strlen(command) + 1);
     strcpy(cpy_command, command);
 
@@ -370,9 +357,6 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    printf("Entering WaitForThreadEvent\n");
-    fflush(stdout);
-
     DWORD out = WaitForSingleObject(data_arguments->event, TIME_WAIT);
 
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
@@ -391,17 +375,10 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    //data_arguments->out[data_arguments->out_size] = '\0';
-    printf("creating respn\n");
-    fflush(stdout);
-
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
 
-    //printf("%s\n", output);
-    //fflush(stdout);
     send(socket, response, strlen(response), 0);
     send(socket, data_arguments->out, data_arguments->out_size, 0);
-
 
     free(cpy_command);
     free(cpy_args);

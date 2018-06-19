@@ -120,8 +120,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
 
 #ifdef __unix__
     struct sigaction sa;
-
-    printf("proc id: %d\n", getpid());
+    //printf("proc id: %d\n", getpid());
 
     // Setup the sighub handler
     sa.sa_handler = &handle_signal;

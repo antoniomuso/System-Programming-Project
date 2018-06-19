@@ -116,15 +116,11 @@ void* process_routine (void *arg) {
             continue;
         }
 
-        printf("Pid Accept Request: %d\n",getpid());
+        //printf("Pid Accept Request: %d\n",getpid());
         printf("Client Connect\n");
         fflush(stdout);
-
-        printf("%s\n",inet_ntoa(saddr.sin_addr));
-
-
+        //printf("%s\n",inet_ntoa(saddr.sin_addr));
         set_blocking(clientfd, 1);
-
 
         int read_len;
         int data_read = 0;
@@ -140,8 +136,6 @@ void* process_routine (void *arg) {
                 fflush(stdout);
                 break;
             }
-            printf("HTTP PID Accept Request: %d\n",getpid());
-
 
             buffer[read_len + data_read] = '\0';
 
@@ -532,8 +526,8 @@ int run_server(options c_options, options f_options) {
 
 
 #endif
-    printf("Father is entering in Loop\n");
-    fflush(stdout);
+    //printf("Father is entering in Loop\n");
+    //fflush(stdout);
 
     free_options(c_options);
     free_options(f_options);
