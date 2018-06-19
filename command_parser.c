@@ -676,9 +676,62 @@ int startsWith(const char *pre, const char *str)
 }
 
 struct operation_command parser_operation (char * url) {
+
     struct operation_command out;
     out.args = NULL;
     out.comm = NULL;
     if (!startsWith("/command/", url)) return out;
 
+    char * com = malloc(strlen(url) - 8);
+    strcpy(com, url + 9);
+
+    char * mem_point = NULL;
+
+
+    if (*com == '?') {
+        out.comm = NULL;
+        out.args = NULL;
+        free(com);
+        return out;
+    }
+
+    char * token = strtok_r(com,"?", &mem_point);
+
+
+
+    if (token == NULL) {
+        out.args = NULL;
+        out.comm = com;
+        if (strlen(com) == 0) {
+            out.comm = NULL;
+            free(com);
+        }
+        return out;
+    }
+
+
+
+    if (strlen(token) == 0) {
+        out.comm = NULL;
+        out.args = NULL;
+        free(com);
+        return out;
+    }
+
+    out.comm = token;
+
+
+    token = strtok_r(NULL, "?", &mem_point);
+    out.args = token;
+
+    while ((token = strtok_r(NULL, "?", &mem_point)) != NULL) {
+        *(token-1) = ' ';
+    }
+    printf("command: %s\nargs: %s\n", out.comm,out.args);
+
+    return out;
+}
+
+void free_operation_command(struct operation_command op) {
+    free(op.comm);
 }

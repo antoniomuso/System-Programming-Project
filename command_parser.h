@@ -86,6 +86,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
 void free_http_header(http_header http_h);
 int startsWith(const char *pre, const char *str);
 struct operation_command parser_operation (char * url);
+void free_operation_command(struct operation_command op);
 #endif //SYSTEM_PROGRAMMING_PROJECT_COMMAND_PARSER_H
 
 
