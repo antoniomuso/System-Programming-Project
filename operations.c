@@ -417,20 +417,26 @@ int is_dir(char * url) {
 
 void send_file (int socket, char * url) {
 
-    if (is_dir(url+1) == 1) {
-        // send dir content
-        printf("path is a directory\n");
-        return;
-    }
+
 
     FILE * pfile;
 
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
+        printf("enter in\n");
+        fflush(stdout);
         //Send a error response
-        char * http_h = create_http_response(204,0,NULL, NULL, NULL);
+        char * http_h = create_http_response(204,-1,NULL, NULL, NULL);
         send(socket,http_h,strlen(http_h),0);
         free(http_h);
+        return;
+    }
+    printf("pass fopen\n");
+    fflush(stdout);
+
+    if (is_dir(url+1) == 1) {
+        // send dir content
+        printf("path is a directory\n");
         return;
     }
 
@@ -455,7 +461,6 @@ void send_file (int socket, char * url) {
     int remaining_to_read = lengthOfFile;
     printf("send header\n");
     fflush(stdout);
-
 
     for(;;) {
 

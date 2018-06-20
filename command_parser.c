@@ -609,15 +609,19 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     //NB: Still need to handle the translation of content_type
     const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
+
     // Max path len
     if ( (content_type != NULL && strlen(content_type) > PATH_MAX)
          || (location != NULL && strlen(location) > MAX_HTTP_FIELD_LEN)) {
         return NULL;
     }
 
-    const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + strlen(filename);
+    int len_fn = filename == NULL ? 0 : strlen(filename);
+
+    const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + len_fn ;
 
     char *response = calloc(resp_len, 1);
+
 
     char *content = NULL;
     if (content_len != -1 && content_type != NULL) {
@@ -626,7 +630,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
                                                      "Connection: keep-alive\r\n"
                                         "Content-Length: %ld\r\n"
                                         "Content Type: %s\r\n",
-                 content_len, content_type == NULL ? "" : content_type);
+                 content_len, content_type);
 
         if (err == -1) {
             free(content);
@@ -634,6 +638,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
             return NULL;
         }
     }
+
 
     char *file = NULL;
     if (filename != NULL) {
