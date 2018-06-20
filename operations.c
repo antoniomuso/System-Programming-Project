@@ -441,13 +441,14 @@ char *list_dir(char *dir_name) {
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             while (strlen(ffd.cFileName) + 1 + strlen("\n") + pos > buf_size-1) {
                 buf_size *= 2;
-                dirs = realloc(dirs, buf_size);
-                if (dirs == NULL) {
+                char * point = realloc(dirs, buf_size);
+                if (point == NULL) {
                     printf("dirs (d) is null\n");
                     fflush(stdout);
                     buf_size /= 2;
                     continue;
                 }
+                dirs = point;
                 printf("reallocd\n");
                 fflush(stdout);
             }
@@ -455,13 +456,14 @@ char *list_dir(char *dir_name) {
         } else {
             while (strlen(ffd.cFileName) + strlen("\n") + pos > buf_size-1) {
                 buf_size *= 2;
-                dirs = realloc(dirs, buf_size);
-                if (dirs == NULL) {
+                char * point = realloc(dirs, buf_size);
+                if (point == NULL) {
                     printf("dirs (f) is null\n");
                     fflush(stdout);
                     buf_size /= 2;
                     continue;
                 }
+                dirs = point
                 printf("reallocd\n");
                 fflush(stdout);
             }
