@@ -619,17 +619,17 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
     time_t timestamp;
 
     int timestr_len = 27;
-    char times_string[timestr_len];
+    char timestamp_str[timestr_len];
     struct tm *tm_info;
 
     time(&timestamp);
     tm_info = localtime(&timestamp);
 
-    //ToDo: Timezone offset is missing + Controlla bene da server.c cosa passare
-    strftime(timestring, timestr_len,  "%d/%b/%Y:%H:%M:%S ", tm_info);
+    //ToDo: Timezone difference is missing
+    strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S ", tm_info);
 
     int buff_len = strlen(cli_addr) + (user_id == NULL ? 1 : strlen(user_id)) + (username == NULL ? 1 : strlen(username)) +
-            + strlen(timestring) + strlen(request) + 3 + 10 + 10;
+            + strlen(timestamp_str) + strlen(request) + 3 + 10 + 10;
 
     printf("%d\n", buff_len);
     fflush(stdout);
@@ -640,7 +640,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
     }
 
     snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
-             username == NULL ? "-" : username, timestring, request, return_code, bytes_sent);
+             username == NULL ? "-" : username, timestamp_str, request, return_code, bytes_sent);
 
     //ToDo: Remove
     printf("%s", log_string);
