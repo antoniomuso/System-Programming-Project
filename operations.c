@@ -413,6 +413,8 @@ int is_dir(char * url) {
     return 0;
 }
 
+
+
 void send_file (int socket, char * url) {
 
     if (is_dir(url+1) == 1) {
@@ -426,8 +428,9 @@ void send_file (int socket, char * url) {
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
         //Send a error responce
-
-
+        char * http_h = create_http_response(204,0,NULL,NULL);
+        send(socket,http_h,strlen(http_h),0);
+        free(http_h);
         return;
     }
 
@@ -450,11 +453,9 @@ void send_file (int socket, char * url) {
     char * buff = malloc(BUFSIZE);
     int read = 0;
     int remaining_to_read = lengthOfFile;
-    printf("sended header\n");
+    printf("send header\n");
     fflush(stdout);
-    //int how_many_read = remaining_to_read < BUFSIZE ? remaining_to_read : BUFSIZE;
-    //printf("read: %d\n", how_many_read);
-    //fflush(stdout);
+
 
     for(;;) {
 
@@ -475,5 +476,6 @@ void send_file (int socket, char * url) {
     }
     printf("unlock file\n");
 #endif
+    free(http_h);
     fclose(pfile);
 }
