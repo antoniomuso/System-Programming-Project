@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <limits.h>
 #define TIME_WAIT 6000
 #define BUFSIZE 4096
 
@@ -587,6 +589,50 @@ void send_file (int socket, char * url) {
         sleep(100);
     }
 #endif
+
+
     free(http_h);
     fclose(pfile);
+}
+
+static const char LOGFILE[] = "log.txt";
+
+int log_write(char *cli_addr, char *user_id, char *username, char *request, int return_code, int bytes_sent) {
+    FILE *logfile = fopen(LOGFILE, "a");
+    if (logfile == NULL) {
+        fprintf(stderr, "Unable to open logfile");
+        exit(EXIT_FAILURE);
+    }
+
+    time_t timestamp;
+
+    int timestr_len = 27;
+    char timestring[timestr_len];
+    struct tm *tm_info;
+
+    time(&timestamp);
+    tm_info = localtime(&timestamp);
+
+    //ToDo: Timezone difference is missing
+    strftime(timestring, timestr_len,  "%d/%b/%Y:%H:%M:%S ", tm_info);
+    timestring[timestr_len-1] = '\0';
+    fflush(stdout);
+
+
+    int buff_len = strlen(cli_addr) + (user_id == NULL ? 0 : strlen(user_id)) + (username == NULL ? 0 : strlen(username)) +
+            + strlen(timestring) + strlen(request) + 3 + 10 + 10;
+
+    printf("%d\n", buff_len);
+    fflush(stdout);
+    char *log_string = calloc(1, buff_len);
+    printf("callocd %d\n", buff_len);
+    fflush(stdout);
+    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
+             username == NULL ? "-" : username, timestring, request, return_code, bytes_sent);
+    printf("%s", log_string);
+
+    int written = fwrite(log_string, strlen(log_string)+1, 1, logfile);
+
+
+    fclose(logfile);
 }

@@ -191,6 +191,10 @@ void* process_routine (void *arg) {
 
             if (strcmp(http_h.type_req, "GET") == 0) {
 
+                //Todo: remove
+                log_write("192.168.0.1", NULL, NULL, http_h.type_req, 0, 0);
+
+
                 if (is_chipher == 1 ) {
 
                 } else if (startsWith("/command/", http_h.url)) {
