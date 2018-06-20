@@ -50,6 +50,8 @@ int main(int argc, char *argv[]) {
     if (pid > 0)
         exit(EXIT_SUCCESS);
 
+    umask(0);
+
     /* On success: The child process becomes session leader */
     if (setsid() < 0)
         exit(EXIT_FAILURE);
@@ -69,6 +71,9 @@ int main(int argc, char *argv[]) {
     if (pid > 0)
         exit(EXIT_SUCCESS);
 
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
     // Qui il demone è nato.
 #endif
 

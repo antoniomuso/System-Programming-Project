@@ -223,8 +223,8 @@ void* thread (void *arg) {
 
     close(fd[1]);
     int status = 0;
-    if (waitpid(pid,&status,0) == -1 ) {
-        fprintf(stderr, "Error in waitpid");
+    if (waitpid(pid,&status,0) < 0  && errno != ECHILD) {
+        fprintf(stderr, "Error in waitpid erro: %s\n", strerror(errno));
         arguments->error_out = 1;
         close(fd[0]);
         pthread_mutex_lock(&arguments->mutex);
