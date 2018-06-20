@@ -427,7 +427,7 @@ void send_file (int socket, char * url) {
 
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
-        //Send a error responce
+        //Send a error response
         char * http_h = create_http_response(204,0,NULL,NULL);
         send(socket,http_h,strlen(http_h),0);
         free(http_h);
@@ -438,7 +438,7 @@ void send_file (int socket, char * url) {
     int fd = fileno(pfile);
     if (flock(fd,LOCK_EX) != 0) {
         fprintf(stderr,"Error during file lock\n");
-        // return responce with error lock
+        // return response with error lock
         fclose(pfile);
     }
 #endif
