@@ -3,3 +3,4 @@ cmake-build-debug
 *.o
 main
 *.exe
+log.txt
