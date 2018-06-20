@@ -448,7 +448,7 @@ void send_file (int socket, char * url) {
     fseek(pfile, 0, SEEK_SET);
 
 
-    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", "out.txt",NULL);
+    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
     send(socket,http_h, strlen(http_h), 0);
     char * buff = malloc(BUFSIZE);
     int read = 0;

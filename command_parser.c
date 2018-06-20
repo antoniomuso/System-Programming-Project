@@ -741,3 +741,13 @@ struct operation_command parser_operation (char * url) {
 void free_operation_command(struct operation_command op) {
     free(op.comm);
 }
+
+char * get_file_name (char * path) {
+    int path_len = strlen(path);
+    for (int i = path_len-1; i >= 0 ; i--) {
+        if (path[i] == '/') {
+            return path + (i + 1);
+        }
+    }
+    return NULL;
+}
