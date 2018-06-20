@@ -394,6 +394,9 @@ int is_dir(char * url) {
 #ifdef __unix__
     struct stat st;
     stat(url, &st);
+    if (S_IFREG & st.st_mode) {
+        return 0;
+    }
     if (S_IFDIR & st.st_mode) {
         return 1;
     }
@@ -417,6 +420,12 @@ int is_dir(char * url) {
 
 void send_file (int socket, char * url) {
 
+    if (is_dir(url+1) == 1) {
+        // send dir content
+        printf("path is a directory\n");
+
+        return;
+    }
 
 
     FILE * pfile;
@@ -425,20 +434,15 @@ void send_file (int socket, char * url) {
     if (pfile == NULL) {
         printf("enter in\n");
         fflush(stdout);
+
         //Send a error response
-        char * http_h = create_http_response(204,-1,NULL, NULL, NULL);
+        char * http_h = create_http_response(404,-1,NULL, NULL, NULL);
         send(socket,http_h,strlen(http_h),0);
         free(http_h);
         return;
     }
     printf("pass fopen\n");
     fflush(stdout);
-
-    if (is_dir(url+1) == 1) {
-        // send dir content
-        printf("path is a directory\n");
-        return;
-    }
 
 #ifdef __unix__
     int fd = fileno(pfile);
