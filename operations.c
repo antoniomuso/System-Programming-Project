@@ -12,6 +12,7 @@
 
 #ifdef __unix__
 
+#include <sys/file.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -413,7 +414,66 @@ int is_dir(char * url) {
 }
 
 void send_file (int socket, char * url) {
-    printf("E' una directory: %d\n", is_dir(url+1));
 
-    //printf("E' una directory: %d\n", is_dir("b64.c"));
+    if (is_dir(url+1) == 1) {
+        // send dir content
+        printf("path is a directory\n");
+        return;
+    }
+
+    FILE * pfile;
+
+    pfile = fopen((url+1),"r");
+    if (pfile == NULL) {
+        //Send a error responce
+
+
+        return;
+    }
+
+#ifdef __unix__
+    int fd = fileno(pfile);
+    if (flock(fd,LOCK_EX) != 0) {
+        fprintf(stderr,"Error during file lock\n");
+        // return responce with error lock
+        fclose(pfile);
+    }
+#endif
+
+    fseek(pfile, 0, SEEK_END);
+    int lengthOfFile = ftell(pfile);
+    fseek(pfile, 0, SEEK_SET);
+
+
+    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8",NULL);
+    send(socket,http_h, strlen(http_h), 0);
+    char * buff = malloc(BUFSIZE);
+    int read = 0;
+    int remaining_to_read = lengthOfFile;
+    printf("sended header\n");
+    fflush(stdout);
+    //int how_many_read = remaining_to_read < BUFSIZE ? remaining_to_read : BUFSIZE;
+    //printf("read: %d\n", how_many_read);
+    //fflush(stdout);
+
+    for(;;) {
+
+        read = fread(buff,1,BUFSIZE,pfile);
+
+        printf("read: %d\n", read);
+        fflush(stdout);
+        send(socket,buff,read,0);
+
+        if (read == remaining_to_read) {
+            break;
+        }
+        remaining_to_read -= read;
+    }
+#ifdef __unix__
+    while (flock(fd,LOCK_UN) != 0) {
+        sleep(100);
+    }
+    printf("unlock file\n");
+#endif
+    fclose(pfile);
 }
