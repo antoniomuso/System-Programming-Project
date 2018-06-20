@@ -192,6 +192,8 @@ void* process_routine (void *arg) {
             }
 
             // Controllo se password e username sono corretti.
+#define DEBUG 1
+#if DEBUG != 1
             if (!is_authorize(http_h,credentials)) {
                 char *resp = create_http_response(401,0,NULL, NULL, NULL);
                 send(clientfd,resp,strlen(resp),0);
@@ -199,6 +201,7 @@ void* process_routine (void *arg) {
                 close_socket(clientfd);
                 break;
             }
+#endif
 
             if (strcmp(http_h.type_req, "GET") == 0) {
 

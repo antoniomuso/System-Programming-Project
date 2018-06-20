@@ -606,35 +606,58 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
         exit(EXIT_FAILURE);
     }
 
+#ifdef __unix__
+    int fd = fileno(logfile);
+    if (flock(fd,LOCK_EX) != 0) {
+        fprintf(stderr,"Error during file lock\n");
+        // return response with error lock
+        fclose(logfile);
+        return;
+    }
+#endif
+
     time_t timestamp;
 
     int timestr_len = 27;
-    char timestring[timestr_len];
+    char times_string[timestr_len];
     struct tm *tm_info;
 
     time(&timestamp);
     tm_info = localtime(&timestamp);
 
-    //ToDo: Timezone difference is missing
+    //ToDo: Timezone offset is missing + Controlla bene da server.c cosa passare
     strftime(timestring, timestr_len,  "%d/%b/%Y:%H:%M:%S ", tm_info);
-    timestring[timestr_len-1] = '\0';
-    fflush(stdout);
 
-
-    int buff_len = strlen(cli_addr) + (user_id == NULL ? 0 : strlen(user_id)) + (username == NULL ? 0 : strlen(username)) +
+    int buff_len = strlen(cli_addr) + (user_id == NULL ? 1 : strlen(user_id)) + (username == NULL ? 1 : strlen(username)) +
             + strlen(timestring) + strlen(request) + 3 + 10 + 10;
 
     printf("%d\n", buff_len);
     fflush(stdout);
     char *log_string = calloc(1, buff_len);
-    printf("callocd %d\n", buff_len);
-    fflush(stdout);
+    if (log_string == NULL) {
+        fprintf(stderr, "Calloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
     snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
              username == NULL ? "-" : username, timestring, request, return_code, bytes_sent);
+
+    //ToDo: Remove
     printf("%s", log_string);
 
-    int written = fwrite(log_string, strlen(log_string)+1, 1, logfile);
+    int written = fwrite(log_string, 1, strlen(log_string)+1, logfile);
+    if (written == 0) {
+        fprintf(stderr, "An error occurred while trying to write to logfile");
+        exit(EXIT_FAILURE);
+    }
 
+#ifdef __unix__
+    while (flock(fd,LOCK_UN) != 0) {
+        sleep(100);
+    }
+#endif
 
+    free(log_string);
     fclose(logfile);
+    return 0;
 }
