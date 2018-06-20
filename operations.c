@@ -377,7 +377,7 @@ int execCommand(int socket, const char * command, const char * args) {
         return 1;
     }
 
-    char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL);
+    char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL, NULL);
 
     send(socket, response, strlen(response), 0);
     send(socket, data_arguments->out, data_arguments->out_size, 0);
@@ -428,7 +428,7 @@ void send_file (int socket, char * url) {
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
         //Send a error response
-        char * http_h = create_http_response(204,0,NULL,NULL);
+        char * http_h = create_http_response(204,0,NULL, NULL, NULL);
         send(socket,http_h,strlen(http_h),0);
         free(http_h);
         return;
@@ -448,7 +448,7 @@ void send_file (int socket, char * url) {
     fseek(pfile, 0, SEEK_SET);
 
 
-    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8",NULL);
+    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", "out.txt",NULL);
     send(socket,http_h, strlen(http_h), 0);
     char * buff = malloc(BUFSIZE);
     int read = 0;
@@ -460,7 +460,6 @@ void send_file (int socket, char * url) {
     for(;;) {
 
         read = fread(buff,1,BUFSIZE,pfile);
-
         printf("read: %d\n", read);
         fflush(stdout);
         send(socket,buff,read,0);

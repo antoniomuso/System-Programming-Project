@@ -605,7 +605,7 @@ char *code_to_message(int code) {
     }
 }
 
-char *create_http_response(int response_code, unsigned long content_len, char * content_type, char *location) {
+char *create_http_response(int response_code, unsigned long content_len, char * content_type, char *filename, char *location) {
     //NB: Still need to handle the translation of content_type
     const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
@@ -615,7 +615,9 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
         return NULL;
     }
 
-    char *response = calloc(MAX_CONTENT_LEN + PATH_MAX + 100, 1);
+    const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + strlen(filename);
+
+    char *response = calloc(resp_len, 1);
 
     char *content = NULL;
     if (content_len != -1 && content_type != NULL) {
@@ -633,6 +635,11 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
         }
     }
 
+    char *file = NULL;
+    if (filename != NULL) {
+        file = malloc(strlen(filename)+50);
+        snprintf(file, strlen(filename)+50, "Content-Disposition: attachment; filename=\"%s\"\r\n", filename);
+    }
 
     char *loc = NULL;
     if (location != NULL) {
@@ -640,10 +647,10 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
         snprintf(loc, PATH_MAX + 13, "Location: %s\r\n", location);
     }
 
-    int len = snprintf(response, MAX_CONTENT_LEN + PATH_MAX + 100, "HTTP/1.0 %d %s\r\n"
-                                                                  "%s%s"
+    int len = snprintf(response, resp_len, "HTTP/1.0 %d %s\r\n"
+                                                                  "%s%s%s"
                                                                   "\r\n"
-                                                      , response_code, code_to_message(response_code), content, loc == NULL ? "" : loc);
+                                                      , response_code, code_to_message(response_code), content, loc == NULL ? "" : loc, file == NULL ? "" : file);
 
 
     if (len == -1) {

@@ -143,7 +143,7 @@ void* process_routine (void *arg) {
 
             if (pointer == NULL) {
                 if ( ++read_counter >= MAX_READ_COUNTER ) {
-                    char * resp = create_http_response(400,-1, NULL, NULL);
+                    char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                     send(clientfd, resp,strlen(resp), 0);
                     close_socket(clientfd);
                     free(resp);
@@ -159,7 +159,7 @@ void* process_routine (void *arg) {
 
             if (http_h.is_request < 0) {
                 fprintf(stderr,"Error HTTP parse");
-                char * resp = create_http_response(400,-1, NULL, NULL);
+                char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                 send(clientfd, resp,strlen(resp), 0);
                 free(resp);
                 break;
@@ -178,7 +178,7 @@ void* process_routine (void *arg) {
                     printf("Credentials correct\n");
                 } else {
                     printf("Credentials mismatch\n");
-                    char *resp = create_http_response(401,0,NULL,NULL);
+                    char *resp = create_http_response(401,0,NULL, NULL, NULL);
                     send(clientfd,resp,strlen(resp),0);
                     close_socket(clientfd);
                     break;
@@ -202,14 +202,14 @@ void* process_routine (void *arg) {
                     if (op.comm != NULL) {
 
                         if(execCommand(clientfd, op.comm, op.args) == 1) {
-                            char * resp = create_http_response(500,-1, NULL, NULL);
+                            char * resp = create_http_response(500,-1, NULL, NULL, NULL);
                             send(clientfd, resp,strlen(resp), 0);
                             free(resp);
                         }
 
                     } else {
                         fprintf(stderr, "Command not passed\n");
-                        char * resp = create_http_response(400,-1, NULL, NULL);
+                        char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                         send(clientfd, resp,strlen(resp), 0);
                         free(resp);
                     }
