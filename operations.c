@@ -470,7 +470,10 @@ char *list_dir(char *dir_name) {
     DIR *d;
     // Apro directory
     d = opendir(dir_name);
-    int len = strlen(dir_name);
+
+    if (d == NULL) {
+        return NULL;
+    }
 
     for (;;) {
         struct dirent *entry;
@@ -519,8 +522,7 @@ char *list_dir(char *dir_name) {
 void send_file (int socket, char * url) {
 
     if (is_dir(url+1) == 1) {
-        // send dir content
-        printf("path is a directory\n");
+
         char *content = list_dir(url+1);
 
         if (content == NULL) {
@@ -541,17 +543,12 @@ void send_file (int socket, char * url) {
 
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
-        printf("enter in\n");
-        fflush(stdout);
-
         //Send a error response
         char * http_h = create_http_response(404,-1,NULL, NULL, NULL);
         send(socket,http_h,strlen(http_h),0);
         free(http_h);
         return;
     }
-    printf("pass fopen\n");
-    fflush(stdout);
 
 #ifdef __unix__
     int fd = fileno(pfile);
@@ -559,6 +556,7 @@ void send_file (int socket, char * url) {
         fprintf(stderr,"Error during file lock\n");
         // return response with error lock
         fclose(pfile);
+        return;
     }
 #endif
 
@@ -572,11 +570,8 @@ void send_file (int socket, char * url) {
     char * buff = malloc(BUFSIZE);
     int read = 0;
     int remaining_to_read = lengthOfFile;
-    printf("send header\n");
-    fflush(stdout);
 
     for(;;) {
-
         read = fread(buff,1,BUFSIZE,pfile);
         printf("read: %d\n", read);
         fflush(stdout);
@@ -591,7 +586,6 @@ void send_file (int socket, char * url) {
     while (flock(fd,LOCK_UN) != 0) {
         sleep(100);
     }
-    printf("unlock file\n");
 #endif
     free(http_h);
     fclose(pfile);
