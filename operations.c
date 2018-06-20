@@ -575,7 +575,7 @@ void send_file (int socket, char * url) {
 
     char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
     send(socket,http_h, strlen(http_h), 0);
-    char * buff = malloc(BUFSIZE);
+    char * buff [BUFSIZE];
     int read = 0;
     int remaining_to_read = lengthOfFile;
 
