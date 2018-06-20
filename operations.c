@@ -417,7 +417,7 @@ int is_dir(char * url) {
 }
 
 char *list_dir(char *dir_name) {
-    int buf_size = 10;
+    int buf_size = BUFSIZE;
     int pos = 0;
 
     char *dirs = malloc(buf_size);
@@ -443,14 +443,10 @@ char *list_dir(char *dir_name) {
                 buf_size *= 2;
                 char * point = realloc(dirs, buf_size);
                 if (point == NULL) {
-                    printf("dirs (d) is null\n");
-                    fflush(stdout);
                     buf_size /= 2;
                     continue;
                 }
                 dirs = point;
-                printf("reallocd\n");
-                fflush(stdout);
             }
             written = snprintf(dirs+pos, buf_size, "%s/ \n", ffd.cFileName);
         } else {
@@ -458,14 +454,10 @@ char *list_dir(char *dir_name) {
                 buf_size *= 2;
                 char * point = realloc(dirs, buf_size);
                 if (point == NULL) {
-                    printf("dirs (f) is null\n");
-                    fflush(stdout);
                     buf_size /= 2;
                     continue;
                 }
-                dirs = point
-                printf("reallocd\n");
-                fflush(stdout);
+                dirs = point;
             }
             written = snprintf(dirs+pos, buf_size, "%s \n", ffd.cFileName);
 
@@ -474,6 +466,7 @@ char *list_dir(char *dir_name) {
     } while (FindNextFile(hFind, &ffd) != 0);
 
 #elif __unix__
+
 #endif
     return dirs;
 }
