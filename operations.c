@@ -616,7 +616,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
         fprintf(stderr,"Error during file lock\n");
         // return response with error lock
         fclose(logfile);
-        return;
+        return 1;
     }
 #endif
 
