@@ -659,7 +659,9 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
 
 
     if (len == -1) {
+        free(file);
         free(content);
+        free(loc);
         free(response);
         return NULL;
     }
