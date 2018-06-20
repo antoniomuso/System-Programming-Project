@@ -413,7 +413,7 @@ int is_dir(char * url) {
 }
 
 void send_file (int socket, char * url) {
-    printf("E' una directory: %d\n", is_dir(url));
+    printf("E' una directory: %d\n", is_dir(url+1));
 
-    printf("E' una directory: %d\n", is_dir("b64.c"));
+    //printf("E' una directory: %d\n", is_dir("b64.c"));
 }
