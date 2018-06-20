@@ -669,6 +669,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     char *final_response = calloc(strlen(response), 1);
     memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
 
+    free(file);
     free(content);
     free(loc);
     free(response);

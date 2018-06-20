@@ -385,6 +385,7 @@ int execCommand(int socket, const char * command, const char * args) {
     send(socket, response, strlen(response), 0);
     send(socket, data_arguments->out, data_arguments->out_size, 0);
 
+    free(response);
     free(cpy_command);
     free(cpy_args);
     free(data_arguments);
@@ -636,5 +637,6 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
     int written = fwrite(log_string, strlen(log_string)+1, 1, logfile);
 
 
+    free(log_string);
     fclose(logfile);
 }
