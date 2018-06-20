@@ -604,6 +604,8 @@ void send_file (int socket, char * url) {
 static const char LOGFILE[] = "log.txt";
 
 int log_write(char *cli_addr, char *user_id, char *username, char *request, int return_code, int bytes_sent) {
+    //ToDo: Stabilire DOVE chiamare la funzione e i PARAMETRI da passare (http_header.request non basta).
+
     FILE *logfile = fopen(LOGFILE, "a");
     if (logfile == NULL) {
         fprintf(stderr, "Unable to open logfile");
@@ -619,34 +621,24 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
         return 1;
     }
 #endif
-
-    time_t timestamp;
-
     int timestr_len = 27;
     char timestamp_str[timestr_len];
-    struct tm *tm_info;
 
-    time(&timestamp);
-    tm_info = localtime(&timestamp);
+//    tzset(); //Controllare se serve su unix
+    time_t timestamp = time(NULL);
+    struct tm *lat = localtime(&timestamp);
 
-    //ToDo: Timezone difference is missing
-    strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S ", tm_info);
+    strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S", lat);
 
     int buff_len = strlen(cli_addr) + (user_id == NULL ? 1 : strlen(user_id)) + (username == NULL ? 1 : strlen(username)) +
-            + strlen(timestamp_str) + strlen(request) + 3 + 10 + 10;
-
-    printf("%d\n", buff_len);
-    fflush(stdout);
+            + strlen(timestamp_str) + 20 + strlen(request) + 3 + 10 + 10;
     char log_string[buff_len];
 
-    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
-             username == NULL ? "-" : username, timestamp_str, request, return_code, bytes_sent);
+    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s %li] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
+             username == NULL ? "-" : username, timestamp_str, timezone, request, return_code, bytes_sent);
+    //Nota timezone è -3600 (= 1 ora) perché tiene in considerazione l'ora legale (che è UTC+1)
 
-    //ToDo: Remove
-    printf("%s", log_string);
-
-    int written = fwrite(log_string, 1, strlen(log_string)+1, logfile);
-    if (written == 0) {
+    if (fwrite(log_string, 1, strlen(log_string)+1, logfile) == 0) {
         fprintf(stderr, "An error occurred while trying to write to logfile");
         exit(EXIT_FAILURE);
     }
@@ -657,7 +649,6 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
     }
 #endif
 
-    free(log_string);
     fclose(logfile);
     return 0;
 }
