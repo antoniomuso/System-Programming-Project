@@ -12,6 +12,7 @@
 
 #ifdef __unix__
 
+#include <dirent.h>
 #include <sys/file.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -448,7 +449,7 @@ char *list_dir(char *dir_name) {
                 }
                 dirs = point;
             }
-            written = snprintf(dirs+pos, buf_size, "%s/ \n", ffd.cFileName);
+            written = snprintf(dirs+pos, buf_size, "%s/\n", ffd.cFileName);
         } else {
             while (strlen(ffd.cFileName) + strlen("\n") + pos > buf_size-1) {
                 buf_size *= 2;
@@ -459,13 +460,57 @@ char *list_dir(char *dir_name) {
                 }
                 dirs = point;
             }
-            written = snprintf(dirs+pos, buf_size, "%s \n", ffd.cFileName);
+            written = snprintf(dirs+pos, buf_size, "%s\n", ffd.cFileName);
 
         }
         pos += written;
     } while (FindNextFile(hFind, &ffd) != 0);
 
 #elif __unix__
+    DIR *d;
+    // Apro directory
+    d = opendir(dir_name);
+    int len = strlen(dir_name);
+
+    for (;;) {
+        struct dirent *entry;
+        // leggo un file dalla directory
+        entry = readdir(d);
+        if (!entry)
+            break;
+
+        int written = 0;
+
+        if (DT_DIR & entry->d_type) {
+
+            while (strlen(entry->d_name) + 1 + strlen("\n") + pos > buf_size-1) {
+                buf_size *= 2;
+                char * point = realloc(dirs, buf_size);
+                if (point == NULL) {
+                    buf_size /= 2;
+                    continue;
+                }
+                dirs = point;
+            }
+            written = snprintf(dirs+pos, buf_size, "%s/\n", entry->d_name);
+
+        } else {
+            while (strlen(entry->d_name) + strlen("\n") + pos > buf_size-1) {
+                buf_size *= 2;
+                char * point = realloc(dirs, buf_size);
+                if (point == NULL) {
+                    buf_size /= 2;
+                    continue;
+                }
+                dirs = point;
+            }
+            written = snprintf(dirs+pos, buf_size, "%s\n", entry->d_name);
+        }
+
+        pos += written;
+
+    }
+
 
 #endif
     return dirs;
@@ -477,6 +522,13 @@ void send_file (int socket, char * url) {
         // send dir content
         printf("path is a directory\n");
         char *content = list_dir(url+1);
+
+        if (content == NULL) {
+            char * http_h = create_http_response(500, -1,NULL, NULL,NULL);
+            send(socket,http_h, strlen(http_h), 0);
+            return;
+        }
+
         int content_len = strlen(content);
         char * http_h = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
         send(socket,http_h, strlen(http_h), 0);
