@@ -207,12 +207,11 @@ void* process_routine (void *arg) {
 
 
                 if (is_chipher == 1 ) {
+                    // Se siamo in modalità cifratura
 
                 } else if (startsWith("/command/", http_h.url)) {
-                    // Run command
-                    //if (execCommand(clientfd, "C:\\\\Windows\\\\System32\\\\cmd.exe", "C:\\\\Windows\\\\System32\\\\cmd.exe /k ipconfig") == 1) {
-                    //    fprintf(stderr, "execCommand Error\n");
-                    //}
+                    // Siamo in modalità comando
+
                     struct operation_command op = parser_operation(http_h.url);
                     if (op.comm != NULL) {
 
