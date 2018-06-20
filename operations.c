@@ -416,14 +416,76 @@ int is_dir(char * url) {
     return 0;
 }
 
+char *list_dir(char *dir_name) {
+    int buf_size = 10;
+    int pos = 0;
 
+    char *dirs = malloc(buf_size);
+#ifdef _WIN32
+    WIN32_FIND_DATA ffd;
+    int len = strlen(dir_name) + strlen("\\*")+1;
+    TCHAR szDir[len];
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+
+    memcpy(szDir, dir_name, strlen(dir_name)+1);
+    strcat(szDir, TEXT("\\*"));
+
+    hFind = FindFirstFile(szDir, &ffd);
+
+    if (INVALID_HANDLE_VALUE == hFind) {
+        return NULL;
+    }
+
+    do {
+        int written = 0;
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            while (strlen(ffd.cFileName) + 1 + strlen("\n") + pos > buf_size-1) {
+                buf_size *= 2;
+                dirs = realloc(dirs, buf_size);
+                if (dirs == NULL) {
+                    printf("dirs (d) is null\n");
+                    fflush(stdout);
+                    buf_size /= 2;
+                    continue;
+                }
+                printf("reallocd\n");
+                fflush(stdout);
+            }
+            written = snprintf(dirs+pos, buf_size, "%s/ \n", ffd.cFileName);
+        } else {
+            while (strlen(ffd.cFileName) + strlen("\n") + pos > buf_size-1) {
+                buf_size *= 2;
+                dirs = realloc(dirs, buf_size);
+                if (dirs == NULL) {
+                    printf("dirs (f) is null\n");
+                    fflush(stdout);
+                    buf_size /= 2;
+                    continue;
+                }
+                printf("reallocd\n");
+                fflush(stdout);
+            }
+            written = snprintf(dirs+pos, buf_size, "%s \n", ffd.cFileName);
+
+        }
+        pos += written;
+    } while (FindNextFile(hFind, &ffd) != 0);
+
+#elif __unix__
+#endif
+    return dirs;
+}
 
 void send_file (int socket, char * url) {
 
     if (is_dir(url+1) == 1) {
         // send dir content
         printf("path is a directory\n");
-
+        char *content = list_dir(url+1);
+        int content_len = strlen(content);
+        char * http_h = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
+        send(socket,http_h, strlen(http_h), 0);
+        send(socket, content, content_len, 0);
         return;
     }
 
