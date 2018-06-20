@@ -609,7 +609,6 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     //NB: Still need to handle the translation of content_type
     const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
-
     // Max path len
     if ( (content_type != NULL && strlen(content_type) > PATH_MAX)
          || (location != NULL && strlen(location) > MAX_HTTP_FIELD_LEN)) {
@@ -621,7 +620,6 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + len_fn ;
 
     char *response = calloc(resp_len, 1);
-
 
     char *content = NULL;
     if (content_len != -1 && content_type != NULL) {
@@ -638,7 +636,6 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
             return NULL;
         }
     }
-
 
     char *file = NULL;
     if (filename != NULL) {
@@ -657,23 +654,23 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
                                                                   "\r\n"
                                                       , response_code, code_to_message(response_code), content, loc == NULL ? "" : loc, file == NULL ? "" : file);
 
-
     if (len == -1) {
+        free(file);
         free(content);
+        free(loc);
         free(response);
         return NULL;
     }
 
+    //char *final_response = calloc(strlen(response), 1);
+    //memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
 
-
-    char *final_response = calloc(strlen(response), 1);
-    memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
-
+    free(file);
     free(content);
     free(loc);
-    free(response);
+    //free(response);
 
-    return final_response;
+    return response;
 }
 
 void free_http_header(http_header http_h) {

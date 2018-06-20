@@ -81,7 +81,7 @@ int is_authorize(http_header http_h, options credentials) {
         if (strlen(auth.name) < MAX_OPTION_LEN
             && strlen(auth.password) < MAX_OPTION_LEN
             && contains(auth.name,auth.password,credentials) == 1 ) {
-
+            free(auth.free_pointer);
             printf("Credentials correct\n");
             return 1;
         }

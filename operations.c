@@ -385,8 +385,10 @@ int execCommand(int socket, const char * command, const char * args) {
     send(socket, response, strlen(response), 0);
     send(socket, data_arguments->out, data_arguments->out_size, 0);
 
+    free(response);
     free(cpy_command);
     free(cpy_args);
+    free(data_arguments->out);
     free(data_arguments);
 
     return 0;
@@ -538,6 +540,8 @@ void send_file (int socket, char * url) {
         char * http_h = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
         send(socket,http_h, strlen(http_h), 0);
         send(socket, content, content_len, 0);
+
+        free(content);
         free(http_h);
         return;
     }
@@ -571,7 +575,7 @@ void send_file (int socket, char * url) {
 
     char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
     send(socket,http_h, strlen(http_h), 0);
-    char * buff = malloc(BUFSIZE);
+    char buff [BUFSIZE];
     int read = 0;
     int remaining_to_read = lengthOfFile;
 
