@@ -70,6 +70,30 @@ int close_socket(int socketfd) {
 #endif
 }
 
+
+int is_authorize(http_header http_h, options credentials) {
+    // gestire la richiesta se authorization è NULL con una risposta 401
+    if (http_h.attribute.authorization != NULL) {
+        printf("Auth: %s\n", http_h.attribute.authorization);
+        authorization auth = parse_authorization(http_h.attribute.authorization);
+        printf("name: %s, password: %s\n", auth.name, auth.password);
+
+        if (strlen(auth.name) < MAX_OPTION_LEN
+            && strlen(auth.password) < MAX_OPTION_LEN
+            && contains(auth.name,auth.password,credentials) == 1 ) {
+
+            printf("Credentials correct\n");
+            return 1;
+        }
+        printf("Credentials mismatch\n");
+        free(auth.free_pointer);
+        return 0;
+
+    }
+    return 0;
+
+}
+
 void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
@@ -157,37 +181,24 @@ void* process_routine (void *arg) {
 
             http_h = parse_http_header_request(buffer, header_len);
 
+            // Errore durante il parsing della richiesta http
             if (http_h.is_request < 0) {
                 fprintf(stderr,"Error HTTP parse");
                 char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                 send(clientfd, resp,strlen(resp), 0);
                 free(resp);
+                close_socket(clientfd);
                 break;
             }
 
-            // gestire la richiesta se authorization è NULL con una risposta 401
-            if (http_h.attribute.authorization != NULL) {
-                printf("Auth: %s\n", http_h.attribute.authorization);
-                authorization auth = parse_authorization(http_h.attribute.authorization);
-                printf("name: %s, password: %s\n", auth.name, auth.password);
-
-                if (strlen(auth.name) < MAX_OPTION_LEN
-                    && strlen(auth.password) < MAX_OPTION_LEN
-                    && contains(auth.name,auth.password,credentials) == 1 ) {
-
-                    printf("Credentials correct\n");
-                } else {
-                    printf("Credentials mismatch\n");
-                    char *resp = create_http_response(401,0,NULL, NULL, NULL);
-                    send(clientfd,resp,strlen(resp),0);
-                    close_socket(clientfd);
-                    break;
-                }
-
-                free(auth.free_pointer);
-            } else {}
-
-
+            // Controllo se password e username sono corretti.
+            if (!is_authorize(http_h,credentials)) {
+                char *resp = create_http_response(401,0,NULL, NULL, NULL);
+                send(clientfd,resp,strlen(resp),0);
+                free(resp);
+                close_socket(clientfd);
+                break;
+            }
 
             if (strcmp(http_h.type_req, "GET") == 0) {
 
@@ -222,30 +233,18 @@ void* process_routine (void *arg) {
 
                 } else {
 
-                    // gestire i path relativi
                     printf("url: %s\n", http_h.url);
                     send_file(clientfd,http_h.url);
 
                 }
 
 
-            } else {
+            } else { // this is PUT
 
 
 
             }
 
-
-            //printf("%s %s %s\n",http_h.type_req,http_h.url, http_h.attribute.user_agent);
-            //fflush(stdout);
-
-            //char * resp = create_http_response(200,-1, NULL, NULL);
-            //if (resp == NULL)
-            //    break;
-
-            //send(clientfd, resp,strlen(resp), 0);
-
-            //free(resp);
             free_http_header(http_h);
             close_socket(clientfd);
             break;
