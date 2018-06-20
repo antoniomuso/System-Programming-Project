@@ -637,11 +637,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
 
     printf("%d\n", buff_len);
     fflush(stdout);
-    char *log_string = calloc(1, buff_len);
-    if (log_string == NULL) {
-        fprintf(stderr, "Calloc failed\n");
-        exit(EXIT_FAILURE);
-    }
+    char log_string[buff_len];
 
     snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
              username == NULL ? "-" : username, timestamp_str, request, return_code, bytes_sent);
