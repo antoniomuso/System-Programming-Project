@@ -618,8 +618,9 @@ void send_file (int socket, http_header http_h, char * address) {
 
         int content_len = strlen(content);
         char * resp = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
-        send(socket,resp, strlen(resp), 0);
-        send(socket, content, content_len, 0);
+        if (send(socket,resp, strlen(resp), 0) != -1)
+            send(socket, content, content_len, 0);
+
         http_log(http_h,resp,address,0);
         free(content);
         free(resp);
@@ -653,9 +654,12 @@ void send_file (int socket, http_header http_h, char * address) {
     int lengthOfFile = ftell(pfile);
     fseek(pfile, 0, SEEK_SET);
 
-
     char * resp = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
-    send(socket,resp, strlen(resp), 0);
+    int err = send(socket,resp, strlen(resp), 0);
+    if (err == -1) {
+        goto unlock;
+    }
+
     char buff [BUFSIZE];
     int read = 0;
     int remaining_to_read = lengthOfFile;
@@ -666,12 +670,13 @@ void send_file (int socket, http_header http_h, char * address) {
         fflush(stdout);
         send(socket,buff,read,0);
 
-        if (read == remaining_to_read) {
+        if (read == remaining_to_read || read == 0) {
             break;
         }
         remaining_to_read -= read;
     }
 #ifdef __unix__
+unlock:
     while (flock(fd,LOCK_UN) != 0) {
         sleep(100);
     }
@@ -683,20 +688,19 @@ void send_file (int socket, http_header http_h, char * address) {
 }
 
 void put_file (int clientfd, http_header http_h, char * address, char * buffer, const int BUFF_READ_LEN,int header_len, int data_read) {
-
-
     fflush(stdout);
     FILE * file;
+
+    //TODO: Se non si sovrascrive il file decommentare e gestire risposta.
+    /*
     file = fopen(http_h.url+1, "r" );
     if (file != NULL) {
         // send a error file exist.
-
         fclose(file);
 
+        return;
     }
-
-
-
+     */
     file = fopen(http_h.url+1, "w" );
 
 #ifdef __unix__
@@ -705,7 +709,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         fprintf(stderr,"Error during file lock\n");
         // return response with error lock
         fclose(file);
-
+        return;
     }
 #endif
 
@@ -737,13 +741,13 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     }
 
     int write = fwrite(data,1,data_l,file);
-    /*if (write == 0) {
+    if (write != data_l) {
         char * resp = create_http_response(500,-1, NULL, NULL, NULL);
         send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
         goto unlock;
-    }*/
+    }
 
     int remaining_to_read = http_h.attribute.content_length - data_l;
 
