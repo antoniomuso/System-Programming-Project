@@ -214,7 +214,7 @@ void* process_routine (void *arg) {
 
                 if (is_chipher == 1 ) {
                     // Se siamo in modalità cifratura
-                    send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr);
+                    send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr,address);
 
                 } else if (startsWith("/command/", http_h.url)) {
                     // Siamo in modalità comando
