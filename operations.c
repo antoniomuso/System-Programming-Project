@@ -887,7 +887,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         fflush(stdout);
     }
 
-    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE , 0, lengthOfFile + padding, NULL);
+    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE, 0, lengthOfFile + padding, NULL);
 
     if (map_h == NULL) {
         printf("map-h\n");
@@ -922,12 +922,21 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     map_int = (unsigned int *) map;
 
+#ifdef __unix__
     n_pack = last != 0 ? n_pack + 1 : n_pack;
+#endif
 
     for (int i = 0; i < n_pack; i++) {
         encrypt(map_int + (i) , address);
     }
 
+#ifded _WIN32
+    if (last != 0) {
+        unsigned int rem = map_int[n_pack];
+        rem = rem << padding;
+        rem = rem >> padding;
+    }
+#endif
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     send(socket, resp, strlen(resp), 0);
     http_log(http_h, resp, conv_address, 0);
@@ -948,6 +957,7 @@ unlock:
 #elif __WIN32
     UnmapViewOfFile(map);
     CloseHandle(map_h);
+    CloseHandle(file_h);
 unlock:
 #endif
     fclose(file);
