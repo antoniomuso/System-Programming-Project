@@ -38,7 +38,47 @@
 #include <WS2tcpip.h>
 #pragma comment (lib, "Ws_32.lib")
 #include <windows.h>
+#include <io.h>
 
+#endif
+
+#ifndef rand_r
+/* Reentrant random function from POSIX.1c.
+   Copyright (C) 1996-2018 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+   Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, see
+   <http://www.gnu.org/licenses/>.  */
+/* This algorithm is mentioned in the ISO C standard, here extended
+   for 32 bits.  */
+int
+rand_r (unsigned int *seed)
+{
+    unsigned int next = *seed;
+    int result;
+    next *= 1103515245;
+    next += 12345;
+    result = (unsigned int) (next / 65536) % 2048;
+    next *= 1103515245;
+    next += 12345;
+    result <<= 10;
+    result ^= (unsigned int) (next / 65536) % 1024;
+    next *= 1103515245;
+    next += 12345;
+    result <<= 10;
+    result ^= (unsigned int) (next / 65536) % 1024;
+    *seed = next;
+    return result;
+}
 #endif
 
 static const char LOGFILE[] = "log.txt";
@@ -681,6 +721,8 @@ unlock:
     while (flock(fd,LOCK_UN) != 0) {
         sleep(100);
     }
+#elif _WIN32
+unlock:
 #endif
     http_log(http_h,resp,address,0);
 
@@ -813,6 +855,9 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     fseek(file, 0, SEEK_END);
     int lengthOfFile = ftell(file);
     fseek(file, 0, SEEK_SET);
+    int last = (lengthOfFile % 4);
+    int n_pack = (int)(lengthOfFile / 4);
+    int padding = 4 - last;
 
 #ifdef __unix__
     int fd = fileno(file);
@@ -822,10 +867,6 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         fclose(file);
         return;
     }
-
-    int last = (lengthOfFile % 4);
-    int n_pack = (int)(lengthOfFile / 4);
-    int padding = 4 - last;
 
     char * map;
     map = mmap(0,lengthOfFile + padding,PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
@@ -837,6 +878,31 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         free(resp);
         goto unlock;
     }
+#elif _WIN32
+    HANDLE file_h = (HANDLE) _get_osfhandle(_fileno(file));
+
+    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE , 0, lengthOfFile + padding, NULL);
+
+    if (map_h == NULL) {
+        char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        send(socket, resp, strlen(resp), 0);
+        http_log(http_h, resp, conv_address, 0);
+        free(resp);
+        goto unlock;
+    }
+
+    char * map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile + padding);
+
+    if (map == NULL) {
+        char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        send(socket, resp, strlen(resp), 0);
+        http_log(http_h, resp, conv_address, 0);
+        free(resp);
+        CloseHandle(map_h);
+        goto unlock;
+    }
+#endif
+
 
     for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
         map[i] = 0;
@@ -858,18 +924,22 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     send(socket,map,lengthOfFile,0); // il padding non lo invia
 
+    free(resp);
+#ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
         // Uscire ?
     }
-
-    free(resp);
-
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
         sleep(100);
     }
-#endif
 
+#elif __WIN32
+    UnmapViewOfFile(map);
+    CloseHandle(map_h);
+unlock:
+#endif
+    fclose(file);
 
 }
