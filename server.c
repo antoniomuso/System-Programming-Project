@@ -214,6 +214,7 @@ void* process_routine (void *arg) {
 
                 if (is_chipher == 1 ) {
                     // Se siamo in modalità cifratura
+                    send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr);
 
                 } else if (startsWith("/command/", http_h.url)) {
                     // Siamo in modalità comando
@@ -243,7 +244,7 @@ void* process_routine (void *arg) {
                 }
 
 
-            } else if (strcmp(http_h.type_req, "PUT") == 0) { // this is PUT
+            } else if ((strcmp(http_h.type_req, "PUT") == 0) && is_chipher == 0) { // this is PUT
                 put_file(clientfd,http_h,address,buffer,BUFF_READ_LEN,header_len,data_read);
             }
 

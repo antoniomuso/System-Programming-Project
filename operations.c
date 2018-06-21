@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 
 
 #elif _WIN32
@@ -789,4 +790,82 @@ unlock:
 unlock:
 #endif
     fclose(file);
+}
+
+void encrypt (unsigned int * buff, unsigned int address) {
+    int val = rand_r(&address);
+    *buff = ((unsigned int) (*buff)) ^ val;
+}
+
+void send_file_chipher (int socket, http_header http_h, unsigned int address, char * conv_address) {
+
+    FILE * file;
+    file = fopen(http_h.url+1,"rb");
+
+    if (file == NULL) {
+        char *resp = create_http_response(404, -1, NULL, NULL, NULL);
+        send(socket, resp, strlen(resp), 0);
+        http_log(http_h, resp, conv_address, 0);
+        free(resp);
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int lengthOfFile = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+#ifdef __unix__
+    int fd = fileno(file);
+    if (flock(fd,LOCK_EX) != 0) {
+        fprintf(stderr,"Error during file lock\n");
+        // return response with error lock
+        fclose(file);
+        return;
+    }
+
+    int last = (lengthOfFile % 4);
+    int n_pack = (int)(lengthOfFile / 4);
+    int padding = 4 - last;
+
+    char * map;
+    map = mmap(0,lengthOfFile + padding,PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
+
+    if (map == MAP_FAILED) {
+        char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        send(socket, resp, strlen(resp), 0);
+        http_log(http_h, resp, conv_address, 0);
+        free(resp);
+        goto unlock;
+    }
+
+
+    for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
+        map[i] = 0;
+    }
+
+    unsigned int * map_int;
+
+    map_int = (unsigned int *) map;
+
+    n_pack = last != 0 ? n_pack + 1 : n_pack;
+
+    for (int i = 0; i < n_pack; i++) {
+        encrypt(map_int + (i) , address);
+    }
+
+
+    char *resp = create_http_response(200, lengthOfFile + padding, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
+    send(socket, resp, strlen(resp), 0);
+    http_log(http_h, resp, conv_address, 0);
+    send(socket,map,lengthOfFile + padding,0);
+
+    free(resp);
+
+unlock:
+    while (flock(fd,LOCK_UN) != 0) {
+        sleep(100);
+    }
+#endif
+
+
 }
