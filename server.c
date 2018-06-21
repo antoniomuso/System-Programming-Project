@@ -143,7 +143,8 @@ void* process_routine (void *arg) {
         //printf("Pid Accept Request: %d\n",getpid());
         printf("Client Connect\n");
         fflush(stdout);
-        //printf("%s\n",inet_ntoa(saddr.sin_addr));
+        char * address = inet_ntoa(saddr.sin_addr);
+
         set_blocking(clientfd, 1);
 
         int read_len;
@@ -185,6 +186,7 @@ void* process_routine (void *arg) {
             if (http_h.is_request < 0) {
                 fprintf(stderr,"Error HTTP parse");
                 char * resp = create_http_response(400,-1, NULL, NULL, NULL);
+                http_log(http_h, resp,address,1);
                 send(clientfd, resp,strlen(resp), 0);
                 free(resp);
                 close_socket(clientfd);
@@ -192,11 +194,12 @@ void* process_routine (void *arg) {
             }
 
             // Controllo se password e username sono corretti.
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG != 1
             if (!is_authorize(http_h,credentials)) {
                 char *resp = create_http_response(401,0,NULL, NULL, NULL);
                 send(clientfd,resp,strlen(resp),0);
+                http_log(http_h,resp,address,1);
                 free(resp);
                 close_socket(clientfd);
                 break;
@@ -205,8 +208,8 @@ void* process_routine (void *arg) {
 
             if (strcmp(http_h.type_req, "GET") == 0) {
 
-                //Todo: remove
-                log_write("192.168.0.1", NULL, NULL, http_h.type_req, 0, 0);
+
+                //log_write("192.168.0.1", NULL, NULL, http_h.type_req, 0, 0);
 
 
                 if (is_chipher == 1 ) {
@@ -218,9 +221,10 @@ void* process_routine (void *arg) {
                     struct operation_command op = parser_operation(http_h.url);
                     if (op.comm != NULL) {
 
-                        if(execCommand(clientfd, op.comm, op.args) == 1) {
+                        if(exec_command(clientfd, op.comm, op.args, http_h, address) == 1) {
                             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
                             send(clientfd, resp,strlen(resp), 0);
+                            http_log(http_h,resp,address,0);
                             free(resp);
                         }
 
@@ -228,6 +232,7 @@ void* process_routine (void *arg) {
                         fprintf(stderr, "Command not passed\n");
                         char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                         send(clientfd, resp,strlen(resp), 0);
+                        http_log(http_h,resp,address,0);
                         free(resp);
                     }
                     free_operation_command(op);
@@ -236,7 +241,7 @@ void* process_routine (void *arg) {
                 } else {
 
                     printf("url: %s\n", http_h.url);
-                    send_file(clientfd,http_h.url);
+                    send_file(clientfd,http_h,address);
 
                 }
 

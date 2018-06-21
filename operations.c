@@ -3,7 +3,6 @@
 //
 
 #include "operations.h"
-#include "command_parser.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,6 +40,8 @@
 
 #endif
 
+static const char LOGFILE[] = "log.txt";
+
 struct data_args {
     int fd;
     char * command;
@@ -59,6 +60,85 @@ struct data_args {
     pthread_cond_t cond_var;
 #endif
 };
+
+int log_write(char *cli_addr, char *user_id, char *username, char *request, char * url,
+              char * protocol_type, int return_code, int bytes_sent) {
+
+    FILE *logfile = fopen(LOGFILE, "a");
+    if (logfile == NULL) {
+        fprintf(stderr, "Unable to open logfile");
+        exit(EXIT_FAILURE);
+    }
+
+#ifdef __unix__
+    int fd = fileno(logfile);
+    if (flock(fd,LOCK_EX) != 0) {
+        fprintf(stderr,"Error during file lock\n");
+        // return response with error lock
+        fclose(logfile);
+        return 0;
+    }
+#endif
+    int timestr_len = 27;
+    char timestamp_str[timestr_len];
+
+//    tzset(); //Controllare se serve su unix
+    time_t timestamp = time(NULL);
+    struct tm *lat = localtime(&timestamp);
+
+    strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S", lat);
+
+    int buff_len = strlen(cli_addr)
+                   + (user_id == NULL ? 1 : strlen(user_id))
+                   + (username == NULL ? 1 : strlen(username)) +
+                   + strlen(timestamp_str) + 20 + strlen(request) + strlen(url) +  strlen(protocol_type) + 3 + 10 + 10;
+    char log_string[buff_len + strlen("\n")];
+
+    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s %li] \"%s %s %s\" %d %d\n", cli_addr,
+             user_id == NULL ? "-" : user_id,
+             username == NULL ? "-" : username,
+             timestamp_str, timezone, request, url, protocol_type, return_code, bytes_sent);
+    //Nota timezone è -3600 (= 1 ora) perché tiene in considerazione l'ora legale (che è UTC+1)
+
+    if (fwrite(log_string, 1, strlen(log_string), logfile) == 0) {
+        fprintf(stderr, "An error occurred while trying to write to logfile");
+        exit(EXIT_FAILURE);
+    }
+
+#ifdef __unix__
+    while (flock(fd,LOCK_UN) != 0) {
+        sleep(100);
+    }
+#endif
+
+    fclose(logfile);
+    return 1;
+}
+
+int http_log (http_header h_request, char * h_response, char * client_address, int no_name) {
+    http_header h_resp = parse_http_header_response(h_response,strlen(h_response));
+    if (h_resp.is_request == -1) {
+        fprintf(stderr, "Error during response parsing");
+        return 0;
+    }
+    int err = 0;
+    if (!no_name) {
+        authorization auth = parse_authorization(h_request.attribute.authorization);
+        err = log_write(client_address, NULL, auth.name, h_request.type_req, h_request.url,
+                  h_request.protocol_type, h_resp.code_response, h_resp.attribute.content_length);
+        free(auth.free_pointer);
+        free_http_header(h_resp);
+        return err;
+    }
+
+    err = log_write(client_address, NULL, NULL, h_request.type_req, h_request.url,
+              h_request.protocol_type, h_resp.code_response, h_resp.attribute.content_length);
+
+    free_http_header(h_resp);
+    return err;
+}
+
+
 
 #ifdef __unix__
 char **  build_arguments(char * args) {
@@ -282,7 +362,7 @@ int windows_thread (void *arg) {
     return 0;
 }
 
-int execCommand(int socket, const char * command, const char * args) {
+int exec_command(int socket, const char * command, const char * args, http_header http_h, char * address) {
     char * cpy_command = malloc(strlen(command) + 1);
     strcpy(cpy_command, command);
 
@@ -384,6 +464,8 @@ int execCommand(int socket, const char * command, const char * args) {
 
     send(socket, response, strlen(response), 0);
     send(socket, data_arguments->out, data_arguments->out_size, 0);
+
+    http_log(http_h,response,address,0);
 
     free(response);
     free(cpy_command);
@@ -523,26 +605,28 @@ char *list_dir(char *dir_name) {
     return dirs;
 }
 
-void send_file (int socket, char * url) {
+void send_file (int socket, http_header http_h, char * address) {
 
+    char * url = http_h.url;
     if (is_dir(url+1) == 1) {
 
         char *content = list_dir(url+1);
 
         if (content == NULL) {
-            char * http_h = create_http_response(500, -1,NULL, NULL,NULL);
-            send(socket,http_h, strlen(http_h), 0);
-            free(http_h);
+            char * resp = create_http_response(500, -1,NULL, NULL,NULL);
+            send(socket,resp, strlen(resp), 0);
+            http_log(http_h,resp,address,0);
+            free(resp);
             return;
         }
 
         int content_len = strlen(content);
-        char * http_h = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
-        send(socket,http_h, strlen(http_h), 0);
+        char * resp = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
+        send(socket,resp, strlen(resp), 0);
         send(socket, content, content_len, 0);
-
+        http_log(http_h,resp,address,0);
         free(content);
-        free(http_h);
+        free(resp);
         return;
     }
 
@@ -552,9 +636,10 @@ void send_file (int socket, char * url) {
     pfile = fopen((url+1),"r");
     if (pfile == NULL) {
         //Send a error response
-        char * http_h = create_http_response(404,-1,NULL, NULL, NULL);
-        send(socket,http_h,strlen(http_h),0);
-        free(http_h);
+        char * resp = create_http_response(404,-1,NULL, NULL, NULL);
+        send(socket,resp,strlen(resp),0);
+        http_log(http_h,resp,address,0);
+        free(resp);
         return;
     }
 
@@ -573,8 +658,8 @@ void send_file (int socket, char * url) {
     fseek(pfile, 0, SEEK_SET);
 
 
-    char * http_h = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
-    send(socket,http_h, strlen(http_h), 0);
+    char * resp = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
+    send(socket,resp, strlen(resp), 0);
     char buff [BUFSIZE];
     int read = 0;
     int remaining_to_read = lengthOfFile;
@@ -595,64 +680,8 @@ void send_file (int socket, char * url) {
         sleep(100);
     }
 #endif
+    http_log(http_h,resp,address,0);
 
-
-    free(http_h);
+    free(resp);
     fclose(pfile);
-}
-
-static const char LOGFILE[] = "log.txt";
-
-int log_write(char *cli_addr, char *user_id, char *username, char *request, int return_code, int bytes_sent) {
-    //ToDo: Stabilire DOVE chiamare la funzione e i PARAMETRI da passare (http_header.request non basta).
-
-    FILE *logfile = fopen(LOGFILE, "a");
-    if (logfile == NULL) {
-        fprintf(stderr, "Unable to open logfile");
-        exit(EXIT_FAILURE);
-    }
-
-#ifdef __unix__
-    int fd = fileno(logfile);
-    if (flock(fd,LOCK_EX) != 0) {
-        fprintf(stderr,"Error during file lock\n");
-        // return response with error lock
-        fclose(logfile);
-        return 1;
-    }
-#endif
-    int timestr_len = 27;
-    char timestamp_str[timestr_len];
-
-//    tzset(); //Controllare se serve su unix
-    time_t timestamp = time(NULL);
-    struct tm *lat = localtime(&timestamp);
-
-    strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S", lat);
-
-    int buff_len = strlen(cli_addr)
-            + (user_id == NULL ? 1 : strlen(user_id))
-            + (username == NULL ? 1 : strlen(username)) +
-            + strlen(timestamp_str) + 20 + strlen(request) + 3 + 10 + 10;
-    char log_string[buff_len + strlen("\n")];
-
-    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s %li] \"%s\" %d %d\n", cli_addr,
-             user_id == NULL ? "-" : user_id,
-             username == NULL ? "-" : username,
-             timestamp_str, timezone, request, return_code, bytes_sent);
-    //Nota timezone è -3600 (= 1 ora) perché tiene in considerazione l'ora legale (che è UTC+1)
-
-    if (fwrite(log_string, 1, strlen(log_string), logfile) == 0) {
-        fprintf(stderr, "An error occurred while trying to write to logfile");
-        exit(EXIT_FAILURE);
-    }
-
-#ifdef __unix__
-    while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
-    }
-#endif
-
-    fclose(logfile);
-    return 0;
 }
