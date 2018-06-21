@@ -914,27 +914,41 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 #endif
 
+
+#ifdef __unix__
     for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
         map[i] = 0;
     }
-
+#endif
     unsigned int * map_int;
 
     map_int = (unsigned int *) map;
 
-#ifdef __unix__
+
     n_pack = last != 0 ? n_pack + 1 : n_pack;
-#endif
+
 
     for (int i = 0; i < n_pack; i++) {
         encrypt(map_int + (i) , address);
     }
 
-#ifded _WIN32
+#ifdef _WIN32
+    char buff[4];
     if (last != 0) {
-        unsigned int rem = map_int[n_pack];
-        rem = rem << padding;
-        rem = rem >> padding;
+
+        for (int i = lengthOfFile - last - 1, j = 0; i < lengthOfFile; i++, j++) {
+            buff[j] = map[i];
+        }
+        for (int i = last ; i < 4; i++ ) {
+            buff[i] = '\0';
+        }
+        int * val = buff;
+        encrypt(val, address);
+
+        for (int i = lengthOfFile - last - 1, j = 0; i < lengthOfFile; i++, j++) {
+            map[i] = buff[j];
+        }
+
     }
 #endif
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
