@@ -879,11 +879,19 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         goto unlock;
     }
 #elif _WIN32
-    HANDLE file_h = (HANDLE) _get_osfhandle(_fileno(file));
+    fclose(file);
+
+    HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_h == NULL) {
+        printf("file_h\n");
+        fflush(stdout);
+    }
 
     HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE , 0, lengthOfFile + padding, NULL);
 
     if (map_h == NULL) {
+        printf("map-h\n");
+        fflush(stdout);
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
         send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
@@ -891,9 +899,12 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         goto unlock;
     }
 
-    char * map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile + padding);
+    char * map;
+    map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile + padding);
 
     if (map == NULL) {
+        printf("map-vn");
+        fflush(stdout);
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
         send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
@@ -902,7 +913,6 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         goto unlock;
     }
 #endif
-
 
     for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
         map[i] = 0;
