@@ -630,15 +630,19 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, int 
 
     strftime(timestamp_str, timestr_len,  "%d/%b/%Y:%H:%M:%S", lat);
 
-    int buff_len = strlen(cli_addr) + (user_id == NULL ? 1 : strlen(user_id)) + (username == NULL ? 1 : strlen(username)) +
+    int buff_len = strlen(cli_addr)
+            + (user_id == NULL ? 1 : strlen(user_id))
+            + (username == NULL ? 1 : strlen(username)) +
             + strlen(timestamp_str) + 20 + strlen(request) + 3 + 10 + 10;
-    char log_string[buff_len];
+    char log_string[buff_len + strlen("\n")];
 
-    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s %li] \"%s\" %d %d\n", cli_addr, user_id == NULL ? "-" : user_id,
-             username == NULL ? "-" : username, timestamp_str, timezone, request, return_code, bytes_sent);
+    snprintf(log_string, buff_len+strlen("\n"), "%s %s %s [%s %li] \"%s\" %d %d\n", cli_addr,
+             user_id == NULL ? "-" : user_id,
+             username == NULL ? "-" : username,
+             timestamp_str, timezone, request, return_code, bytes_sent);
     //Nota timezone è -3600 (= 1 ora) perché tiene in considerazione l'ora legale (che è UTC+1)
 
-    if (fwrite(log_string, 1, strlen(log_string)+1, logfile) == 0) {
+    if (fwrite(log_string, 1, strlen(log_string), logfile) == 0) {
         fprintf(stderr, "An error occurred while trying to write to logfile");
         exit(EXIT_FAILURE);
     }
