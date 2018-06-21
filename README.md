@@ -13,3 +13,6 @@
 - [ ] Creare un funzione che cifra un file che mappa in memoria, la cifratura é: xor bitwise usando srand(ip-client).
 - [ ] Gestire download e upload dei file GET PUT. Se viene passato con la GET un nome di una director deve restituire l'albero della directori (non ricorsivo)
 - [ ] Gestire l'accesso esclusivo dei file mediante lock.
+
+
+Gestire per bene gli errori delle fwrite e delle send.

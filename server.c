@@ -28,7 +28,6 @@
 
 
 
-
 #elif _WIN32
 
 # undef  _WIN32_WINNT
@@ -161,6 +160,7 @@ void* process_routine (void *arg) {
                 fflush(stdout);
                 break;
             }
+            data_read += read_len;
 
             buffer[read_len + data_read] = '\0';
 
@@ -172,8 +172,8 @@ void* process_routine (void *arg) {
                     send(clientfd, resp,strlen(resp), 0);
                     close_socket(clientfd);
                     free(resp);
+                    break;
                 }
-                data_read += read_len;
                 continue;
             }
 
@@ -239,17 +239,12 @@ void* process_routine (void *arg) {
 
 
                 } else {
-
-                    printf("url: %s\n", http_h.url);
                     send_file(clientfd,http_h,address);
-
                 }
 
 
-            } else { // this is PUT
-
-
-
+            } else if (strcmp(http_h.type_req, "PUT") == 0) { // this is PUT
+                put_file(clientfd,http_h,address,buffer,BUFF_READ_LEN,header_len,data_read);
             }
 
             free_http_header(http_h);
