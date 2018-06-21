@@ -838,7 +838,6 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         goto unlock;
     }
 
-
     for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
         map[i] = 0;
     }
@@ -853,11 +852,11 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         encrypt(map_int + (i) , address);
     }
 
-    char *resp = create_http_response(200, lengthOfFile + padding, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
+    char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     send(socket, resp, strlen(resp), 0);
     http_log(http_h, resp, conv_address, 0);
 
-    send(socket,map,lengthOfFile + padding,0);
+    send(socket,map,lengthOfFile,0); // il padding non lo invia
 
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
