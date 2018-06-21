@@ -1,0 +1,11 @@
+PRIMO ANNO: 	
+		 -Sistemi Digitali   (6)
+		 -Calcolo Integrale  (6)
+SECONDO ANNO:
+		 {{ -Algoritmi2         (9) }}
+		 -Basi2		     (6 -> 12)
+TERZO ANNO:
+		 -Ing. Software	     (6)
+		 -Prog. Sistema	     (6)
+		 -Sicurezza	     (6)
+

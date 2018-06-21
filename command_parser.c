@@ -320,7 +320,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     /**
      * Parses a file following the chosen format.
      */
-    FILE *fname = fopen(name, "r");
+    FILE *fname = fopen(name, "rb");
     if (fname == NULL) {
         fprintf(stderr, "Unable to open file %s\n", name);
         exit(EXIT_FAILURE);

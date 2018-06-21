@@ -629,7 +629,7 @@ void send_file (int socket, http_header http_h, char * address) {
 
     FILE * pfile;
 
-    pfile = fopen((url+1),"r");
+    pfile = fopen((url+1),"rb");
     if (pfile == NULL) {
         //Send a error response
         char * resp = create_http_response(404,-1,NULL, NULL, NULL);
