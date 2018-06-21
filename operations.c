@@ -478,7 +478,6 @@ int exec_command(int socket, const char * command, const char * args, http_heade
 }
 
 int is_dir(char * url) {
-    printf("path %s\n", url);
 #ifdef __unix__
     struct stat st;
     stat(url, &st);
@@ -490,13 +489,9 @@ int is_dir(char * url) {
     }
 #elif _WIN32
     DWORD attr = GetFileAttributes((LPCTSTR) url );
-    printf("%d\n", attr);
     if (attr == INVALID_FILE_ATTRIBUTES) {
-        printf("No dir %d\n", GetLastError());
         LPSTR messageBuffer = NULL;
-        size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-        printf("%s\n", messageBuffer);
+        //size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
     }
     if (attr != INVALID_FILE_ATTRIBUTES &&
          (attr & FILE_ATTRIBUTE_DIRECTORY)) return 1;
