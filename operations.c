@@ -123,6 +123,7 @@ int http_log (http_header h_request, char * h_response, char * client_address, i
     }
     int err = 0;
     if (!no_name) {
+        if (h_request.attribute.authorization == NULL) return 0;
         authorization auth = parse_authorization(h_request.attribute.authorization);
         err = log_write(client_address, NULL, auth.name, h_request.type_req, h_request.url,
                   h_request.protocol_type, h_resp.code_response, h_resp.attribute.content_length);
