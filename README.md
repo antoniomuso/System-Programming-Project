@@ -10,7 +10,7 @@
 - [x] Creare creatore dei log secondo lo standard sul testo di Bernaschi.
 - [x] Gestione command compreso di funzione per spawnare un processo dandogli come input un comando, ritorna come output l'output del comando Gesitsce anche la sincronizzazione. Progettare con la possibilità futura di passare argomenti.
 - [x] Gestire la connessione sulla porta 8081.
-- [ ] Creare un funzione che cifra un file che mappa in memoria, la cifratura é: xor bitwise usando srand(ip-client).
+- [x] Creare un funzione che cifra un file che mappa in memoria, la cifratura é: xor bitwise usando srand(ip-client).
 - [x] Gestire download e upload dei file GET PUT. Se viene passato con la GET un nome di una director deve restituire l'albero della directori (non ricorsivo)
 - [x] Gestire l'accesso esclusivo dei file mediante lock.
 
@@ -21,3 +21,13 @@ Gestire per bene gli errori delle fwrite e delle send.
 - main.c
 - signal.c
 - server.c
+
+## Funzioni Riviste operation.c
+- send_file
+- send_file_chipher
+- put_file
+- list_dir `Dobbiamo fare una scelta sulle realloc`
+- http_log
+- log_write
+- m_sleep
+- Send
