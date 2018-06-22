@@ -23,6 +23,7 @@ int len = 0;
 int mode = 0;
 
 int flag_restart = 0;
+int child_terminate = 0;
 
 
 
@@ -34,10 +35,8 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 #ifdef _WIN32
     HANDLE *array = (HANDLE *) children_array;
     if (mode == 0) {
-        for (i = 0; i < len; i++) {
-            if(!TerminateThread(array[i], exit_code))
-                return i;
-        }
+         child_terminate = 1;
+         return len;
     } else if (mode == 1) {
         for (i = 0; i < len; i++) {
             if(!TerminateProcess(array[i], exit_code))
@@ -47,16 +46,11 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 #elif __unix__
 
     if (mode == 0) {
-        pthread_t *tids = (pthread_t *) children_array;
+        //pthread_t *tids = (pthread_t *) children_array;
+        child_terminate = 1;
+        //printf("kill: %ld\n",tids[i]);
+        return len;
 
-        for (i = 0; i < len; i++) {
-            int err = 0;
-            printf("kill: %ld\n",tids[i]);
-            if (err = pthread_cancel(tids[i]) != 0) {
-                fprintf(stderr,"%s\n", strerror(err));
-                return i;
-            }
-        }
     } else if (mode == 1) {
         int *pids = (int *) children_array;
 
@@ -83,7 +77,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 void handle_signal(int signal) {
 
     infanticide(arr_process, len, mode, SIGKILL);
-
+    free(arr_process);
     flag_restart = 1;
 
     // TODO: La run server non va lanciata da qua. Dobbiamo fare in modo che qui venga cambiato un flag al padre che gli fa rilanciare tutto.

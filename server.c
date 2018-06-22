@@ -105,7 +105,7 @@ void* process_routine (void *arg) {
     //printf("%d %d \n", server_socket, server_socket_chiper);
     int clientfd;
     //char * header_buffer = malloc(BUFF_READ_LEN);
-    char * buffer = malloc(BUFF_READ_LEN);
+    char buffer[BUFF_READ_LEN];
 
     set_blocking(server_socket, 0);
     set_blocking(server_socket_chiper, 0);
@@ -118,13 +118,25 @@ void* process_routine (void *arg) {
 
     int maxfdp = server_socket > server_socket_chiper ?  server_socket  : server_socket_chiper;
 
-    int rc = 0;
-    while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, NULL) ) != -1) {
+    struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
 
+    int rc = 0;
+    while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, &tv) ) != -1) {
+        if (child_terminate == 1) {
+            goto thread_exit;
+        }
+
+        //printf("Time out\n");
+        //fflush(stdout);
         //printf("Select active\n");
         //fflush(stdout);
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
+
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
 
         struct sockaddr_in saddr = {0};
         size_t addr_len = sizeof(saddr);
@@ -252,7 +264,16 @@ void* process_routine (void *arg) {
             close_socket(clientfd);
             break;
         }
+
     }
+
+    thread_exit:
+    free_options(credentials);
+#ifdef __unix__
+    pthread_exit(NULL);
+#elif _WIN32
+    ExitThread(0);
+#endif
 }
 int w_process_routine (void *arg) {
     process_routine(arg);
@@ -367,6 +388,8 @@ int run_server(options c_options, options f_options) {
         for (int i = 0; i < n_proc ; i++) {
             if (pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer) != 0) {
                 fprintf(stderr, "Error during threads creation");
+                free_options(c_options);
+                free_options(f_options);
                 exit(EXIT_FAILURE);
             }
         }
@@ -394,11 +417,12 @@ int run_server(options c_options, options f_options) {
             } else if (pid == 0) {
                 free_options(c_options);
                 free_options(f_options);
-
                 process_routine((void *)sock_pointer);
             } else {
-                    fprintf(stderr, "Fork Error %i", pid);
-                    exit(EXIT_FAILURE);
+                fprintf(stderr, "Fork Error %i", pid);
+                free_options(c_options);
+                free_options(f_options);
+                exit(EXIT_FAILURE);
             }
 
         }
@@ -550,6 +574,7 @@ int run_server(options c_options, options f_options) {
 
     }
     flag_restart = 0;
+    child_terminate = 0;
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);
