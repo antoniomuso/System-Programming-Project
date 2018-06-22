@@ -59,14 +59,42 @@ gestione.
 ### Operazioni
 Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e ...
 ##### GET
+Le richieste di GET sulla porta principale (quella specificata in input o dal file di configurazione) sono gestitite 
+dalla funzione `send_file`.
 ###### File
+Se il path richiesto corrisponde a un file, la funzione `send_file` lo apre, acquisisce il lock su di esso e, dopo 
+averlo letto, lo invia al client richiedente.
 ###### Directory
-Nel caso in cui l'url richiesta corrisponde a una directory, viene invocata la funzione `list_dir` che restituisce il 
-contenuto della directory indicata.
+Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` che restituisce il 
+**contenuto della directory** indicata, che viene inviato come risposta.
 ##### GET con cifratura
-##### PUT
+Le richieste di GET per i file sulla porta che prevede cifratura preventiva del file stesso sono gestite dalla funzione
+`send_file_cipher`. Dopo essere stato aperto, il file è mappato in memoria grazie alle apposite funzioni dei due sistemi
+operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi del file 
+mappato di dimensione pari a 4 byte e li cifra mediante lo _XOR_ con un intero random avente come seme 
+l'indirizzo IP del client. 
+Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri (0)
+all'ultimo blocco. 
 ##### Esecuzione comandi
-(argomenti)
+Come da specifiche, nel caso in cui il primo elemento del path contenga la la stringa **command** viene eseguita la 
+funzione `exec_command`, la quale crea un thread che andrà a generare il processo che eseguirà il comando passato in 
+input. Come meccanismi di sincronizzazione, sono stati usati una **_condition variable_** per Unix e un **_Evento_** per
+Windows.
+
+L'implementazione di `exec_command` supporta anche il **passaggio di parametri**, secondo la seguente sintassi:
+`[...]/command/arg1?arg2?[...]?argN`, dove nel caso di passaggio di comandi legati ai terminali 
+(es: _cat_, _ipconfig_, _echo_) il primo argomento deve corrispondere, sia per Unix che per Windows, allo stesso valore
+di _command_. 
+
+Esempi:
+- Unix: `/command/date?date` 
+- Windows: `/command/C:/Windows/System32/cmd.exe?C:\Windows\System32\cmd.exe?/k?ipconfig` 
+
+##### PUT
+Le richieste di PUT vengono gestite dalla funzione `put_file`, che dopo aver creato un file con lo stesso nome di quello
+che il client sta caricando ed ottenuto il lock su di esso, legge e trascrive il contenuto che gli viene inviato. Nel 
+caso in cui esistesse già un file con lo stesso nome di quello che il client sta caricando, il file esistente viene 
+sovrascritto.
 ##### Logging
 
 ### Parser
