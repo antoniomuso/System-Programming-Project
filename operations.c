@@ -529,8 +529,8 @@ int exec_command(int socket, const char * command, const char * args, http_heade
 
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL, NULL);
 
-    send(socket, response, strlen(response), 0);
-    send(socket, data_arguments->out, data_arguments->out_size, 0);
+    Send(socket, response, strlen(response), 0);
+    Send(socket, data_arguments->out, data_arguments->out_size, 0);
 
     http_log(http_h,response,address,0);
 
@@ -570,6 +570,8 @@ char *list_dir(char *dir_name) {
     int pos = 0;
 
     char *dirs = malloc(buf_size);
+    if (dirs == NULL) return NULL;
+
 #ifdef _WIN32
     WIN32_FIND_DATA ffd;
     int len = strlen(dir_name) + strlen("\\*")+1;
@@ -657,9 +659,7 @@ char *list_dir(char *dir_name) {
             }
             written = snprintf(dirs+pos, buf_size, "%s\n", entry->d_name);
         }
-
         pos += written;
-
     }
 
 
@@ -679,7 +679,7 @@ void send_file (int socket, http_header http_h, char * address) {
             if (resp == NULL) {
                 return;
             }
-            send(socket,resp, strlen(resp), 0);
+            Send(socket,resp, strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             return;
@@ -687,8 +687,11 @@ void send_file (int socket, http_header http_h, char * address) {
 
         int content_len = strlen(content);
         char * resp = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
-        if (send(socket,resp, strlen(resp), 0) != -1)
-            send(socket, content, content_len, 0);
+        if (resp == NULL) {
+            free(content);
+        }
+
+        if (Send(socket,resp, strlen(resp), 0) != -1) Send(socket, content, content_len, 0);
 
         http_log(http_h,resp,address,0);
         free(content);
@@ -696,14 +699,17 @@ void send_file (int socket, http_header http_h, char * address) {
         return;
     }
 
-
     FILE * pfile;
 
     pfile = fopen((url+1),"rb");
     if (pfile == NULL) {
         //Send a error response
         char * resp = create_http_response(404,-1,NULL, NULL, NULL);
-        send(socket,resp,strlen(resp),0);
+        if (resp == NULL) {
+            return;
+        }
+
+        Send(socket,resp,strlen(resp),0);
         http_log(http_h,resp,address,0);
         free(resp);
         return;
@@ -724,7 +730,11 @@ void send_file (int socket, http_header http_h, char * address) {
     fseek(pfile, 0, SEEK_SET);
 
     char * resp = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
-    int err = send(socket,resp, strlen(resp), 0);
+    if (resp == NULL) {
+        goto unlock;
+    }
+
+    int err = Send(socket,resp, strlen(resp), 0);
     if (err == -1) {
         goto unlock;
     }
@@ -737,23 +747,24 @@ void send_file (int socket, http_header http_h, char * address) {
         read = fread(buff,1,BUFSIZE,pfile);
         printf("read: %d\n", read);
         fflush(stdout);
-        send(socket,buff,read,0);
+        Send(socket,buff,read,0);
 
         if (read == remaining_to_read || read == 0) {
             break;
         }
         remaining_to_read -= read;
     }
+
+    http_log(http_h,resp,address,0);
+
 #ifdef __unix__
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #elif _WIN32
 unlock:
 #endif
-    http_log(http_h,resp,address,0);
-
     free(resp);
     fclose(pfile);
 }
@@ -798,14 +809,14 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         int write = fwrite(data,1,data_l,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-            send(clientfd, resp,strlen(resp), 0);
+            Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             goto unlock;
         }
         // Invio la richiesta di fine.
         char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
-        send(clientfd, resp,strlen(resp), 0);
+        Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
         goto unlock;
@@ -814,7 +825,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     int write = fwrite(data,1,data_l,file);
     if (write != data_l) {
         char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-        send(clientfd, resp,strlen(resp), 0);
+        Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
         goto unlock;
@@ -833,7 +844,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         write = fwrite(buffer,1,read,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-            send(clientfd, resp,strlen(resp), 0);
+            Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             goto unlock;
@@ -847,14 +858,14 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
 
     // mando la risposta
     char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
-    send(clientfd, resp,strlen(resp), 0);
+    Send(clientfd, resp,strlen(resp), 0);
     http_log(http_h,resp,address,0);
     free(resp);
 
 #ifdef __unix__
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #elif _WIN32
 unlock:
@@ -915,7 +926,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map == MAP_FAILED) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         goto unlock;
@@ -926,7 +937,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_h == NULL) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         return;
@@ -936,7 +947,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map_h == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(file_h);
@@ -948,7 +959,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(map_h);
@@ -977,10 +988,10 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 #endif
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
-    send(socket, resp, strlen(resp), 0);
+    Send(socket, resp, strlen(resp), 0);
     http_log(http_h, resp, conv_address, 0);
 
-    send(socket,map,lengthOfFile,0); // il padding non lo invia
+    Send(socket,map,lengthOfFile,0); // il padding non lo invia
 
     free(resp);
 #ifdef __unix__
@@ -990,7 +1001,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
     fclose(file);
 #elif __WIN32
