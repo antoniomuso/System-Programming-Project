@@ -911,7 +911,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
-        CloseHandle(file_h)
+        CloseHandle(file_h);
         goto unlock;
     }
 
@@ -974,4 +974,5 @@ unlock:
     CloseHandle(file_h);
 unlock:
 #endif
+    return;
 }
