@@ -128,10 +128,6 @@ void* process_routine (void *arg) {
             goto thread_exit;
         }
 
-        //printf("Time out\n");
-        //fflush(stdout);
-        //printf("Select active\n");
-        //fflush(stdout);
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
 
