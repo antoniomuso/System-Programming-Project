@@ -128,7 +128,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
     FILE *logfile = fopen(LOGFILE, "a");
     if (logfile == NULL) {
         fprintf(stderr, "Unable to open logfile");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
 #ifdef __unix__
@@ -137,7 +137,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
         fprintf(stderr,"Error during file lock\n");
         // return response with error lock
         fclose(logfile);
-        return 0;
+        return 1;
     }
 #endif
     int timestr_len = 27;
@@ -163,29 +163,34 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
 
     if (fwrite(log_string, 1, strlen(log_string), logfile) == 0) {
         fprintf(stderr, "An error occurred while trying to write to logfile");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
 #ifdef __unix__
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #endif
 
     fclose(logfile);
-    return 1;
+    return 0;
 }
 
 int http_log (http_header h_request, char * h_response, char * client_address, int no_name) {
     http_header h_resp = parse_http_header_response(h_response,strlen(h_response));
     if (h_resp.is_request == -1) {
         fprintf(stderr, "Error during response parsing");
-        return 0;
+        return 1;
     }
     int err = 0;
     if (!no_name) {
-        if (h_request.attribute.authorization == NULL) return 0;
+        if (h_request.attribute.authorization == NULL) return 1;
         authorization auth = parse_authorization(h_request.attribute.authorization);
+
+        if (auth.free_pointer == NULL) {
+            free_http_header(h_resp);
+            return 1;
+        }
         err = log_write(client_address, NULL, auth.name, h_request.type_req, h_request.url,
                   h_request.protocol_type, h_resp.code_response, h_resp.attribute.content_length);
         free(auth.free_pointer);
@@ -671,6 +676,9 @@ void send_file (int socket, http_header http_h, char * address) {
 
         if (content == NULL) {
             char * resp = create_http_response(500, -1,NULL, NULL,NULL);
+            if (resp == NULL) {
+                return;
+            }
             send(socket,resp, strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
