@@ -770,21 +770,13 @@ unlock:
 }
 
 void put_file (int clientfd, http_header http_h, char * address, char * buffer, const int BUFF_READ_LEN,int header_len, int data_read) {
-    fflush(stdout);
     FILE * file;
-
-    //TODO: Se non si sovrascrive il file decommentare e gestire risposta.
-    /*
-    file = fopen(http_h.url+1, "r" );
-    if (file != NULL) {
-        // send a error file exist.
-        fclose(file);
-
-        return;
-    }
-     */
     file = fopen(http_h.url+1, "w" );
 
+    if (file == NULL) {
+        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
+        return;
+    }
 #ifdef __unix__
     int fd = fileno(file);
     if (flock(fd,LOCK_EX) != 0) {
@@ -801,14 +793,16 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     int data_write_in_file = 0;
     int data_l = data_read - header_len;
 
-    printf("content length: %d\n", http_h.attribute.content_length);
-    printf("%d\n",data_l);
 
     if (http_h.attribute.content_length == data_l) {
-
+        // Se ho già letto i dati alla prima lettura con l'header
         int write = fwrite(data,1,data_l,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
+            if (resp == NULL) {
+                goto unlock;
+            }
+
             Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
@@ -816,6 +810,9 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         }
         // Invio la richiesta di fine.
         char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
+        if (resp == NULL) {
+            goto unlock;
+        }
         Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
@@ -823,8 +820,13 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     }
 
     int write = fwrite(data,1,data_l,file);
+
     if (write != data_l) {
+        // se non riesco a scrivere tutto
         char * resp = create_http_response(500,-1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            goto unlock;
+        }
         Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
@@ -838,12 +840,16 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         if (remaining_to_read < BUFF_READ_LEN) read = recv(clientfd,buffer,remaining_to_read, 0);
         else  read = recv(clientfd,buffer,BUFF_READ_LEN, 0);
 
-        printf("read: %d\n", read);
-        fflush(stdout);
+        if (read == 0 || read == -1) {
+            goto unlock;
+        }
 
         write = fwrite(buffer,1,read,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
+            if (resp == NULL) {
+                goto unlock;
+            }
             Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
@@ -858,6 +864,9 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
 
     // mando la risposta
     char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
+    if (resp == NULL) {
+        goto unlock;
+    }
     Send(clientfd, resp,strlen(resp), 0);
     http_log(http_h,resp,address,0);
     free(resp);
