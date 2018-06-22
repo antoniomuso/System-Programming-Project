@@ -51,14 +51,18 @@ modalità o sotto piattaforma Unix.
 ##### Routine 
 Tutti i processi/thread figli eseguono la stessa funzione: `process_routine` che riceve in input le due socket create in
 precedenza dal processo padre e in cui è specificata la modalità di gestione delle richieste in arrivo da
-parte di client esterni. Al fine di evitare un'attesa attiva dei figli, si utilizza 
- che i processi si blocchino su una sola accept, si `select` per selezionare  
-
+parte di client esterni. Al fine di evitare che i figli si blocchino su una sola `accept`, 
+si utilizza la funzione `select` per risvegliare i processi appena si verifica un cambiamento su una delle due socket, 
+ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendiosa.  
+Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette e si procede con la sua
+gestione.
 ### Operazioni
-
+Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e ...
 ##### GET
 ###### File
 ###### Directory
+Nel caso in cui l'url richiesta corrisponde a una directory, viene invocata la funzione `list_dir` che restituisce il 
+contenuto della directory indicata.
 ##### GET con cifratura
 ##### PUT
 ##### Esecuzione comandi
