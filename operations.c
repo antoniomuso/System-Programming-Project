@@ -81,6 +81,26 @@ rand_r (unsigned int *seed)
 }
 #endif
 
+
+
+void m_sleep (unsigned int time) {
+#ifdef __unix__
+    sleep(time);
+#elif _WIN32
+    Sleep(time * 1000);
+#endif
+
+}
+
+int Send(int socket, const void * buff, int size, int flag) {
+    int res = send(socket,buff ,size ,0);
+    if (res == -1) {
+        fprintf(stderr, "send Error\n");
+    }
+    return res;
+}
+
+
 static const char LOGFILE[] = "log.txt";
 
 struct data_args {
@@ -860,7 +880,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (file == NULL) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         return;

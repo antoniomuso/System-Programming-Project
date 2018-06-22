@@ -497,6 +497,11 @@ http_header parse_http_header_response(const char *data, int data_len) {
     }
     // Copy of data
     char * data_copy = malloc(data_len+1);
+    if (data_copy == NULL) {
+        http_h.is_request = -1;
+        return http_h;
+    }
+
     http_h.pointer_to_free = data_copy;
     memcpy(data_copy, data, data_len);
     data_copy[data_len] = '\0';
@@ -550,6 +555,11 @@ http_header parse_http_header_request (const char* data, int data_len) {
 
     // Copy of date
     char * data_copy = malloc(data_len+1);
+    if (data_copy == NULL) {
+        http_h.is_request = -1;
+        return http_h;
+    }
+
     http_h.pointer_to_free = data_copy;
     memcpy(data_copy, data, data_len);
     data_copy[data_len] = '\0';
@@ -745,6 +755,11 @@ struct operation_command parser_operation (char * url) {
     if (!startsWith("/command/", url)) return out;
 
     char * com = malloc(strlen(url) - 8);
+    if (com == NULL) {
+        out.comm = NULL;
+        out.args = NULL;
+        return out;
+    }
     strcpy(com, url + 9);
 
     char * mem_point = NULL;

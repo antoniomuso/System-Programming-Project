@@ -49,23 +49,6 @@
  */
 
 
-void m_sleep (unsigned int time) {
-#ifdef __unix__
-    sleep(time);
-#elif _WIN32
-    Sleep(time * 1000);
-#endif
-
-}
-
-int Send(int socket, const void * buff, int size, int flag) {
-    int res = send(socket,buff ,size ,0);
-    if (res == -1) {
-        fprintf(stderr, "send Error\n");
-    }
-    return res;
-}
-
 
 // If -1 there are an error.
 int set_blocking(int sockfd, int blocking) {
@@ -94,6 +77,7 @@ int is_authorize(http_header http_h, options credentials) {
     if (http_h.attribute.authorization != NULL) {
         printf("Auth: %s\n", http_h.attribute.authorization);
         authorization auth = parse_authorization(http_h.attribute.authorization);
+        if (auth.free_pointer == NULL) return 0;
         printf("name: %s, password: %s\n", auth.name, auth.password);
 
         if (strlen(auth.name) < MAX_OPTION_LEN
@@ -211,7 +195,7 @@ void* process_routine (void *arg) {
                         break;
                     }
 
-                    send(clientfd, resp,strlen(resp), 0);
+                    Send(clientfd, resp,strlen(resp), 0);
                     close_socket(clientfd);
                     free(resp);
                     break;
@@ -229,8 +213,12 @@ void* process_routine (void *arg) {
             if (http_h.is_request < 0) {
                 fprintf(stderr,"Error HTTP parse");
                 char * resp = create_http_response(400,-1, NULL, NULL, NULL);
+                if (resp == NULL) {
+                    close_socket(clientfd);
+                    break;
+                }
                 http_log(http_h, resp,address,1);
-                send(clientfd, resp,strlen(resp), 0);
+                Send(clientfd, resp,strlen(resp), 0);
                 free(resp);
                 close_socket(clientfd);
                 break;
@@ -241,19 +229,17 @@ void* process_routine (void *arg) {
 #if DEBUG != 1
             if (!is_authorize(http_h,credentials)) {
                 char *resp = create_http_response(401,0,NULL, NULL, NULL);
-                send(clientfd,resp,strlen(resp),0);
+                if (resp == NULL) {
+                    goto socket_exit;
+                }
+                Send(clientfd,resp,strlen(resp),0);
                 http_log(http_h,resp,address,1);
                 free(resp);
-                close_socket(clientfd);
-                break;
+                goto socket_exit;
             }
 #endif
 
             if (strcmp(http_h.type_req, "GET") == 0) {
-
-
-                //log_write("192.168.0.1", NULL, NULL, http_h.type_req, 0, 0);
-
 
                 if (is_chipher == 1 ) {
                     // Se siamo in modalità cifratura
@@ -267,7 +253,11 @@ void* process_routine (void *arg) {
 
                         if(exec_command(clientfd, op.comm, op.args, http_h, address) == 1) {
                             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-                            send(clientfd, resp,strlen(resp), 0);
+                            if (resp == NULL) {
+                                free_operation_command(op);
+                                goto socket_exit;
+                            }
+                            Send(clientfd, resp,strlen(resp), 0);
                             http_log(http_h,resp,address,0);
                             free(resp);
                         }
@@ -275,7 +265,10 @@ void* process_routine (void *arg) {
                     } else {
                         fprintf(stderr, "Command not passed\n");
                         char * resp = create_http_response(400,-1, NULL, NULL, NULL);
-                        send(clientfd, resp,strlen(resp), 0);
+                        if (resp == NULL) {
+                            goto socket_exit;
+                        }
+                        Send(clientfd, resp,strlen(resp), 0);
                         http_log(http_h,resp,address,0);
                         free(resp);
                     }
@@ -291,6 +284,7 @@ void* process_routine (void *arg) {
                 put_file(clientfd,http_h,address,buffer,BUFF_READ_LEN,header_len,data_read);
             }
 
+            socket_exit:
             free_http_header(http_h);
             close_socket(clientfd);
             break;

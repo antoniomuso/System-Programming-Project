@@ -5,6 +5,8 @@
 
 #ifndef SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H
 #define SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H
+void m_sleep (unsigned int time);
+int Send(int socket, const void * buff, int size, int flag);
 int exec_command(int socket, const char * command, const char * args, http_header http_h, char * address);
 void send_file (int socket, http_header http_h, char * address);
 void send_file_chipher (int socket, http_header http_h, unsigned int address, char * conv_address);
