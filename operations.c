@@ -128,7 +128,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
     FILE *logfile = fopen(LOGFILE, "a");
     if (logfile == NULL) {
         fprintf(stderr, "Unable to open logfile");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
 #ifdef __unix__
@@ -137,7 +137,7 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
         fprintf(stderr,"Error during file lock\n");
         // return response with error lock
         fclose(logfile);
-        return 0;
+        return 1;
     }
 #endif
     int timestr_len = 27;
@@ -163,29 +163,34 @@ int log_write(char *cli_addr, char *user_id, char *username, char *request, char
 
     if (fwrite(log_string, 1, strlen(log_string), logfile) == 0) {
         fprintf(stderr, "An error occurred while trying to write to logfile");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
 #ifdef __unix__
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #endif
 
     fclose(logfile);
-    return 1;
+    return 0;
 }
 
 int http_log (http_header h_request, char * h_response, char * client_address, int no_name) {
     http_header h_resp = parse_http_header_response(h_response,strlen(h_response));
     if (h_resp.is_request == -1) {
         fprintf(stderr, "Error during response parsing");
-        return 0;
+        return 1;
     }
     int err = 0;
     if (!no_name) {
-        if (h_request.attribute.authorization == NULL) return 0;
+        if (h_request.attribute.authorization == NULL) return 1;
         authorization auth = parse_authorization(h_request.attribute.authorization);
+
+        if (auth.free_pointer == NULL) {
+            free_http_header(h_resp);
+            return 1;
+        }
         err = log_write(client_address, NULL, auth.name, h_request.type_req, h_request.url,
                   h_request.protocol_type, h_resp.code_response, h_resp.attribute.content_length);
         free(auth.free_pointer);
@@ -524,8 +529,8 @@ int exec_command(int socket, const char * command, const char * args, http_heade
 
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL, NULL);
 
-    send(socket, response, strlen(response), 0);
-    send(socket, data_arguments->out, data_arguments->out_size, 0);
+    Send(socket, response, strlen(response), 0);
+    Send(socket, data_arguments->out, data_arguments->out_size, 0);
 
     http_log(http_h,response,address,0);
 
@@ -565,6 +570,8 @@ char *list_dir(char *dir_name) {
     int pos = 0;
 
     char *dirs = malloc(buf_size);
+    if (dirs == NULL) return NULL;
+
 #ifdef _WIN32
     WIN32_FIND_DATA ffd;
     int len = strlen(dir_name) + strlen("\\*")+1;
@@ -652,9 +659,7 @@ char *list_dir(char *dir_name) {
             }
             written = snprintf(dirs+pos, buf_size, "%s\n", entry->d_name);
         }
-
         pos += written;
-
     }
 
 
@@ -671,7 +676,10 @@ void send_file (int socket, http_header http_h, char * address) {
 
         if (content == NULL) {
             char * resp = create_http_response(500, -1,NULL, NULL,NULL);
-            send(socket,resp, strlen(resp), 0);
+            if (resp == NULL) {
+                return;
+            }
+            Send(socket,resp, strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             return;
@@ -679,8 +687,11 @@ void send_file (int socket, http_header http_h, char * address) {
 
         int content_len = strlen(content);
         char * resp = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
-        if (send(socket,resp, strlen(resp), 0) != -1)
-            send(socket, content, content_len, 0);
+        if (resp == NULL) {
+            free(content);
+        }
+
+        if (Send(socket,resp, strlen(resp), 0) != -1) Send(socket, content, content_len, 0);
 
         http_log(http_h,resp,address,0);
         free(content);
@@ -688,14 +699,17 @@ void send_file (int socket, http_header http_h, char * address) {
         return;
     }
 
-
     FILE * pfile;
 
     pfile = fopen((url+1),"rb");
     if (pfile == NULL) {
         //Send a error response
         char * resp = create_http_response(404,-1,NULL, NULL, NULL);
-        send(socket,resp,strlen(resp),0);
+        if (resp == NULL) {
+            return;
+        }
+
+        Send(socket,resp,strlen(resp),0);
         http_log(http_h,resp,address,0);
         free(resp);
         return;
@@ -716,7 +730,11 @@ void send_file (int socket, http_header http_h, char * address) {
     fseek(pfile, 0, SEEK_SET);
 
     char * resp = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
-    int err = send(socket,resp, strlen(resp), 0);
+    if (resp == NULL) {
+        goto unlock;
+    }
+
+    int err = Send(socket,resp, strlen(resp), 0);
     if (err == -1) {
         goto unlock;
     }
@@ -729,43 +747,36 @@ void send_file (int socket, http_header http_h, char * address) {
         read = fread(buff,1,BUFSIZE,pfile);
         printf("read: %d\n", read);
         fflush(stdout);
-        send(socket,buff,read,0);
+        Send(socket,buff,read,0);
 
         if (read == remaining_to_read || read == 0) {
             break;
         }
         remaining_to_read -= read;
     }
+
+    http_log(http_h,resp,address,0);
+
 #ifdef __unix__
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #elif _WIN32
 unlock:
 #endif
-    http_log(http_h,resp,address,0);
-
     free(resp);
     fclose(pfile);
 }
 
 void put_file (int clientfd, http_header http_h, char * address, char * buffer, const int BUFF_READ_LEN,int header_len, int data_read) {
-    fflush(stdout);
     FILE * file;
-
-    //TODO: Se non si sovrascrive il file decommentare e gestire risposta.
-    /*
-    file = fopen(http_h.url+1, "r" );
-    if (file != NULL) {
-        // send a error file exist.
-        fclose(file);
-
-        return;
-    }
-     */
     file = fopen(http_h.url+1, "w" );
 
+    if (file == NULL) {
+        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
+        return;
+    }
 #ifdef __unix__
     int fd = fileno(file);
     if (flock(fd,LOCK_EX) != 0) {
@@ -782,31 +793,41 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     int data_write_in_file = 0;
     int data_l = data_read - header_len;
 
-    printf("content length: %d\n", http_h.attribute.content_length);
-    printf("%d\n",data_l);
 
     if (http_h.attribute.content_length == data_l) {
-
+        // Se ho già letto i dati alla prima lettura con l'header
         int write = fwrite(data,1,data_l,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-            send(clientfd, resp,strlen(resp), 0);
+            if (resp == NULL) {
+                goto unlock;
+            }
+
+            Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             goto unlock;
         }
         // Invio la richiesta di fine.
         char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
-        send(clientfd, resp,strlen(resp), 0);
+        if (resp == NULL) {
+            goto unlock;
+        }
+        Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
         goto unlock;
     }
 
     int write = fwrite(data,1,data_l,file);
+
     if (write != data_l) {
+        // se non riesco a scrivere tutto
         char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-        send(clientfd, resp,strlen(resp), 0);
+        if (resp == NULL) {
+            goto unlock;
+        }
+        Send(clientfd, resp,strlen(resp), 0);
         http_log(http_h,resp,address,0);
         free(resp);
         goto unlock;
@@ -819,13 +840,17 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         if (remaining_to_read < BUFF_READ_LEN) read = recv(clientfd,buffer,remaining_to_read, 0);
         else  read = recv(clientfd,buffer,BUFF_READ_LEN, 0);
 
-        printf("read: %d\n", read);
-        fflush(stdout);
+        if (read == 0 || read == -1) {
+            goto unlock;
+        }
 
         write = fwrite(buffer,1,read,file);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
-            send(clientfd, resp,strlen(resp), 0);
+            if (resp == NULL) {
+                goto unlock;
+            }
+            Send(clientfd, resp,strlen(resp), 0);
             http_log(http_h,resp,address,0);
             free(resp);
             goto unlock;
@@ -839,14 +864,17 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
 
     // mando la risposta
     char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
-    send(clientfd, resp,strlen(resp), 0);
+    if (resp == NULL) {
+        goto unlock;
+    }
+    Send(clientfd, resp,strlen(resp), 0);
     http_log(http_h,resp,address,0);
     free(resp);
 
 #ifdef __unix__
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
 #elif _WIN32
 unlock:
@@ -879,7 +907,11 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     file = fopen(http_h.url+1,"rb");
 
     if (file == NULL) {
+        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            return;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
@@ -907,7 +939,10 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map == MAP_FAILED) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        if (resp == NULL) {
+            goto unlock;
+        }
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         goto unlock;
@@ -918,7 +953,10 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_h == NULL) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        if (resp == NULL) {
+            return;
+        }
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         return;
@@ -928,24 +966,32 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map_h == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        if (resp == NULL) {
+            CloseHandle(file_h);
+            return;
+        }
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(file_h);
-        goto unlock;
+        return;
     }
 
-    char * map;
-    map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile);
+    char * map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile);
 
     if (map == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
-        send(socket, resp, strlen(resp), 0);
+        if (resp == NULL) {
+            CloseHandle(file_h);
+            CloseHandle(map_h);
+            return;
+        }
+        Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(map_h);
         CloseHandle(file_h);
-        goto unlock;
+        return;
     }
 #endif
 
@@ -965,34 +1011,41 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 
 #ifdef _WIN32
+    // La cifratura dei bit con il padding la faccio separata in windows
     encrypt(map_int + n_pack, address, padding);
 #endif
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
-    send(socket, resp, strlen(resp), 0);
-    http_log(http_h, resp, conv_address, 0);
+    if (resp == NULL) {
+        if (munmap(map, lengthOfFile+padding) == -1) {
+            fprintf(stderr, "Error during un-mmapping\n");
+        }
+        goto unlock;
+    }
 
-    send(socket,map,lengthOfFile,0); // il padding non lo invia
+    if (Send(socket, resp, strlen(resp), 0) != -1)
+        Send(socket,map,lengthOfFile,0); // il padding non viene inviato
+
+    http_log(http_h, resp, conv_address, 0);
 
     free(resp);
 #ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
-        goto unlock;
     }
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
-        sleep(100);
+        sleep(1);
     }
     fclose(file);
 #elif __WIN32
     if (UnmapViewOfFile(map) == FALSE) {
         fprintf(stderr, "Error during un-mmapping\n");
-        //goto unlock;
     }
     CloseHandle(map_h);
     CloseHandle(file_h);
 unlock:
-#endif
     return;
+#endif
+
 }
