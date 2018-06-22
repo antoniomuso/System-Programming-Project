@@ -94,6 +94,9 @@ int main(int argc, char *argv[]) {
         free_options(fopt);
 
         fopt = parse_file("config.txt", confs, 4);
+        if (is_options_error(fopt)) {
+            exit(EXIT_FAILURE);
+        }
         opt.commands = NULL;
     }
 
