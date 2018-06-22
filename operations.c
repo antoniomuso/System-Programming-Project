@@ -942,7 +942,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         for (int i = last ; i < 4; i++ ) {
             buff[i] = '\0';
         }
-        int * val = buff;
+        int * val = (int *) buff;
         encrypt(val, address);
 
         for (int i = lengthOfFile - last - 1, j = 0; i < lengthOfFile; i++, j++) {
