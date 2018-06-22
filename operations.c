@@ -1017,10 +1017,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     if (resp == NULL) {
-        if (munmap(map, lengthOfFile+padding) == -1) {
-            fprintf(stderr, "Error during un-mmapping\n");
-        }
-        goto unlock;
+        goto unmap;
     }
 
     if (Send(socket, resp, strlen(resp), 0) != -1)
@@ -1029,6 +1026,8 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     http_log(http_h, resp, conv_address, 0);
 
     free(resp);
+
+unmap:
 #ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
@@ -1045,7 +1044,6 @@ unlock:
     CloseHandle(map_h);
     CloseHandle(file_h);
 unlock:
-    return;
 #endif
-
+    return;
 }

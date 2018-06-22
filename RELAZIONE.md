@@ -51,7 +51,8 @@ modalità o sotto piattaforma Unix.
 ##### Routine 
 Tutti i processi/thread figli eseguono la stessa funzione: `process_routine` che riceve in input le due socket create in
 precedenza dal processo padre e in cui è specificata la modalità di gestione delle richieste in arrivo da
-parte di client esterni. Al fine di evitare che i processi si blocchino su una sola accept, si `select` per selezionare  
+parte di client esterni. Al fine di evitare un'attesa attiva dei figli, si utilizza 
+ che i processi si blocchino su una sola accept, si `select` per selezionare  
 
 ### Operazioni
 
