@@ -834,9 +834,23 @@ unlock:
     fclose(file);
 }
 
-void encrypt (unsigned int * buff, unsigned int address) {
+void encrypt (unsigned int * buff, unsigned int address, int pad) {
+    char *ptr = (char *) buff;
+    char buff_copy[4] = {0};
+    int rem = 4 - pad;
+    for (int i = 0; i < rem; i++) {
+        // i restati pad sono zeri (padding)
+        buff_copy[i] = ptr[i];
+    }
+    int *buff_copy_i;
+    buff_copy_i = (int *) buff_copy;
+
     int val = rand_r(&address);
-    *buff = ((unsigned int) (*buff)) ^ val;
+    *buff_copy_i = ((unsigned int) (*buff_copy_i)) ^ val;
+
+    for (int i = 0; i < rem; i++) {
+        ptr[i] = buff_copy[i];
+    }
 }
 
 void send_file_chipher (int socket, http_header http_h, unsigned int address, char * conv_address) {
@@ -883,74 +897,57 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_h == NULL) {
-        printf("file_h\n");
-        fflush(stdout);
+        char *resp = create_http_response(404, -1, NULL, NULL, NULL);
+        send(socket, resp, strlen(resp), 0);
+        http_log(http_h, resp, conv_address, 0);
+        free(resp);
+        return;
     }
 
-    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE, 0, lengthOfFile + padding, NULL);
+    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE, 0, lengthOfFile, NULL);
 
     if (map_h == NULL) {
-        printf("map-h\n");
-        fflush(stdout);
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
         send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
+        CloseHandle(file_h)
         goto unlock;
     }
 
     char * map;
-    map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile + padding);
+    map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile);
 
     if (map == NULL) {
-        printf("map-vn");
-        fflush(stdout);
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
         send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(map_h);
+        CloseHandle(file_h);
         goto unlock;
     }
 #endif
-
 
 #ifdef __unix__
     for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
         map[i] = 0;
     }
-#endif
-    unsigned int * map_int;
-
-    map_int = (unsigned int *) map;
-
 
     n_pack = last != 0 ? n_pack + 1 : n_pack;
+#endif
 
+    unsigned int * map_int;
+    map_int = (unsigned int *) map;
 
     for (int i = 0; i < n_pack; i++) {
-        encrypt(map_int + (i) , address);
+        encrypt(map_int + (i) , address, 0);
     }
 
 #ifdef _WIN32
-    char buff[4];
-    if (last != 0) {
-
-        for (int i = lengthOfFile - last - 1, j = 0; i < lengthOfFile; i++, j++) {
-            buff[j] = map[i];
-        }
-        for (int i = last ; i < 4; i++ ) {
-            buff[i] = '\0';
-        }
-        int * val = (int *) buff;
-        encrypt(val, address);
-
-        for (int i = lengthOfFile - last - 1, j = 0; i < lengthOfFile; i++, j++) {
-            map[i] = buff[j];
-        }
-
-    }
+    encrypt(map_int + n_pack, address, padding);
 #endif
+
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     send(socket, resp, strlen(resp), 0);
     http_log(http_h, resp, conv_address, 0);
@@ -961,19 +958,20 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 #ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
-        // Uscire ?
+        goto unlock;
     }
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
         sleep(100);
     }
-
+    fclose(file);
 #elif __WIN32
-    UnmapViewOfFile(map);
+    if (UnmapViewOfFile(map) == FALSE) {
+        fprintf(stderr, "Error during un-mmapping\n");
+        //goto unlock;
+    }
     CloseHandle(map_h);
     CloseHandle(file_h);
 unlock:
 #endif
-    fclose(file);
-
 }
