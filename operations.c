@@ -907,7 +907,11 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     file = fopen(http_h.url+1,"rb");
 
     if (file == NULL) {
+        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            return;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
@@ -935,6 +939,9 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map == MAP_FAILED) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            goto unlock;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
@@ -946,6 +953,9 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_h == NULL) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            return;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
@@ -956,24 +966,32 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     if (map_h == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            CloseHandle(file_h);
+            return;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(file_h);
-        goto unlock;
+        return;
     }
 
-    char * map;
-    map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile);
+    char * map = MapViewOfFile(map_h, FILE_MAP_COPY, 0, 0, lengthOfFile);
 
     if (map == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            CloseHandle(file_h);
+            CloseHandle(map_h);
+            return;
+        }
         Send(socket, resp, strlen(resp), 0);
         http_log(http_h, resp, conv_address, 0);
         free(resp);
         CloseHandle(map_h);
         CloseHandle(file_h);
-        goto unlock;
+        return;
     }
 #endif
 
@@ -993,20 +1011,24 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 
 #ifdef _WIN32
+    // La cifratura dei bit con il padding la faccio separata in windows
     encrypt(map_int + n_pack, address, padding);
 #endif
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
-    Send(socket, resp, strlen(resp), 0);
-    http_log(http_h, resp, conv_address, 0);
+    if (resp == NULL) {
+        goto unlock;
+    }
 
-    Send(socket,map,lengthOfFile,0); // il padding non lo invia
+    if (Send(socket, resp, strlen(resp), 0) != -1)
+        Send(socket,map,lengthOfFile,0); // il padding non viene inviato
+
+    http_log(http_h, resp, conv_address, 0);
 
     free(resp);
 #ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
         fprintf(stderr, "Error during un-mmapping\n");
-        goto unlock;
     }
 unlock:
     while (flock(fd,LOCK_UN) != 0) {
@@ -1016,11 +1038,11 @@ unlock:
 #elif __WIN32
     if (UnmapViewOfFile(map) == FALSE) {
         fprintf(stderr, "Error during un-mmapping\n");
-        //goto unlock;
     }
     CloseHandle(map_h);
     CloseHandle(file_h);
 unlock:
-#endif
     return;
+#endif
+
 }
