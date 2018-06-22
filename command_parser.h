@@ -72,7 +72,7 @@ struct operation_command {
 };
 
 authorization parse_authorization (const char * src);
-
+int is_options_error (options opt);
 char* get_command_value (char command[], options opt);
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm);
 options parse_file(char *name, command_arc cmd_arc[], int arc_len);

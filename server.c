@@ -284,8 +284,8 @@ int run_server(options c_options, options f_options) {
     printf("Initialising Winsock...\n");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
     {
-        fprintf(stderr,"Failed. Error Code : %d",WSAGetLastError());
-        return 1;
+        fprintf(stderr,"Failed. Error Code : %d\n",WSAGetLastError());
+        exit(EXIT_FAILURE);
     }
 
     printf("Initialised.\n");
@@ -310,14 +310,24 @@ int run_server(options c_options, options f_options) {
                  ? get_command_value("-mode", c_options)
                  : get_command_value("mode", f_options);
 
-    int n_proc = get_command_value("-n_proc", c_options) != NULL
-                 ? atoi(get_command_value("-n_proc", c_options))
-                 : atoi(get_command_value("n_proc", f_options));
+    char * o_n_proc = get_command_value("-n_proc", c_options);
+    char * f_n_proc = get_command_value("n_proc", f_options);
+
+    if (f_n_proc == NULL) {
+        fprintf(stderr, "Error config file, parameters incomplete\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int n_proc = o_n_proc != NULL
+                 ? atoi(o_n_proc)
+                 : atoi(f_n_proc);
+
+
     char chiper_port[MAX_OPTION_LEN];
     snprintf(chiper_port, MAX_OPTION_LEN, "%d", atoi(port) + 1);
 
-    if (n_proc <= 0) {
-        fprintf(stderr, "Error n_proc <= 0");
+    if (n_proc <= 0 || port == NULL || server_ip == NULL || mode == NULL) {
+        fprintf(stderr, "Error config file, parameters incomplete\n");
         exit(EXIT_FAILURE);
     }
 
@@ -373,7 +383,7 @@ int run_server(options c_options, options f_options) {
         printf("mode = MT\n");
         fflush(stdout);
 
-        pthread_t tid[n_proc ];
+        pthread_t tid[n_proc];
 
         int sockets[2];
         sockets[0] = server_socket;
@@ -453,17 +463,10 @@ int run_server(options c_options, options f_options) {
         set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
 
     } else if (strcmp(mode, "MP") == 0) {
-        /**
-         * TODO: Ricordarsi di chiudere i processi una volta finito o in caso di fallimento di qualsiasi operazione
-         */
 
         int buf_size = 30;
 
         char buff[buf_size];
-
-
-        //STARTUPINFO startup_info[n_proc-1];
-        //PROCESS_INFORMATION proc_info[n_proc-1];
 
         STARTUPINFO startup_info = {0};
         PROCESS_INFORMATION proc_info = {0};
@@ -494,7 +497,6 @@ int run_server(options c_options, options f_options) {
                     0,
                     NULL);
 
-
             if (pipe_h == INVALID_HANDLE_VALUE) {
                 printf("Couldn't create Pipe\n");
                 exit(EXIT_FAILURE);
@@ -509,8 +511,6 @@ int run_server(options c_options, options f_options) {
             DWORD proc_pid = proc_info.dwProcessId;
             children_handle[i] = proc_info.hProcess;
 
-            WSAPROTOCOL_INFO wsa_prot_info[2];
-
             WSAPROTOCOL_INFO wsa_prot_info_1;
             WSAPROTOCOL_INFO wsa_prot_info_2;
 
@@ -521,29 +521,24 @@ int run_server(options c_options, options f_options) {
                 exit(EXIT_FAILURE);
             }
 
-
             BOOL fSuccess = FALSE;
             //Wait for child to connect to pipe
             fSuccess = ConnectNamedPipe(pipe_h, NULL) ? TRUE : FALSE;
             if (!fSuccess) {
                 fprintf(stderr, "No incoming child connection\n");
-                exit(EXIT_FAILURE);
             }
             DWORD written = 0;
-            if (WriteFile(pipe_h, &wsa_prot_info_1, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
+            if (WriteFile(pipe_h, &wsa_prot_info_1, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE) {
                 fprintf(stderr, "Couldn't write to pipe\n");
-            if (WriteFile(pipe_h, &wsa_prot_info_2, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE)
+                exit(EXIT_FAILURE);
+            }
+
+            if (WriteFile(pipe_h, &wsa_prot_info_2, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE) {
                 fprintf(stderr, "Couldn't write to pipe\n");
-            fflush(stdout);
+                exit(EXIT_FAILURE);
+            }
         }
-
         set_signal_handler(children_handle, sizeof(HANDLE), n_proc, 1);
-
-        int server_socket_arr[2];
-        server_socket_arr[0] = server_socket;
-        server_socket_arr[1] = server_socket_cipher;
-
-        sock_pointer = server_socket_arr;
 
     } else {
         fprintf(stderr, "Error invalid mode");

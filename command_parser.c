@@ -124,6 +124,11 @@ cont:
 
 #define MAX_BUFF_LEN 8000
 
+int is_options_error (options opt) {
+    if (opt.commands == NULL) return 1;
+    return 0;
+}
+
 /**
  *
  * @param command Command String
@@ -212,8 +217,13 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
 
     int pos = 0;
     int len = 6;
+    options option;
     command* comm = calloc(sizeof(command), len);
 
+    if (comm == NULL) {
+        fprintf(stderr, "Malloc failed during options parser\n");
+        exit(EXIT_FAILURE);
+    }
 
 
     for (int i = 1; i < argc ; i++) {
@@ -225,7 +235,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                     len += REALLOC_INC_SIZE;
                     comm = (command*) realloc(comm, sizeof(command) * len);
                     if (comm == NULL) {
-                        fprintf(stderr, "Options realloc failed\n");
+                        fprintf(stderr, "Options realloc failed during options parser\n");
                         exit(EXIT_FAILURE);
                     }
                 }
@@ -279,7 +289,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
         }
     }
 
-    options option;
+
     option.comm_len = pos;
     option.commands = comm;
 
@@ -295,9 +305,11 @@ command extract_command(char *string) {
     char delimiter = '=';
     char *ptr = strchr(string, delimiter);
 
+    command comm;
+
     if (ptr != NULL) {
         //int index = ptr - string;
-        command comm;
+
 
         *(ptr) = '\0';
         if (strlen(string) > MAX_OPTION_LEN || strlen(ptr) > MAX_OPTION_LEN) {
@@ -312,29 +324,36 @@ command extract_command(char *string) {
         return comm;
     }
 
+    comm.name[0] = '\0';
+    comm.value[0] = '\0';
+
     fprintf(stderr, "Extraction failed.\n");
-    //exit(EXIT_FAILURE);
+    return comm;
 }
 
 options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     /**
      * Parses a file following the chosen format.
      */
+    options ret;
+    ret.commands = NULL;
+
     FILE *fname = fopen(name, "rb");
     if (fname == NULL) {
         fprintf(stderr, "Unable to open file %s\n", name);
-        exit(EXIT_FAILURE);
+        return ret;
+        //exit(EXIT_FAILURE);
     }
 
     fseek(fname, 0, SEEK_END);
     long fsize = ftell(fname);
     fseek(fname, 0, SEEK_SET);
 
-    char *buff = malloc(fsize + 2);
+    char buff[fsize + 2];
 
     if(fread(buff, 1, fsize, fname) < fsize) {
         fprintf(stderr, "Unable to read from %s\n", name);
-        exit(EXIT_FAILURE);
+        return ret;
     }
     fclose(fname);
 
@@ -345,6 +364,10 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     int len = 20;
 
     command* comm = calloc(sizeof(command), len);
+    if (comm == NULL) {
+        fprintf(stderr, "Malloc error file_parser\n");
+        return ret;
+    }
 
     char * p = buff;
 
@@ -355,15 +378,22 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
         fflush(stdout);
         p = NULL;
         command cmd = extract_command(lines);
+        if (strlen(cmd.name) == 0 || strlen(cmd.value) == 0) {
+            free(comm);
+            fprintf(stderr, "Config file format error\n", name);
+            return ret;
+        }
 
         if (k >= len) {
             len+= REALLOC_INC_SIZE;
-            comm = (command*) realloc(comm, sizeof(command) * len);
-
-            if (comm == NULL) {
+            command * app;
+            app = (command*) realloc(comm, sizeof(command) * len);
+            if (app == NULL) {
+                free(comm);
                 fprintf(stderr,"Realloc Failed\n");
-                exit(EXIT_FAILURE);
+                return ret;
             }
+            comm = app;
         }
 
         if (cmd_arc == NULL){
@@ -402,9 +432,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
         }
         k++;
     }
-    free(buff);
 
-    options ret;
     ret.comm_len = k;
     ret.commands = comm;
 
