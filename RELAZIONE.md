@@ -20,7 +20,7 @@ ognuno con un proprio header, che vengono compilati assieme automaticamente tram
 Per compilare l'intero programma è sufficiente posizionarsi nella directory del progetto e usare il makefile:
 
 - Nel caso di Unix, è sufficiente chiamare `make`.
-- Nel per Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
+- In Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
 
 ### Server
 ##### Avvio del server
