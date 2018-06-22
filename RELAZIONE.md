@@ -70,16 +70,18 @@ Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la
 ##### GET con cifratura
 Le richieste di GET per i file sulla porta che prevede cifratura preventiva del file stesso sono gestite dalla funzione
 `send_file_cipher`. Dopo essere stato aperto, il file è mappato in memoria grazie alle apposite funzioni dei due sistemi
-operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi del file 
-mappato di dimensione pari a 4 byte e li cifra mediante lo _XOR_ con un intero random avente come seme 
-l'indirizzo IP del client. 
-Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri (0)
-all'ultimo blocco. 
+operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi di dimensione 
+pari a 4 byte del file mappato  e li cifra mediante lo _XOR_ con un intero random avente come seme l'indirizzo IP del 
+client. 
+Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri 
+(0) all'ultimo blocco. 
 ##### Esecuzione comandi
 Come da specifiche, nel caso in cui il primo elemento del path contenga la la stringa **command** viene eseguita la 
 funzione `exec_command`, la quale crea un thread che andrà a generare il processo che eseguirà il comando passato in 
 input. Come meccanismi di sincronizzazione, sono stati usati una **_condition variable_** per Unix e un **_Evento_** per
-Windows.
+Windows. Per entrambe le piattaforme si è deciso di usare il meccanismo delle **_pipe_** per redirezionare l'output dei
+processi che eseguono il comando, al fine di inviarne il contenuto al client una volta completata l'esecuzione del 
+thread.
 
 L'implementazione di `exec_command` supporta anche il **passaggio di parametri**, secondo la seguente sintassi:
 `[...]/command/arg1?arg2?[...]?argN`, dove nel caso di passaggio di comandi legati ai terminali 
@@ -96,11 +98,12 @@ che il client sta caricando ed ottenuto il lock su di esso, legge e trascrive il
 caso in cui esistesse già un file con lo stesso nome di quello che il client sta caricando, il file esistente viene 
 sovrascritto.
 ##### Logging
-
-### Parser
+Come da specifiche, tutte le richieste sono loggate all'interno del file _log.txt_ secondo il formato stabilito dal 
+_common log format_.
 
 ### Segnali ed Eventi
 (stessa funzione di terminazione)
 ##### Unix
 ##### Windows
 
+### Parser
