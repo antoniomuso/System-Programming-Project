@@ -34,6 +34,8 @@ successiva allo scopo di poter scaricare i file richiesti dopo che essi siano st
 multi processo.
 - `-n_proc <numero>` per specificare quanti thread/processi (a seconda della modalità scelta) "figli" creare.
 ### Server
+Su Unix, il codice è scritto in modo tale che il server nasca come **_processo demone_** (la daemonizzazione è 
+effettuata nel file `main.c`), mentre su Windows esso nascerà come un normale processo.
 ##### Avvio del server
 Dopo aver caricato i vari parametri, si procede con la configurazione del server con la creazione delle socket: 
 una "normale" e l'altra per le sole operazioni di _GET_ precedute da cifratura.
@@ -102,7 +104,7 @@ sovrascritto.
 Come da specifiche, tutte le richieste sono loggate all'interno del file _log.txt_ secondo il formato stabilito dal 
 _common log format_.
 
-### Segnali ed Eventi
+### Segnali ed Eventi da console
 (stessa funzione di terminazione)
 ##### Unix
 ##### Windows
