@@ -31,6 +31,9 @@ int main(int argc, char *argv[]) {
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
     options fopt = parse_file("config.txt", confs, 4);
 
+    if (is_options_error(fopt)) {
+        exit(EXIT_FAILURE);
+    }
 
 
 #ifdef __unix__
@@ -85,10 +88,15 @@ int main(int argc, char *argv[]) {
     printf("Windows\n");
 #endif
 
+    // If server return with 0 we must reload configuration file and reload server.
     while (run_server(opt, fopt) == 0) {
+        free_options(opt);
+        free_options(fopt);
+
         fopt = parse_file("config.txt", confs, 4);
         opt.commands = NULL;
     }
 
+    fprintf(stderr,"Error during reload.");
     return 1;
 }
