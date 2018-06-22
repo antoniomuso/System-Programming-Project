@@ -380,7 +380,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
         command cmd = extract_command(lines);
         if (strlen(cmd.name) == 0 || strlen(cmd.value) == 0) {
             free(comm);
-            fprintf(stderr, "Config file format error\n", name);
+            fprintf(stderr, "Config file format error\n");
             return ret;
         }
 
@@ -648,10 +648,15 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + len_fn ;
 
     char *response = calloc(resp_len, 1);
+    if (response == NULL) return NULL;
 
     char *content = NULL;
     if (content_len != -1 && content_type != NULL) {
         content = malloc(MAX_CONTENT_LEN);
+        if (content == NULL) {
+            free(response);
+            return NULL;
+        }
         int err = snprintf(content, MAX_CONTENT_LEN, "Accept-Ranges: bytes\r\n"
                                                      "Connection: keep-alive\r\n"
                                         "Content-Length: %ld\r\n"
@@ -668,13 +673,37 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     char *file = NULL;
     if (filename != NULL) {
         file = malloc(strlen(filename)+50);
-        snprintf(file, strlen(filename)+50, "Content-Disposition: attachment; filename=\"%s\"\r\n", filename);
+        if (file == NULL) {
+            free(content);
+            free(response);
+            return NULL;
+        }
+        int err = snprintf(file, strlen(filename)+50, "Content-Disposition: attachment; filename=\"%s\"\r\n", filename);
+        if (err == -1) {
+            free(content);
+            free(response);
+            free(file);
+            return NULL;
+        }
     }
 
     char *loc = NULL;
     if (location != NULL) {
         loc = malloc(PATH_MAX + 13);
-        snprintf(loc, PATH_MAX + 13, "Location: %s\r\n", location);
+        if (loc == NULL) {
+            free(content);
+            free(response);
+            free(file);
+            return NULL;
+        }
+        int err = snprintf(loc, PATH_MAX + 13, "Location: %s\r\n", location);
+        if (err == -1) {
+            free(content);
+            free(response);
+            free(file);
+            free(loc);
+            return NULL;
+        }
     }
 
     int len = snprintf(response, resp_len, "HTTP/1.0 %d %s\r\n"
@@ -690,13 +719,9 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
         return NULL;
     }
 
-    //char *final_response = calloc(strlen(response), 1);
-    //memcpy(final_response, response, len); //This way, final_response should not be null-terminated.
-
     free(file);
     free(content);
     free(loc);
-    //free(response);
 
     return response;
 }

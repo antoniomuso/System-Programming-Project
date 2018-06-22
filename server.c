@@ -49,14 +49,33 @@
  */
 
 
+void m_sleep (unsigned int time) {
+#ifdef __unix__
+    sleep(time);
+#elif _WIN32
+    Sleep(time * 1000);
+#endif
 
+}
+
+int Send(int socket, const void * buff, int size, int flag) {
+    int res = send(socket,buff ,size ,0);
+    if (res == -1) {
+        fprintf(stderr, "send Error\n");
+    }
+    return res;
+}
+
+
+// If -1 there are an error.
 int set_blocking(int sockfd, int blocking) {
     int nonblock = blocking == 0 ? 1 : 0;
 #ifdef __unix__
     return ioctl(sockfd, FIONBIO, &nonblock);
 #elif _WIN32
     u_long wnonblock = (u_long) nonblock;
-    return ioctlsocket(sockfd, FIONBIO, &wnonblock);
+    if (ioctlsocket(sockfd, FIONBIO, &wnonblock) == SOCKET_ERROR) return -1;
+    return 0;
 #endif
 }
 
@@ -101,14 +120,20 @@ void* process_routine (void *arg) {
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
     options credentials = parse_file("passwordFile.txt", NULL, 0);
+    if (is_options_error(credentials)) {
+        fprintf(stderr, "Error during read of password FILE, process exit");
+        goto thread_exit;
+    }
 
-    //printf("%d %d \n", server_socket, server_socket_chiper);
     int clientfd;
-    //char * header_buffer = malloc(BUFF_READ_LEN);
+
     char buffer[BUFF_READ_LEN];
 
-    set_blocking(server_socket, 0);
-    set_blocking(server_socket_chiper, 0);
+    if (set_blocking(server_socket, 0) == -1 || set_blocking(server_socket_chiper, 0) == -1) {
+        free_options(credentials);
+        fprintf(stderr, "Error during set not blocking socket\n");
+        goto thread_exit;
+    }
 
     fd_set fds;
     FD_ZERO(&fds);
@@ -152,7 +177,11 @@ void* process_routine (void *arg) {
         fflush(stdout);
         char * address = inet_ntoa(saddr.sin_addr);
 
-        set_blocking(clientfd, 1);
+        if (set_blocking(clientfd, 1) == -1) {
+            close_socket(clientfd);
+            fprintf(stderr, "Error during set blocking client socket.\n");
+            continue;
+        }
 
         int read_len;
         int data_read = 0;
@@ -164,8 +193,7 @@ void* process_routine (void *arg) {
 
             if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
                 close_socket(clientfd);
-                printf("exit\n");
-                fflush(stdout);
+                fprintf(stderr,"Error during recive or client close connection");
                 break;
             }
             data_read += read_len;
@@ -173,15 +201,22 @@ void* process_routine (void *arg) {
             buffer[read_len + data_read] = '\0';
 
             char * pointer = strstr(buffer,"\r\n\r\n");
-
             if (pointer == NULL) {
+
                 if ( ++read_counter >= MAX_READ_COUNTER ) {
                     char * resp = create_http_response(400,-1, NULL, NULL, NULL);
+
+                    if (resp == NULL) {
+                        close_socket(clientfd);
+                        break;
+                    }
+
                     send(clientfd, resp,strlen(resp), 0);
                     close_socket(clientfd);
                     free(resp);
                     break;
                 }
+                m_sleep(1);
                 continue;
             }
 
@@ -262,6 +297,7 @@ void* process_routine (void *arg) {
         }
 
     }
+    fprintf(stderr,"Select error\n");
 
     thread_exit:
     free_options(credentials);
@@ -272,6 +308,7 @@ void* process_routine (void *arg) {
 #endif
 }
 int w_process_routine (void *arg) {
+    // ignore return value
     process_routine(arg);
     return 0;
 }
@@ -403,7 +440,6 @@ int run_server(options c_options, options f_options) {
         set_signal_handler(tid, sizeof(pthread_t), n_proc, 0);
 
     } else if (strcmp(mode, "MP") == 0) {
-        //TODO Riordarsi di uccidere i figli quando finiscono o in caso di fallimento di qualsiasi operazione.
         printf("mode = MP\n");
         fflush(stdout);
 
@@ -435,13 +471,13 @@ int run_server(options c_options, options f_options) {
         set_signal_handler(pids, sizeof(int), n_proc, 1);
 
     } else {
-        fprintf(stderr, "Error invalid mode");
+        free_options(c_options);
+        free_options(f_options);
+        fprintf(stderr, "Error invalid mode\n");
         exit(EXIT_FAILURE);
     }
 
 #elif _WIN32
-
-
     if (strcmp(mode, "MT") == 0) {
         HANDLE hThreadArray[n_proc];
         DWORD dwThreadArray[n_proc];
@@ -455,6 +491,8 @@ int run_server(options c_options, options f_options) {
         for (int i = 0; i < n_proc; i++) {
             hThreadArray[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) w_process_routine, (LPVOID) sock_pointer, 0, &dwThreadArray[i]);
             if (hThreadArray[i] == NULL) {
+                free_options(c_options);
+                free_options(f_options);
                 fprintf(stderr, "Error during threads creation");
                 exit(EXIT_FAILURE);
             }
@@ -498,6 +536,8 @@ int run_server(options c_options, options f_options) {
                     NULL);
 
             if (pipe_h == INVALID_HANDLE_VALUE) {
+                free_options(c_options);
+                free_options(f_options);
                 printf("Couldn't create Pipe\n");
                 exit(EXIT_FAILURE);
             }
@@ -505,6 +545,8 @@ int run_server(options c_options, options f_options) {
             if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, FALSE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
                 fprintf(stderr, "Error occurred while trying to create a process\n");
                 fflush(stderr);
+                free_options(c_options);
+                free_options(f_options);
                 exit(EXIT_FAILURE);
             }
 
@@ -517,6 +559,8 @@ int run_server(options c_options, options f_options) {
             //Duplicate socket
             if ((WSADuplicateSocket(server_socket, proc_pid, &(wsa_prot_info_1) ) == SOCKET_ERROR)
                     || WSADuplicateSocket(server_socket_cipher, proc_pid, &(wsa_prot_info_2) ) == SOCKET_ERROR) {
+                free_options(c_options);
+                free_options(f_options);
                 fprintf(stderr, "Error occurred while trying to duplicate socket %d for process %d (%d))\n", server_socket, proc_pid, WSAGetLastError());
                 exit(EXIT_FAILURE);
             }
@@ -529,11 +573,15 @@ int run_server(options c_options, options f_options) {
             }
             DWORD written = 0;
             if (WriteFile(pipe_h, &wsa_prot_info_1, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE) {
+                free_options(c_options);
+                free_options(f_options);
                 fprintf(stderr, "Couldn't write to pipe\n");
                 exit(EXIT_FAILURE);
             }
 
             if (WriteFile(pipe_h, &wsa_prot_info_2, sizeof(WSAPROTOCOL_INFO), &written, NULL) == FALSE) {
+                free_options(c_options);
+                free_options(f_options);
                 fprintf(stderr, "Couldn't write to pipe\n");
                 exit(EXIT_FAILURE);
             }
@@ -541,41 +589,33 @@ int run_server(options c_options, options f_options) {
         set_signal_handler(children_handle, sizeof(HANDLE), n_proc, 1);
 
     } else {
+        free_options(c_options);
+        free_options(f_options);
         fprintf(stderr, "Error invalid mode");
         exit(EXIT_FAILURE);
     }
 
-
-
-
 #endif
-    //printf("Father is entering in Loop\n");
-    //fflush(stdout);
 
     free_options(c_options);
     free_options(f_options);
 
-    //process_routine((void *) sock_pointer);
     while(flag_restart == 0) {
 #ifdef __unix__
         sleep(1);
 #elif _WIN32
         Sleep(1000);
 #endif
-
     }
+
     flag_restart = 0;
     child_terminate = 0;
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);
-#ifdef __unix__
-    sleep(2);
-#elif _WIN32
-    Sleep(2000);
-#endif
+
+    m_sleep(2);
+
     return 0;
-
-
 }
 

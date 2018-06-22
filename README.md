@@ -16,3 +16,7 @@
 
 
 Gestire per bene gli errori delle fwrite e delle send.
+
+## File Rivisti
+- main.c
+- signal.c
