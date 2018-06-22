@@ -13,13 +13,36 @@ entrambi in modo  simile alla tecnica di sviluppo "[Pair Programming](https://en
 mentre quelle secondarie come i vari parser sono state sviluppate individualmente.  
 
 ## Implementazione
-Per aumentare la leggibilità e la modularità del codice è stato deciso di organizzare il codice in file separati, ognuno
-con un proprio header, che vengono compilati assieme automaticamente con  
+Per aumentare la leggibilità e la modularità del codice è stato deciso di organizzare il codice in file separati, 
+ognuno con un proprio header, che vengono compilati assieme automaticamente tramite il makefile.
+
+### Compilazione
+Per compilare l'intero programma è sufficiente posizionarsi nella directory del progetto e usare il makefile:
+
+- Nel caso di Unix, è sufficiente chiamare `make`.
+- Nel per Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
 
 ### Server
+##### Avvio del server
+##### Creazione Thread o Processi
+##### Routine 
+
 
 ### Operazioni
 
+##### GET
+###### File
+###### Directory
+##### GET con cifratura
+##### PUT
+##### Esecuzione comandi
+(argomenti)
+##### Logging
+
 ### Parser
 
-### Segnali ed Errori
+### Segnali ed Eventi
+(stessa funzione di terminazione)
+##### Unix
+##### Windows
+
