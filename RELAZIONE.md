@@ -74,7 +74,8 @@ operativi, successivamente si procede con la cifratura tramite la funzione `encr
 pari a 4 byte del file mappato  e li cifra mediante lo _XOR_ con un intero random avente come seme l'indirizzo IP del 
 client. 
 Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri 
-(0) all'ultimo blocco. 
+(0) all'ultimo blocco al fine di effettuare correttamente la cifratura, tale **padding** tuttavia non è né mappato in 
+memoria né tantomeno inviato inviato al client. 
 ##### Esecuzione comandi
 Come da specifiche, nel caso in cui il primo elemento del path contenga la la stringa **command** viene eseguita la 
 funzione `exec_command`, la quale crea un thread che andrà a generare il processo che eseguirà il comando passato in 
