@@ -65,7 +65,9 @@ Le richieste di GET sulla porta principale (quella specificata in input o dal fi
 dalla funzione `send_file`.
 ###### File
 Se il path richiesto corrisponde a un file, la funzione `send_file` lo apre, acquisisce il lock su di esso e, dopo 
-averlo letto, lo invia al client richiedente.
+averlo letto, lo invia al client richiedente. La lettura del file è eseguita a blocchi di dimensione massima prefissata,
+i quali vengono inviati una volta raggiunta tale dimensione; il procedimento continua finquando non è stato letto e 
+inviato l'intero contenuto del file.
 ###### Directory
 Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` che restituisce il 
 **contenuto della directory** indicata, che viene inviato come risposta.
