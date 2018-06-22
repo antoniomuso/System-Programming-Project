@@ -1017,6 +1017,9 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     if (resp == NULL) {
+        if (munmap(map, lengthOfFile+padding) == -1) {
+            fprintf(stderr, "Error during un-mmapping\n");
+        }
         goto unlock;
     }
 
