@@ -75,15 +75,9 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 
 #ifdef __unix__
 void handle_signal(int signal) {
-
     infanticide(arr_process, len, mode, SIGKILL);
     free(arr_process);
     flag_restart = 1;
-
-    // TODO: La run server non va lanciata da qua. Dobbiamo fare in modo che qui venga cambiato un flag al padre che gli fa rilanciare tutto.
-            //Idea: Mettere il padre in while(1) per controllare il flag (oppure controllarlo periodicamente)
-    //run_server(NULL, &fopt);
-
 }
 
 
@@ -95,7 +89,7 @@ BOOL ctrl_handler(DWORD ctrl_type) {
         printf("entering handler for %d \n", ctrl_type);
         fflush(stdout);
         infanticide(arr_process, len, mode, 0);
-
+        free(arr_process);
         flag_restart = 1;
         return TRUE;
     }
@@ -105,8 +99,11 @@ BOOL ctrl_handler(DWORD ctrl_type) {
 #endif
 
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
-
     arr_process = calloc(arr_len, type_size);
+    if (arr_process == NULL) {
+        fprintf(stderr, "Malloc error in set_signal_handler\n");
+        exit(EXIT_FAILURE);
+    }
     mode = mod;
     len = arr_len;
 
@@ -123,7 +120,10 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
     sa.sa_flags = SA_RESTART;
 
     // Block every signal during the handler
-    sigfillset(&sa.sa_mask);
+    if (sigfillset(&sa.sa_mask) == -1) {
+        fprintf(stderr, "sigfillset error in set_signal_handler\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (sigaction(SIGHUP, &sa, NULL) == -1) {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
