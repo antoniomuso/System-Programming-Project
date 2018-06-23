@@ -104,7 +104,7 @@ caso in cui esistesse già un file con lo stesso nome di quello che il client st
 sovrascritto.
 ##### Logging
 Come da specifiche, tutte le richieste sono loggate all'interno del file _log.txt_ secondo il formato stabilito dal 
-_common log format_.
+_common log format_. Nel caso di fallimento della funzione di logging, è stato deciso di non riportare gli errori.
 
 ### Segnali ed Eventi da console
 Come da specifiche, il server è in grado di rileggere il file di configurazione dopo l'avvenimento di uno specifico 
