@@ -23,14 +23,14 @@ Per compilare l'intero programma è sufficiente posizionarsi nella directory del
 - In Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
 
 ### Lancio
-È possibile avviare il programma eseguendo il file _main_ (`./main` su Unix e `main.exe` su Windows). Senza parametri,
-verranno caricate le impostazioni specificate nel file di configurazione _config.txt_, oppure è possibile specificare  
+È possibile avviare il programma eseguendo il _main_ (`./main` su Unix e `main.exe` su Windows). Senza parametri,
+verranno caricate le impostazioni specificate nel file di configurazione _config.txt_, oppure è possibile specificare 
 manualmente i parametri, tutti o in parte (in quest'ultimo caso, i restanti valori saranno estratti dal file di 
 configurazione), secondo la seguente sintassi di lancio  da linea di comando:
 - `-server_ip <ip>` per specificare l'indirizzo IP su cui aprire la socket.
 - `-port <numero_porta>` per specificare la porta a cui legarsi, il server si legherà automaticamente alla porta 
 successiva allo scopo di poter scaricare i file richiesti dopo che essi siano stati cifrati come da specifiche.
-- `-mode <mode>` per specificare la modalità di funzionamento del server: **MT** per multi thread e **MP** per
+- `-mode <modalità>` per specificare la modalità di funzionamento del server: **MT** per multi thread e **MP** per
 multi processo.
 - `-n_proc <numero>` per specificare quanti thread/processi (a seconda della modalità scelta) "figli" creare.
 ### Server
@@ -94,7 +94,7 @@ L'implementazione di `exec_command` supporta anche il **passaggio di parametri**
 di _command_. 
 
 Esempi:
-- Unix: `/command/date?date` 
+- Unix: `/command/date?date`, `/command/cat?cat?config.txt` 
 - Windows: `/command/C:/Windows/System32/cmd.exe?C:\Windows\System32\cmd.exe?/k?ipconfig` 
 
 ##### PUT
