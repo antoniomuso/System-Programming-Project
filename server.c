@@ -99,6 +99,8 @@ void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
 
+    set_child_handler();
+
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
@@ -601,8 +603,6 @@ int run_server(options c_options, options f_options) {
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);
-
-    m_sleep(2);
 
     return 0;
 }

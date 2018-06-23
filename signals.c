@@ -11,6 +11,9 @@
 
 #ifdef __unix__
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
@@ -46,9 +49,17 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 #elif __unix__
 
     if (mode == 0) {
-        //pthread_t *tids = (pthread_t *) children_array;
-        child_terminate = 1;
-        //printf("kill: %ld\n",tids[i]);
+        pthread_t *tids = (pthread_t *) children_array;
+        for (i = 0; i < len; i++) {
+            if (pthread_kill(tids[i], exit_code) == -1) {
+                fprintf(stderr,"%s\n", strerror(errno));
+                return i;
+            }
+            int s = 1;
+            wait(&s);
+            printf("thread: %d\n", s);
+            fflush(stdout);
+        }
         return len;
 
     } else if (mode == 1) {
@@ -56,10 +67,12 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 
         for (i = 0; i < len; i++) {
             printf("kill: %d\n",pids[i]);
+            int status = 1;
             if (kill(pids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return i;
             }
+            waitpid(pids[i], &status, 0);
         }
     }
 
@@ -69,13 +82,42 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 
+void child_handler (int signal) {
+    if (signal == SIGUSR1) {
+        child_terminate = 1;
+    }
+}
 
 
+void set_child_handler () {
+#ifdef __unix__
+    struct sigaction sa;
+    //printf("proc id: %d\n", getpid());
+
+    // Setup the sighub handler
+    sa.sa_handler = &child_handler;
+
+    // Restart the system call, if at all possible
+    sa.sa_flags = SA_RESTART;
+
+    // Block every signal during the handler
+    if (sigfillset(&sa.sa_mask) == -1) {
+        fprintf(stderr, "sigfillset error in set_signal_handler\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sigaction(SIGUSR1, &sa, NULL) == -1) {
+        fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
+        exit(EXIT_FAILURE);
+    }
+
+#endif
+}
 
 
 #ifdef __unix__
 void handle_signal(int signal) {
-    infanticide(arr_process, len, mode, SIGKILL);
+    infanticide(arr_process, len, mode, SIGUSR1);
     free(arr_process);
     flag_restart = 1;
 }
