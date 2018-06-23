@@ -116,7 +116,6 @@ struct data_args {
 #ifdef _WIN32
     HANDLE event;
 #elif __unix__
-    int done;
     pthread_mutex_t mutex;
     pthread_cond_t cond_var;
 #endif
@@ -356,7 +355,6 @@ void* thread (void *arg) {
         fprintf(stderr, "Error during fork of commands");
         arguments->error_out = 1;
         pthread_mutex_lock(&arguments->mutex);
-        arguments->done = 1;
         if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
         pthread_mutex_unlock(&arguments->mutex);
         return NULL;
@@ -377,8 +375,7 @@ void* thread (void *arg) {
         arguments->error_out = 1;
         close(fd[0]);
         pthread_mutex_lock(&arguments->mutex);
-        arguments->done = 1;
-        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
         pthread_mutex_unlock(&arguments->mutex);
 
         return NULL;
@@ -415,7 +412,6 @@ void* thread (void *arg) {
     arguments->out_size = all_read_data;
     arguments->out = buff_out;
     pthread_mutex_lock(&arguments->mutex);
-    arguments->done = 1;
     if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
     pthread_mutex_unlock(&arguments->mutex);
     close(fd[0]);
@@ -431,25 +427,31 @@ int windows_thread (void *arg) {
 
 int exec_command(int socket, const char * command, const char * args, http_header http_h, char * address) {
     char * cpy_command = malloc(strlen(command) + 1);
+    if (cpy_command == NULL) {
+        return 1;
+    }
     strcpy(cpy_command, command);
 
     char *cpy_args = NULL;
     if (args != NULL) {
         cpy_args = malloc(strlen(args) + 1);
-        strcpy(cpy_args, args);
-        if (cpy_args == NULL) {
-            printf("cpyargs is null\n");
-            fflush(stdout);
+        if(cpy_args == NULL) {
+            free(cpy_command);
             return 1;
         }
+        strcpy(cpy_args, args);
     }
 
     struct data_args * data_arguments = malloc(sizeof(struct data_args));
+    if (data_arguments == NULL) {
+        free(cpy_args);
+        free(cpy_command);
+        return 1;
+    }
 
     data_arguments->fd = socket;
     data_arguments->command = cpy_command;
     data_arguments->args = cpy_args;
-
 
 #ifdef __unix__
 
@@ -468,11 +470,6 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         free(data_arguments);
         return 1;
     }
-    //pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    struct timespec timer;
-    timer.tv_sec = TIME_WAIT / 1000;
-    timer.tv_nsec = (TIME_WAIT % 1000) * 1000000;
-
     pthread_t tid;
 
     if (pthread_create(&tid, NULL, &thread, (void *) data_arguments) != 0) {
@@ -482,13 +479,28 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         return 1;
     }
 
-    pthread_mutex_lock(&(data_arguments->mutex));
-    data_arguments->done = 0;
-    while (data_arguments->done == 0) {
-        pthread_cond_wait(&(data_arguments->cond_var), &(data_arguments->mutex));
+    if (pthread_mutex_lock(&(data_arguments->mutex)) != 0) {
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments);
+        return 1;
     }
-    pthread_mutex_unlock(&(data_arguments->mutex));
 
+
+    if (pthread_cond_wait(&(data_arguments->cond_var), &(data_arguments->mutex)) != 0) {
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments);
+        return 1;
+    }
+
+
+    if (pthread_mutex_unlock(&(data_arguments->mutex)) != 0) {
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments);
+        return 1;
+    }
 
 
 #elif _WIN32
@@ -615,6 +627,8 @@ char *list_dir(char *dir_name) {
         }
         pos += written;
     } while (FindNextFile(hFind, &ffd) != 0);
+
+    CloseHandle(hFind);
 
 #elif __unix__
     DIR *d;

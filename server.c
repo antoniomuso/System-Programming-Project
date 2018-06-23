@@ -593,11 +593,7 @@ int run_server(options c_options, options f_options) {
     free_options(f_options);
 
     while(flag_restart == 0) {
-#ifdef __unix__
-        sleep(1);
-#elif _WIN32
-        Sleep(1000);
-#endif
+        m_sleep(1);
     }
 
     flag_restart = 0;
