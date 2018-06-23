@@ -42,7 +42,7 @@
 #define getpid GetCurrentProcessId
 #endif
 
-
+int lmode = 0;
 /*
  * Run thread function
  */
@@ -101,6 +101,17 @@ void* process_routine (void *arg) {
 
     set_child_handler();
 
+#ifdef _WIN32
+    HANDLE event;
+    if (lmode == 0) {
+        char *event_name = "threadevent";
+        if ((event = OpenEvent(SYNCHRONIZE, FALSE, event_name)) == NULL) {
+            fprintf(stderr, "Failed Opening Event\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+#endif
+
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
 
@@ -137,6 +148,13 @@ void* process_routine (void *arg) {
         if (child_terminate == 1) {
             goto thread_exit;
         }
+#ifdef _WIN32
+        if (lmode == 0) {
+            DWORD out = WaitForSingleObject(event, 500);
+            if (out == WAIT_OBJECT_0)
+                goto thread_exit;
+        }
+#endif
 
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
@@ -296,7 +314,8 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    ExitThread(0);
+    if(lmode == 0) CloseHandle(event);
+    //ExitThread(0);
 #endif
 }
 int w_process_routine (void *arg) {
@@ -473,6 +492,9 @@ int run_server(options c_options, options f_options) {
 
 #elif _WIN32
     if (strcmp(mode, "MT") == 0) {
+
+        lmode = 0;
+
         HANDLE hThreadArray[n_proc];
         DWORD dwThreadArray[n_proc];
 
@@ -492,9 +514,12 @@ int run_server(options c_options, options f_options) {
             }
         }
 
+        set_thread_event();
         set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
 
     } else if (strcmp(mode, "MP") == 0) {
+
+        lmode = 1;
 
         int buf_size = 30;
 
@@ -597,6 +622,23 @@ int run_server(options c_options, options f_options) {
     while(flag_restart == 0) {
         m_sleep(1);
     }
+
+#ifdef _WIN32
+    HANDLE eventp;
+    if (lmode == 0) {
+        char *event_name = "threadevent";
+        if ((eventp = OpenEvent(SYNCHRONIZE | EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+            fprintf(stderr, "Failed Opening Event\n");
+            exit(EXIT_FAILURE);
+        }
+        if (!ResetEvent(eventp)) {
+            fprintf(stderr, "Failed Resetting Event\n");
+            exit(EXIT_FAILURE);
+        }
+        CloseHandle(eventp);
+    }
+
+#endif
 
     flag_restart = 0;
     child_terminate = 0;

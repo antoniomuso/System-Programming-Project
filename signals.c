@@ -38,8 +38,23 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 #ifdef _WIN32
     HANDLE *array = (HANDLE *) children_array;
     if (mode == 0) {
-         child_terminate = 1;
-         return len;
+        for (i = 0; i < len; i++) {
+            char *event_name = "threadevent";
+            HANDLE event;
+            if ((event = OpenEvent(EVENT_ALL_ACCESS | SYNCHRONIZE, FALSE, event_name)) == NULL) {
+                fprintf(stderr, "Failed Opening Event %s %d\n", event_name, GetLastError());
+                return i;
+            }
+            if(SetEvent(event) == FALSE) {
+                fprintf(stderr, "SetEvent Failed %d\n", GetLastError());
+                CloseHandle(event);
+                return i;
+            }
+            printf("Event %s set", event_name);
+            if(!TerminateThread(array[i], exit_code))
+                return i;
+            CloseHandle(event);
+        }
     } else if (mode == 1) {
         for (i = 0; i < len; i++) {
             if(!TerminateProcess(array[i], exit_code))
@@ -115,7 +130,6 @@ void set_child_handler () {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
         exit(EXIT_FAILURE);
     }
-
 #endif
 }
 
@@ -186,5 +200,15 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
         exit(EXIT_FAILURE);
     }
 #endif
-
 }
+
+#ifdef _WIN32
+void set_thread_event() {
+    char *event_name = "threadevent";
+    if (CreateEvent(NULL, FALSE, TRUE, event_name) == NULL) {
+        fprintf(stderr, "Couldn't creare event");
+        ExitThread(1);
+    }
+    printf("Thread event %s created\n", event_name);
+}
+#endif
