@@ -53,12 +53,13 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
         for (i = 0; i < len; i++) {
             if (pthread_kill(tids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
-                return i;
+                return 1;
             }
             // wait thread exit
-            int j = pthread_join(tids[i], NULL);
-            printf("thread: %d\n", j);
-            fflush(stdout);
+            if (pthread_join(tids[i], NULL) != 0) {
+                fprintf(stderr,"Thread join error\n");
+                return 1;
+            }
         }
         return len;
 
@@ -66,15 +67,14 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
         int *pids = (int *) children_array;
 
         for (i = 0; i < len; i++) {
-            printf("kill: %d\n",pids[i]);
-
             if (kill(pids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
-                return i;
+                return 1;
             }
             int status = 0;
             if (waitpid(pids[i], &status, 0) == -1) {
                 fprintf(stderr,"Wait error\n");
+                return 1;
             }
 
         }
@@ -121,7 +121,10 @@ void set_child_handler () {
 
 #ifdef __unix__
 void handle_signal(int signal) {
-    infanticide(arr_process, len, mode, SIGUSR1);
+    if (infanticide(arr_process, len, mode, SIGUSR1) == 1) {
+        fprintf(stderr, "Error during kill of child process.");
+        exit(EXIT_FAILURE);
+    }
     free(arr_process);
     flag_restart = 1;
 }
