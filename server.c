@@ -11,7 +11,6 @@
 #include <string.h>
 
 #define BUFF_READ_LEN 8000
-#define MAX_READ_COUNTER 2
 #ifdef __unix__
 
 #include <netdb.h>
@@ -171,7 +170,6 @@ void* process_routine (void *arg) {
         int data_read = 0;
 
         http_header http_h;
-        int read_counter = 0;
 
         for (;;) {
             if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
@@ -199,21 +197,6 @@ void* process_routine (void *arg) {
                     free(resp);
                     break;
                 }
-
-                if ( ++read_counter >= MAX_READ_COUNTER ) {
-                    // it doesn't recive all header within 2 messages
-                    char * resp = create_http_response(400,-1, NULL, NULL, NULL);
-                    if (resp == NULL) {
-                        close_socket(clientfd);
-                        break;
-                    }
-
-                    Send(clientfd, resp,strlen(resp), 0);
-                    close_socket(clientfd);
-                    free(resp);
-                    break;
-                }
-                m_sleep(1);
                 continue;
             }
 
