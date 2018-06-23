@@ -213,6 +213,9 @@ char **  build_arguments(char * args) {
     int pos = 0;
     int max_len = 5;
     char ** out_arr = calloc(max_len, sizeof(char*));
+    if (out_arr == NULL) {
+        return NULL;
+    }
 
     char * token = NULL;
     while ((token = strtok_r(pointer, " ", &mem_point)) != NULL) {
@@ -223,13 +226,24 @@ char **  build_arguments(char * args) {
             out_arr = realloc(out_arr, max_len * sizeof(char*));
         }
         char * arg = malloc(strlen(token)+1);
+        if (arg == NULL) {
+            free(out_arr);
+            return NULL;
+        }
         strcpy(arg, token);
         out_arr[pos] = arg;
         pos++;
     }
     if (pos >= max_len) {
-        max_len += 1;
-        out_arr = realloc(out_arr, max_len * sizeof(char*));
+        max_len += 2;
+        char ** real = NULL;
+        real = realloc(out_arr, max_len * sizeof(char*));
+        if (real == NULL) {
+            free(out_arr);
+            return NULL;
+        }
+        out_arr = real;
+
     }
     out_arr[pos] = NULL;
     return out_arr;
@@ -309,7 +323,17 @@ void* thread (void *arg) {
     DWORD dwRead;
     CHAR buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
-    CHAR *buff_out = malloc(BUFSIZE);
+    CHAR *buff_out = malloc(buff_out_s);
+
+    if (buff_out == NULL) {
+        arguments->error_out = 1;
+        if(SetEvent(arguments->event) == FALSE)
+            fprintf(stderr, "SetEvent Failed");
+        CloseHandle(pipe_read);
+        CloseHandle(child_write);
+        return NULL;
+    }
+
     BOOL bSuccess = FALSE;
     int read = 0;
 
@@ -319,17 +343,25 @@ void* thread (void *arg) {
         fflush(stdout);
         bSuccess = ReadFile(pipe_read, buff, BUFSIZE, &dwRead, NULL);
 
-        fflush(stdout);
         if (read+dwRead >= buff_out_s) {
             buff_out_s *= 2;
-            buff_out = realloc(buff_out, buff_out_s);
+            char * real = NULL;
+            real = realloc(buff_out, buff_out_s);
+            if (real == NULL) {
+                arguments->error_out = 1;
+                if(SetEvent(arguments->event) == FALSE) fprintf(stderr, "SetEvent Failed");
+                CloseHandle(pipe_read);
+                CloseHandle(child_write);
+                free(buff_out);
+                return NULL;
+            }
+            buff_out = real;
         }
 
         memcpy(buff_out+read, buff, dwRead);
         read += dwRead;
         if( ! bSuccess || dwRead == 0 || dwRead < BUFSIZE) break;
     }
-
 
     arguments->error_out = 0;
     arguments->out_size = read;
@@ -348,7 +380,13 @@ void* thread (void *arg) {
 #elif __unix__
 
     int fd[2];
-    pipe(fd);
+    if (pipe(fd) == -1) {
+        arguments->error_out = 1;
+        pthread_mutex_lock(&arguments->mutex);
+        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        pthread_mutex_unlock(&arguments->mutex);
+        return NULL;
+    }
     int pid = fork();
 
     if (pid == -1) {
@@ -360,6 +398,10 @@ void* thread (void *arg) {
         return NULL;
     }  else if (pid == 0) {
         char ** args = build_arguments(arguments->args);
+        if (args == NULL) {
+            fprintf(stderr,"Failed build_arguments\n");
+            exit(EXIT_FAILURE);
+        }
         close(fd[0]);
         dup2(fd[1],1);
         dup2(fd[1],2);
@@ -383,7 +425,16 @@ void* thread (void *arg) {
 
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
-    char *buff_out = malloc(BUFSIZE);
+    char *buff_out = malloc(buff_out_s);
+    if (buff_out == NULL) {
+        fprintf(stderr,"malloc error");
+        arguments->error_out = 1;
+        close(fd[0]);
+        pthread_mutex_lock(&arguments->mutex);
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
+        pthread_mutex_unlock(&arguments->mutex);
+        return NULL;
+    }
     int all_read_data = 0;
 
     fcntl(fd[0], F_SETFL, O_NONBLOCK);
@@ -397,15 +448,25 @@ void* thread (void *arg) {
 
         if (all_read_data+n_read >= buff_out_s) {
             buff_out_s *= 2;
-            buff_out = realloc(buff_out, buff_out_s);
-
+            char * real = NULL;
+            real = realloc(buff_out, buff_out_s);
+            if (real == NULL) {
+                fprintf(stderr,"realloc error");
+                arguments->error_out = 1;
+                close(fd[0]);
+                free(buff_out);
+                pthread_mutex_lock(&arguments->mutex);
+                if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
+                pthread_mutex_unlock(&arguments->mutex);
+                return NULL;
+            }
+            buff_out = real;
         }
 
         memcpy(buff_out+all_read_data, buff, n_read);
         all_read_data += n_read;
 
         if(n_read == 0 || n_read < BUFSIZE) break;
-
     }
 
     arguments->error_out = 0;
@@ -529,6 +590,7 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         free(data_arguments);
         return 1;
     }
+    CloseHandle(thread);
 #endif
     if (data_arguments->error_out == 1) {
         fprintf(stderr, "Command Execution Failed\n");
@@ -540,6 +602,13 @@ int exec_command(int socket, const char * command, const char * args, http_heade
     }
 
     char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL, NULL);
+    if (response == NULL) {
+        free(cpy_command);
+        free(cpy_args);
+        free(data_arguments->out);
+        free(data_arguments);
+        return 1;
+    }
 
     Send(socket, response, strlen(response), 0);
     Send(socket, data_arguments->out, data_arguments->out_size, 0);
