@@ -854,7 +854,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
             http_log(http_h,resp,address,0);
             free(resp);
             goto unlock;
-        } // gestisco l'errore
+        }
 
         if (read == remaining_to_read) {
             break;

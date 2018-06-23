@@ -405,6 +405,8 @@ int run_server(options c_options, options f_options) {
     int *sock_pointer = NULL;
 
 #ifdef __unix__
+    // ignore sigpipe.
+    signal(SIGPIPE, SIG_IGN);
 
     if (strcmp(mode, "MT") == 0) {
         printf("mode = MT\n");
