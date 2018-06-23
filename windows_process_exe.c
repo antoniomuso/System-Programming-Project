@@ -1,4 +1,4 @@
-#include "stddef.h"
+#include <stddef.h>
 #include "b64.c/b64.h"
 #include "command_parser.h"
 #include "server.h"
@@ -24,21 +24,15 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     WSADATA wsa;
 
-    //printf("Initialising Child Winsock...\n");
-    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-    {
-        fprintf(stderr,"Failed. Error Code : %d",WSAGetLastError());
+    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0) {
+        fprintf(stderr,"WSAStartup failed. Error Code : %d",WSAGetLastError());
         return 1;
     }
-
-    //printf("Initialised.\n");
-    fflush(stdout);
 
     char *pipe_n = "\\\\.\\pipe\\testpipe";
     int len_name = strlen(pipe_n)+strlen(argv[0])+1;
     char buffer_name[len_name];
     snprintf(buffer_name, len_name, "%s%s", pipe_n, argv[0]);
-
 
     LPTSTR pipe_name = TEXT(buffer_name);
     HANDLE pipe_h;
@@ -55,31 +49,35 @@ int main(int argc, char* argv[]) {
     DWORD dwBufLen = 0;
     DWORD dwErr;
 
+    // WSAEnumProtocols()'s Failure is expected here. Its purpose here is to initialize dwBufLen
     if ((WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen) != SOCKET_ERROR))
         printf("WSAEnumProtocols() failed with error code %d\n", WSAGetLastError());
     if ((dwErr = WSAGetLastError()) != WSAENOBUFS) {
-        fprintf(stderr, "Critical Problem Occurred\n");
+        fprintf(stderr, "Critical Error Occurred\n");
         exit(EXIT_FAILURE);
     }
-    //printf("Error >expected< %d\nNow allocation space for the structure...\n", WSAGetLastError());
+
     DWORD dwBufLens = dwBufLen*2;
     lpProtocolBuf = (WSAPROTOCOL_INFO *)malloc(dwBufLens);
+    if (lpProtocolBuf == NULL) {
+        exit(EXIT_FAILURE);
+    }
 
     if (WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLens) == SOCKET_ERROR) {
         fprintf(stderr, "Couldn't allocate space for WSAPROTOCOL_INFO structure\n");
+        free(lpProtocolBuf);
         exit(EXIT_FAILURE);
     }
-
 
     DWORD cbRead_1;
     DWORD cbRead_2;
     BOOL fSuccess;
 
     //Read from Pipe and store result in WSAPROTOCOL_INFO struct
-    if ((fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLens, &cbRead_1, NULL) == FALSE)
-            //|| (fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf_2, 1*dwBufLen_2, &cbRead_2, NULL))
-             )
+    if ((fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLens, &cbRead_1, NULL) == FALSE)) {
         fprintf(stderr, "Couldn't Read from Pipe\n");
+        free(lpProtocolBuf);
+    }
 
     SOCKET sock_fd[2];
 
@@ -90,18 +88,16 @@ int main(int argc, char* argv[]) {
 
     if ((sock_fd[0] == INVALID_SOCKET) || sock_fd[1] == INVALID_SOCKET) {
         printf("WSASocket() failed with error code %d\n", WSAGetLastError());
+        free(lpProtocolBuf);
         WSACleanup();
     }
 
-    fflush(stdout);
     free(lpProtocolBuf);
-
     CloseHandle(pipe_h);
 
     SOCKET *sock_fd_ptr;
     sock_fd_ptr = sock_fd;
     process_routine((void *) sock_fd_ptr);
-    //ToDo Disallocare spazio di lpProtocolBuf
 #endif
     return 0;
 }
