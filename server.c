@@ -187,6 +187,22 @@ void* process_routine (void *arg) {
             char * pointer = strstr(buffer,"\r\n\r\n");
             if (pointer == NULL) {
 
+
+                if (BUFF_READ_LEN-1 <= data_read) {
+                    // header is too much big.
+                    char * resp = create_http_response(431,-1, NULL, NULL, NULL);
+
+                    if (resp == NULL) {
+                        close_socket(clientfd);
+                        break;
+                    }
+
+                    Send(clientfd, resp,strlen(resp), 0);
+                    close_socket(clientfd);
+                    free(resp);
+                    break;
+                }
+
                 if ( ++read_counter >= MAX_READ_COUNTER ) {
                     char * resp = create_http_response(400,-1, NULL, NULL, NULL);
 
