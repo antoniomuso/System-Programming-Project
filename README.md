@@ -34,5 +34,5 @@ Gestire per bene gli errori delle fwrite e delle send.
 
 ## Idee
 - [ ] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
-- [ ] Controllare che la grandezza dell'header non superi il buffer
+- [x] Controllare che la grandezza dell'header non superi il buffer
 - [ ] Ridefinire lo standard di passaggio dei comandi per /command/
