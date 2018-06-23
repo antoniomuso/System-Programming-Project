@@ -174,24 +174,21 @@ void* process_routine (void *arg) {
         int read_counter = 0;
 
         for (;;) {
-
             if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
                 close_socket(clientfd);
-                fprintf(stderr,"Error during recive or client close connection");
+                fprintf(stderr,"Error during recive or client close connection\n");
                 break;
             }
             data_read += read_len;
-
-            buffer[read_len + data_read] = '\0';
+            buffer[data_read] = '\0';
 
             char * pointer = strstr(buffer,"\r\n\r\n");
+
             if (pointer == NULL) {
-
-
                 if (BUFF_READ_LEN-1 <= data_read) {
                     // header is too much big.
+                    fprintf(stderr,"Header too much big\n");
                     char * resp = create_http_response(431,-1, NULL, NULL, NULL);
-
                     if (resp == NULL) {
                         close_socket(clientfd);
                         break;
@@ -204,8 +201,8 @@ void* process_routine (void *arg) {
                 }
 
                 if ( ++read_counter >= MAX_READ_COUNTER ) {
+                    // it doesn't recive all header within 2 messages
                     char * resp = create_http_response(400,-1, NULL, NULL, NULL);
-
                     if (resp == NULL) {
                         close_socket(clientfd);
                         break;
