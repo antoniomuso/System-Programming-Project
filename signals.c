@@ -50,7 +50,6 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 CloseHandle(event);
                 return i;
             }
-            printf("Event %s set", event_name);
             if(!TerminateThread(array[i], exit_code))
                 return i;
             CloseHandle(event);

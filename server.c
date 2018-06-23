@@ -42,12 +42,13 @@
 #define getpid GetCurrentProcessId
 #endif
 
-int lmode = 0;
+
 /*
  * Run thread function
  */
-
-
+#ifdef _WIN32
+int launch_mode = 0;
+#endif
 
 // If -1 there are an error.
 int set_blocking(int sockfd, int blocking) {
@@ -103,7 +104,7 @@ void* process_routine (void *arg) {
 
 #ifdef _WIN32
     HANDLE event;
-    if (lmode == 0) {
+    if (launch_mode == 0) {
         char *event_name = "threadevent";
         if ((event = OpenEvent(SYNCHRONIZE, FALSE, event_name)) == NULL) {
             fprintf(stderr, "Failed Opening Event\n");
@@ -149,7 +150,7 @@ void* process_routine (void *arg) {
             goto thread_exit;
         }
 #ifdef _WIN32
-        if (lmode == 0) {
+        if (launch_mode == 0) {
             DWORD out = WaitForSingleObject(event, 500);
             if (out == WAIT_OBJECT_0)
                 goto thread_exit;
@@ -314,7 +315,7 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    if(lmode == 0) CloseHandle(event);
+    if(launch_mode == 0) CloseHandle(event);
     //ExitThread(0);
 #endif
 }
@@ -493,7 +494,7 @@ int run_server(options c_options, options f_options) {
 #elif _WIN32
     if (strcmp(mode, "MT") == 0) {
 
-        lmode = 0;
+        launch_mode = 0;
 
         HANDLE hThreadArray[n_proc];
         DWORD dwThreadArray[n_proc];
@@ -519,7 +520,7 @@ int run_server(options c_options, options f_options) {
 
     } else if (strcmp(mode, "MP") == 0) {
 
-        lmode = 1;
+        launch_mode = 1;
 
         int buf_size = 30;
 
@@ -625,7 +626,7 @@ int run_server(options c_options, options f_options) {
 
 #ifdef _WIN32
     HANDLE eventp;
-    if (lmode == 0) {
+    if (launch_mode == 0) {
         char *event_name = "threadevent";
         if ((eventp = OpenEvent(SYNCHRONIZE | EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
             fprintf(stderr, "Failed Opening Event\n");
