@@ -21,16 +21,7 @@ Gestire per bene gli errori delle fwrite e delle send.
 - main.c
 - signal.c
 - server.c
-
-## Funzioni Riviste operation.c
-- send_file
-- send_file_chipher
-- put_file
-- list_dir `Dobbiamo fare una scelta sulle realloc`
-- http_log
-- log_write
-- m_sleep
-- Send
+- operation.c `Da riguardare list dir per quanto riguarda le realloc`
 
 ## Idee
 - [ ] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
