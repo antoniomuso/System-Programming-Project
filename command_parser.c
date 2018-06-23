@@ -640,6 +640,8 @@ char *code_to_message(int code) {
             return "Internal Server Error";
         case 501:
             return "Not Implemented";
+        case 431:
+            return "Request Header Fields Too Large";
     }
 }
 
@@ -655,7 +657,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
 
     int len_fn = filename == NULL ? 0 : strlen(filename);
 
-    const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 150 + len_fn ;
+    const int resp_len = MAX_CONTENT_LEN + PATH_MAX + 200 + len_fn ;
 
     char *response = calloc(resp_len, 1);
     if (response == NULL) return NULL;
