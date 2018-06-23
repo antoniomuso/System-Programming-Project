@@ -1,5 +1,5 @@
 # Relazione Progetto Programmazione di Sistema (A.A 2017-2018)
-Antonio Musolino, Giacomo Priamo 
+Antonio Musolino, Giacomo Priamo  
 
 ## Introduzione
 Il progetto è stato sviluppato e testato contemporaneamente su un sistema Unix e uno Windows, il che ci ha permesso di 
@@ -118,3 +118,6 @@ Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le p
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
 e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove configurazioni.
 ### Parser
+Sono stati creati molteplici parser per soddisfare varie necessità: per le richieste HTTP (che include la lettura e la
+decodifica delle credenziali cifrate in base64, per cui è stato deciso di usare un modulo esterno riperito in rete), 
+per creare risposte, per interpretare il file di configurazione e i parametri passati da linea di comando. 
