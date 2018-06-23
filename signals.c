@@ -55,9 +55,9 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return i;
             }
-            int s = 1;
-            wait(&s);
-            printf("thread: %d\n", s);
+            // wait thread exit
+            int j = pthread_join(tids[i], NULL);
+            printf("thread: %d\n", j);
             fflush(stdout);
         }
         return len;
@@ -67,12 +67,16 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 
         for (i = 0; i < len; i++) {
             printf("kill: %d\n",pids[i]);
-            int status = 1;
+
             if (kill(pids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return i;
             }
-            waitpid(pids[i], &status, 0);
+            int status = 0;
+            if (waitpid(pids[i], &status, 0) == -1) {
+                fprintf(stderr,"Wait error\n");
+            }
+
         }
     }
 
