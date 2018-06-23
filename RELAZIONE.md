@@ -1,5 +1,5 @@
 # Relazione Progetto Programmazione di Sistema (A.A 2017-2018)
-Antonio Musolino, Giacomo Priamo
+Antonio Musolino, Giacomo Priamo 
 
 ## Introduzione
 Il progetto è stato sviluppato e testato contemporaneamente su un sistema Unix e uno Windows, il che ci ha permesso di 
@@ -107,8 +107,14 @@ Come da specifiche, tutte le richieste sono loggate all'interno del file _log.tx
 _common log format_.
 
 ### Segnali ed Eventi da console
-(stessa funzione di terminazione)
-##### Unix
-##### Windows
+Come da specifiche, il server è in grado di rileggere il file di configurazione dopo l'avvenimento di uno specifico 
+evento:
+- Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `sighup`. È stato quindi necessario 
+installare un **_signal handler_**.
+- Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `ctrl + break` (`ctrl + interr` per
+le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**.
 
+Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
+l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
+e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove configurazioni.
 ### Parser
