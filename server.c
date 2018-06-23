@@ -151,7 +151,7 @@ void* process_routine (void *arg) {
         }
 #ifdef _WIN32
         if (launch_mode == 0) {
-            DWORD out = WaitForSingleObject(event, 500);
+            DWORD out = WaitForSingleObject(event, 100);
             if (out == WAIT_OBJECT_0)
                 goto thread_exit;
         }
