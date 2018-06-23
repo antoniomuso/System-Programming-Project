@@ -86,12 +86,13 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 
+#ifdef __unix__
 void child_handler (int signal) {
     if (signal == SIGUSR1) {
         child_terminate = 1;
     }
 }
-
+#endif
 
 void set_child_handler () {
 #ifdef __unix__
