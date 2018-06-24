@@ -150,8 +150,8 @@ void child_handler (int signal) {
 }
 #endif
 
-void set_child_handler (void * event) {
 #ifdef __unix__
+void set_child_handler () {
     struct sigaction sa;
     //printf("proc id: %d\n", getpid());
 
@@ -171,11 +171,17 @@ void set_child_handler (void * event) {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
         exit(EXIT_FAILURE);
     }
-
-#elif _WIN32
-
-#endif
 }
+#elif _WIN32
+HANDLE set_child_handler() {
+    HANDLE event_h;
+    if ((event_h = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
+    }
+    return event_h;
+}
+#endif
 
 
 #ifdef __unix__

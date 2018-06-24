@@ -104,15 +104,12 @@ void* process_routine (void *arg) {
 
     // Event is defined only in windows
 #ifdef __unix__
-    set_child_handler(event);
+    set_child_handler();
 #elif _WIN32
-    HANDLE event_h;
-    if ((event_h = OpenEvent(EVENT_ALL_ACCESS, FALSE, "threadevent")) == NULL) {
-        fprintf(stderr, "Failed Opening Event\n");
-        exit(EXIT_FAILURE);
-    }
+    HANDLE event_h = set_child_handler();
     event = &event_h;
 #endif
+
 
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );

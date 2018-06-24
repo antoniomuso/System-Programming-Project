@@ -9,7 +9,11 @@
 int flag_restart;
 
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
-void set_child_handler(void * event);
+#ifdef __unix__
+void set_child_handler();
+#elif _WIN32
+HANDLE set_child_handler();
+#endif
 void set_thread_event();
 void reset_events ();
 int is_reloading (void * event);
