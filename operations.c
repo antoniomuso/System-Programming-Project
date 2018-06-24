@@ -117,16 +117,18 @@ struct data_args {
 };
 
 
-int lock_file (FILE * file, long len) {
+int lock_file (FILE * file, long len, int blocking) {
 #ifdef __unix__
     int fd = fileno(file);
-    if (flock(fd,LOCK_EX) != 0) {
+    int flag = blocking == 1 ? LOCK_EX : LOCK_EX | LOCK_NB;
+    if (flock(fd,flag) != 0) {
         return 1;
     }
 #elif _WIN32
     HANDLE file_h = (HANDLE)_get_osfhandle(_fileno( file ));
     OVERLAPPED sOverlapped = {0} ;
-    if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
+    DWORD flag = blocking == 1 ? LOCKFILE_EXCLUSIVE_LOCK : LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY;
+    if (LockFileEx(file_h, flag , 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
         fprintf(stderr, "Couldn't acquire lock on file\n");
         return 1;
     }
@@ -823,7 +825,7 @@ void send_file (int socket, http_header http_h, char * address) {
     long lengthOfFile = ftell(pfile);
     fseek(pfile, 0, SEEK_SET);
 
-    if (lock_file(pfile,lengthOfFile) == 1){
+    if (lock_file(pfile,lengthOfFile, 1) == 1){
         fprintf(stderr,"lock failed");
         return;
     }
@@ -873,8 +875,17 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         return;
     }
 
-    if (lock_file(file,http_h.attribute.content_length) == 1) {
+    if (lock_file(file,http_h.attribute.content_length, 0) == 1) {
         fprintf(stderr,"lock failed");
+        char * resp = create_http_response(423,-1, NULL, NULL, NULL);
+        if (resp == NULL) {
+            fclose(file);
+            return;
+        }
+        Send(clientfd,resp,strlen(resp),0);
+        http_log(http_h,resp,address,0);
+        fclose(file);
+        free(resp);
         return;
     }
 
@@ -1016,7 +1027,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
 #ifdef __unix__
 
-    if (lock_file(file,lengthOfFile) == 1) {
+    if (lock_file(file,lengthOfFile, 1) == 1) {
         fprintf(stderr,"lock failed");
         return;
     }

@@ -632,6 +632,8 @@ char *code_to_message(int code) {
             return "Forbidden";
         case 404:
             return "Not Found";
+        case 423:
+            return "Locked";
         case 431:
             return "Request Header Fields Too Large";
         case 500:
