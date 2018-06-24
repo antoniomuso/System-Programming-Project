@@ -1,14 +1,9 @@
-//
-// Created by anotoniomusolino on 18/06/18.
-//
-
 #include "operations.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <limits.h>
-//#define TIME_WAIT 6000
 #define BUFSIZE 4096
 
 #ifdef __unix__
@@ -576,7 +571,7 @@ int exec_command(int socket, const char * command, const char * args, http_heade
     }
 
 
-    DWORD out = WaitForSingleObject(data_arguments.event, TIME_WAIT);
+    DWORD out = WaitForSingleObject(data_arguments.event, INFINITE);
 
 
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
