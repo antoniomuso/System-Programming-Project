@@ -22,10 +22,9 @@
 
 
 int main(int argc, char *argv[]) {
-    // TODO: Qui ci va un Parser per le opzioni.
 
     command_arc comm[] = { {"-n_proc","int"},{"-port", "int"},{"-server_ip", "str"}, {"-mode","str"}};
-    options opt = options_parse(argc, argv, comm, 4); // Il puntatore dentro options va liberato.
+    options opt = options_parse(argc, argv, comm, 4);
     //get_command_value((char *) comm, options);
 
     command_arc confs[] = { {"n_proc", "int"}, {"port", "int"}, {"server_ip", "str"}, {"mode", "str"} };
@@ -40,44 +39,36 @@ int main(int argc, char *argv[]) {
     printf("Unix\n");
     fflush(stdout);
 #if DEBUG != 1
-    // Daemon fork
+    // Daemonization
     pid_t pid;
 
-    /* Fork off the parent process */
     pid = fork();
-    /* An error occurred */
     if (pid < 0)
         return(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
     if (pid > 0)
         exit(EXIT_SUCCESS);
 
     umask(0);
 
-    /* On success: The child process becomes session leader */
     if (setsid() < 0)
         exit(EXIT_FAILURE);
 
-    /* Catch, ignore and handle signals */
     signal(SIGCHLD, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
 
-    /* Fork off for the second time*/
     pid = fork();
 
-    /* An error occurred */
     if (pid < 0)
         exit(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
     if (pid > 0)
         exit(EXIT_SUCCESS);
 
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
-    // Qui il demone è nato.
+    // The daemon is created
 #endif
 
 
@@ -88,7 +79,7 @@ int main(int argc, char *argv[]) {
     printf("Windows\n");
 #endif
 
-    // If server return with 0 we must reload configuration file and reload server.
+    // If the server returns 0, the configuration file must be reloaded in order to re-launch the server.
     while (run_server(opt, fopt) == 0) {
         free_options(opt);
         free_options(fopt);
@@ -100,6 +91,6 @@ int main(int argc, char *argv[]) {
         opt.commands = NULL;
     }
 
-    fprintf(stderr,"Error during reload.");
+    fprintf(stderr,"An error occurred while trying to reload the server.");
     return 1;
 }

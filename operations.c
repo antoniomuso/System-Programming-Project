@@ -8,7 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
-#define TIME_WAIT 6000
+//#define TIME_WAIT 6000
 #define BUFSIZE 4096
 
 #ifdef __unix__
@@ -307,7 +307,7 @@ void* thread (void *arg) {
     DWORD proc_pid = proc_info.dwProcessId;
     HANDLE proc_handle = proc_info.hProcess;
 
-    DWORD out = WaitForSingleObject(proc_handle, TIME_WAIT);
+    DWORD out = WaitForSingleObject(proc_handle, INFINITE);
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         arguments->error_out = 1;
         if(SetEvent(arguments->event) == FALSE)
@@ -569,7 +569,9 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         return 1;
     }
 
+
     DWORD out = WaitForSingleObject(data_arguments.event, TIME_WAIT);
+
 
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         free(cpy_command);

@@ -97,6 +97,7 @@ int main(int argc, char* argv[]) {
 
     SOCKET *sock_fd_ptr;
     sock_fd_ptr = sock_fd;
+    launch_mode = 1;
     process_routine((void *) sock_fd_ptr);
 #endif
     return 0;
