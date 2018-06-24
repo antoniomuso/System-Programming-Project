@@ -1020,6 +1020,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 
     char * map;
+    int fd = fileno(file);
     map = mmap(0,lengthOfFile + padding,PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
 
     if (map == MAP_FAILED) {
