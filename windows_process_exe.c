@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     DWORD dwBufLen = 0;
     DWORD dwErr;
 
-    // WSAEnumProtocols()'s Failure is expected here. Its purpose here is to initialize dwBufLen
+    // WSAEnumProtocols()'s Failure is expected here. Its purpose is to initialize dwBufLen
     if ((WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLen) != SOCKET_ERROR))
         printf("WSAEnumProtocols() failed with error code %d\n", WSAGetLastError());
     if ((dwErr = WSAGetLastError()) != WSAENOBUFS) {
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     if ((fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLens, &cbRead_1, NULL) == FALSE)) {
         fprintf(stderr, "Couldn't Read from Pipe\n");
         free(lpProtocolBuf);
-        return 1; // un numero scelto a caso
+        return 1;
     }
 
     SOCKET sock_fd[2];
