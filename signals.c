@@ -48,14 +48,18 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     printf("Event set\n");
     fflush(stdout);
     // Attendiamo la terminazione dei thread.
-//    for (i = 0; i < len; i++) {
-//        if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
-//            fprintf(stderr,"Thread wait error\n");
-//                return 1;
-//        }
-//    printf("Wait endend %d\n", i);
-//    fflush(stdout);
-//    }
+    if (mode == 1) {
+
+
+        for (i = 0; i < len; i++) {
+            if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
+                fprintf(stderr,"Thread wait error\n");
+                return 1;
+            }
+            printf("Wait endend %d\n", i);
+            fflush(stdout);
+        }
+    }
     CloseHandle(event);
 
 #elif __unix__
