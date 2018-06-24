@@ -31,6 +31,6 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [ ] Ridefinire il meccanismo di lock dei file per renderlo universale (Win e Unix)
 
 ## Controllare 
-- [ ] ToDo in ctrl_handler.
+- [x] ToDo in ctrl_handler.
 - [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [ ] Gestire in modo migliore il passaggio della modalità in server.c
