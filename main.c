@@ -81,8 +81,6 @@ int main(int argc, char *argv[]) {
 
     // If the server returns 0, the configuration file must be reloaded in order to re-launch the server.
     while (run_server(opt, fopt) == 0) {
-        free_options(opt);
-        free_options(fopt);
 
         fopt = parse_file("config.txt", confs, 4);
         if (is_options_error(fopt)) {
