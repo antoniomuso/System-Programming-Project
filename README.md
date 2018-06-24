@@ -36,6 +36,7 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [x] Gestire in modo migliore il passaggio della modalità in server.c
 - [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [ ] Finire di rivedere command_parser.c
+- [ ] Doppio controllo (potenzialmente uguale) in server.c: 345, 358
 
 
 ## Test Finali

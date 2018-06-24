@@ -43,14 +43,7 @@
 #endif
 
 
-/**
- * In WINDOWS args is the Handle event
- * @return 1 if server is in reloading.
- */
-
-
-
-// If -1 there are an error.
+// If -1 is returned, there was an error.
 int set_blocking(int sockfd, int blocking) {
     int nonblock = blocking == 0 ? 1 : 0;
 #ifdef __unix__
@@ -116,7 +109,7 @@ void* process_routine (void *arg) {
 
     options credentials = parse_file("passwordFile.txt", NULL, 0);
     if (is_options_error(credentials)) {
-        fprintf(stderr, "Error during read of password FILE, process exit");
+        fprintf(stderr, "An error occurred while trying to read the credentials file. Terminating...\n");
         goto thread_exit;
     }
 
@@ -126,7 +119,7 @@ void* process_routine (void *arg) {
 
     if (set_blocking(server_socket, 0) == -1 || set_blocking(server_socket_chiper, 0) == -1) {
         free_options(credentials);
-        fprintf(stderr, "Error during set not blocking socket\n");
+        fprintf(stderr, "An error occurred while trying to make the socket non-blocking.\n");
         goto thread_exit;
     }
 
@@ -174,7 +167,7 @@ void* process_routine (void *arg) {
 
         if (set_blocking(clientfd, 1) == -1) {
             close_socket(clientfd);
-            fprintf(stderr, "Error during set blocking client socket.\n");
+            fprintf(stderr, "An error occurred while trying to make the client socket non-blocking.\n");
             continue;
         }
 
@@ -186,7 +179,7 @@ void* process_routine (void *arg) {
         for (;;) {
             if ((read_len = recv(clientfd, (void *)(buffer + data_read),(BUFF_READ_LEN-1) - data_read,0)) == -1 || read_len == 0) {
                 close_socket(clientfd);
-                fprintf(stderr,"Error during recive or client close connection\n");
+                fprintf(stderr,"Error occurred during receive, or connection closed by the client.\n");
                 break;
             }
             data_read += read_len;
@@ -196,8 +189,8 @@ void* process_routine (void *arg) {
 
             if (pointer == NULL) {
                 if (BUFF_READ_LEN-1 <= data_read) {
-                    // header is too much big.
-                    fprintf(stderr,"Header too much big\n");
+                    // header is much big.
+                    fprintf(stderr,"Header too big\n");
                     char * resp = create_http_response(431,-1, NULL, NULL, NULL);
                     if (resp == NULL) {
                         close_socket(clientfd);
@@ -217,9 +210,8 @@ void* process_routine (void *arg) {
 
             http_h = parse_http_header_request(buffer, header_len);
 
-            // Errore durante il parsing della richiesta http
             if (http_h.is_request < 0) {
-                fprintf(stderr,"Error HTTP parse");
+                fprintf(stderr,"An error occurred while trying to parse the HTTP request.\n");
                 char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                 if (resp == NULL) {
                     close_socket(clientfd);
@@ -232,7 +224,6 @@ void* process_routine (void *arg) {
                 break;
             }
 
-            // Controllo se password e username sono corretti.
 #define DEBUG 0
 #if DEBUG != 1
             if (!is_authorize(http_h,credentials)) {
@@ -250,12 +241,11 @@ void* process_routine (void *arg) {
             if (strcmp(http_h.type_req, "GET") == 0) {
 
                 if (is_chipher == 1 ) {
-                    // Se siamo in modalità cifratura
+                    // Encryption mode
                     send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr,address);
 
                 } else if (startsWith("/command/", http_h.url)) {
-                    // Siamo in modalità comando
-
+                    // Command mode
                     struct operation_command op = parser_operation(http_h.url);
                     if (op.comm != NULL) {
 
@@ -271,7 +261,8 @@ void* process_routine (void *arg) {
                         }
 
                     } else {
-                        fprintf(stderr, "Command not passed\n");
+                        // GET
+                        fprintf(stderr, "No command supplied.\n");
                         char * resp = create_http_response(400,-1, NULL, NULL, NULL);
                         if (resp == NULL) {
                             goto socket_exit;
@@ -288,7 +279,8 @@ void* process_routine (void *arg) {
                 }
 
 
-            } else if ((strcmp(http_h.type_req, "PUT") == 0) && is_chipher == 0) { // this is PUT
+            } else if ((strcmp(http_h.type_req, "PUT") == 0) && is_chipher == 0) {
+                // PUT
                 put_file(clientfd,http_h,address,buffer,BUFF_READ_LEN,header_len,data_read);
             }
 
@@ -310,7 +302,6 @@ void* process_routine (void *arg) {
 #endif
 }
 int w_process_routine (void *arg) {
-    // ignore return value
     process_routine(arg);
     return 0;
 }
@@ -320,14 +311,13 @@ int run_server(options c_options, options f_options) {
 #if _WIN32
     WSADATA wsa;
 
-    printf("Initialising Winsock...\n");
-    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-    {
-        fprintf(stderr,"Failed. Error Code : %d\n",WSAGetLastError());
+    printf("Initializing Winsock...\n");
+    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0) {
+        fprintf(stderr,"WSAStartup failed. Error Code : %d",WSAGetLastError());
         exit(EXIT_FAILURE);
     }
 
-    printf("Initialised.\n");
+    printf("Initialized.\n");
 
 #endif
     struct addrinfo *addr_info;
@@ -353,7 +343,7 @@ int run_server(options c_options, options f_options) {
     char * f_n_proc = get_command_value("n_proc", f_options);
 
     if (f_n_proc == NULL) {
-        fprintf(stderr, "Error config file, parameters incomplete\n");
+        fprintf(stderr, "Configuration file error: parameters incomplete.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -366,19 +356,19 @@ int run_server(options c_options, options f_options) {
     snprintf(chiper_port, MAX_OPTION_LEN, "%d", atoi(port) + 1);
 
     if (n_proc <= 0 || port == NULL || server_ip == NULL || mode == NULL) {
-        fprintf(stderr, "Error config file, parameters incomplete\n");
+        fprintf(stderr, "Configuration file error: parameters incomplete.e\n");
         exit(EXIT_FAILURE);
     }
 
 
     if (server_socket == -1 || server_socket_cipher == -1) {
-        fprintf(stderr,"Couldn't create socket\n");
+        fprintf(stderr,"Couldn't create socket.\n");
         exit(EXIT_FAILURE);
     }
 
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1
         || setsockopt(server_socket_cipher, SOL_SOCKET, SO_REUSEADDR, (const void *)& yes, sizeof(int)) == -1) {
-        fprintf(stderr,"Couldn't setsockopt\n");
+        fprintf(stderr,"Setsockopt failed.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -405,7 +395,7 @@ int run_server(options c_options, options f_options) {
 
     if (listen(server_socket, 10) == -1
         || listen(server_socket_cipher, 10) == -1 ) {
-        fprintf(stderr,"Couldn't make sockets listen\n");
+        fprintf(stderr,"Socket listen failed.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -434,7 +424,7 @@ int run_server(options c_options, options f_options) {
 
         for (int i = 0; i < n_proc ; i++) {
             if (pthread_create(&(tid[i]), NULL, &process_routine, (void *) sock_pointer) != 0) {
-                fprintf(stderr, "Error during threads creation");
+                fprintf(stderr, "An error occurred while trying to  create a thread.\n");
                 free_options(c_options);
                 free_options(f_options);
                 exit(EXIT_FAILURE);
@@ -477,7 +467,7 @@ int run_server(options c_options, options f_options) {
     } else {
         free_options(c_options);
         free_options(f_options);
-        fprintf(stderr, "Error invalid mode\n");
+        fprintf(stderr, "Error: invalid mode\n");
         exit(EXIT_FAILURE);
     }
 
@@ -501,7 +491,7 @@ int run_server(options c_options, options f_options) {
             if (hThreadArray[i] == NULL) {
                 free_options(c_options);
                 free_options(f_options);
-                fprintf(stderr, "Error during threads creation");
+                fprintf(stderr, "An error occurred while trying to  create a thread.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -551,7 +541,7 @@ int run_server(options c_options, options f_options) {
             }
 
             if (!(CreateProcess("windows_process_exe.o", buff, NULL, NULL, FALSE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
-                fprintf(stderr, "Error occurred while trying to create a process\n");
+                fprintf(stderr, "An error occurred while trying to create a process.\n");
                 fflush(stderr);
                 free_options(c_options);
                 free_options(f_options);
@@ -599,7 +589,7 @@ int run_server(options c_options, options f_options) {
     } else {
         free_options(c_options);
         free_options(f_options);
-        fprintf(stderr, "Error invalid mode");
+        fprintf(stderr, "Error: invalid mode.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -608,7 +598,7 @@ int run_server(options c_options, options f_options) {
     free_options(c_options);
     free_options(f_options);
 
-    // it is set to 1 when we are in reload config file mode.
+    // flag_restart is set to 1 when the server is being reloaded.
     while(flag_restart == 0) {
         m_sleep(1);
     }

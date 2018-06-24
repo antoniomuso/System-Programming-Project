@@ -795,6 +795,7 @@ void send_file (int socket, http_header http_h, char * address) {
         char * resp = create_http_response(200, content_len,"text/html; charset=utf-8", NULL,NULL);
         if (resp == NULL) {
             free(content);
+            return;
         }
 
         if (Send(socket,resp, strlen(resp), 0) != -1) Send(socket, content, content_len, 0);
