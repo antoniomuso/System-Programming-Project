@@ -1,6 +1,3 @@
-//
-// Created by anotoniomusolino on 31/05/18.
-//
 #include "command_parser.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,7 +21,6 @@
 #endif
 
 
-//#ifdef _WIN32
 #ifndef strtok_r
 /*-
  * Copyright (c) 1998 Softweyr LLC.  All rights reserved.
@@ -134,7 +130,7 @@ int is_options_error (options opt) {
  * @param command Command String
  * @param opt Commands data struct
  * @return NULL if command isn't contained inside options,
- *         Pointer to a string that it contain the command value.
+ *         otherwise a pointer to a string containing the command value.
  */
 char* get_command_value (char command[], options opt) {
     if (opt.commands == NULL) return NULL;
@@ -208,7 +204,7 @@ authorization parse_authorization (const char * src) {
  *
  * @param argc
  * @param argv
- * @param command_list List of Archetype to pars parameters
+ * @param command_list List of Archetype to parse parameters
  * @param len_comm Len of command_list
  * @return Return Options struct, after use is request free of Options.commands.
  */
@@ -221,7 +217,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
     command* comm = calloc(sizeof(command), len);
 
     if (comm == NULL) {
-        fprintf(stderr, "Malloc failed during options parser\n");
+        fprintf(stderr, "Malloc failed during options parsing\n");
         exit(EXIT_FAILURE);
     }
 
@@ -235,7 +231,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                     len += REALLOC_INC_SIZE;
                     comm = (command*) realloc(comm, sizeof(command) * len);
                     if (comm == NULL) {
-                        fprintf(stderr, "Options realloc failed during options parser\n");
+                        fprintf(stderr, "Realloc failed in options_parse\n");
                         exit(EXIT_FAILURE);
                     }
                 }
@@ -255,7 +251,7 @@ options options_parse (int argc, char *argv[], command_arc command_list[], int l
                 }
                 // Passo all'indice dell'input
                 if (++i >= argc) {
-                    fprintf(stderr, "Iput for command %s not passed\n", argv[i-1]);
+                    fprintf(stderr, "Input for command %s not passed\n", argv[i-1]);
                     exit(EXIT_FAILURE);
                 }
 
@@ -333,7 +329,7 @@ command extract_command(char *string) {
 
 options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     /**
-     * Parses a file following the chosen format.
+     * Parses a file following the format "Name=Val\n".
      */
     options ret;
     ret.commands = NULL;
@@ -365,7 +361,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
 
     command* comm = calloc(sizeof(command), len);
     if (comm == NULL) {
-        fprintf(stderr, "Malloc error file_parser\n");
+        fprintf(stderr, "Malloc failed in parse_file\n");
         return ret;
     }
 
@@ -553,7 +549,7 @@ http_header parse_http_header_request (const char* data, int data_len) {
         return http_h;
     }
 
-    // Copy of date
+    // Copy of data
     char * data_copy = malloc(data_len+1);
     if (data_copy == NULL) {
         http_h.is_request = -1;
@@ -646,10 +642,8 @@ char *code_to_message(int code) {
 }
 
 char *create_http_response(int response_code, unsigned long content_len, char * content_type, char *filename, char *location) {
-    //NB: Still need to handle the translation of content_type
     const unsigned int MAX_CONTENT_LEN = (52 + 20 + MAX_HTTP_FIELD_LEN);
 
-    // Max path len
     if ( (content_type != NULL && strlen(content_type) > PATH_MAX)
          || (location != NULL && strlen(location) > MAX_HTTP_FIELD_LEN)) {
         return NULL;
