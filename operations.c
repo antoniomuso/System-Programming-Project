@@ -442,8 +442,14 @@ void* thread (void *arg) {
     for (;;) {
         int n_read = read(fd[0], buff, BUFSIZE);
 
-        if (n_read == -1 && (errno != EAGAIN && errno != EWOULDBLOCK)) {
-            break;
+        if (n_read == -1) {
+            free(buff_out);
+            arguments->error_out = 1;
+            pthread_mutex_lock(&arguments->mutex);
+            if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+            pthread_mutex_unlock(&arguments->mutex);
+            close(fd[0]);
+            return NULL;
         }
 
         if (all_read_data+n_read >= buff_out_s) {
