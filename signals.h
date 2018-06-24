@@ -12,6 +12,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 #ifdef __unix__
 void set_child_handler();
 #elif _WIN32
+#include <windows.h>
 HANDLE set_child_handler();
 #endif
 void set_thread_event();
