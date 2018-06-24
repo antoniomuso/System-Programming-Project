@@ -26,11 +26,11 @@ Gestire per bene gli errori delle fwrite e delle send.
 ## Idee
 - [x] Gestire child terminate con un diverso meccanismo di sinctronizzazione
 - [x] Controllare che la grandezza dell'header non superi il buffer
-- [ ] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
-- [ ] Ridefinire lo standard di passaggio dei comandi per /command/
+- [x] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
+- [x] Ridefinire lo standard di passaggio dei comandi per /command/
 - [ ] Ridefinire il meccanismo di lock dei file per renderlo universale (Win e Unix)
 
 ## Controllare 
 - [x] ToDo in ctrl_handler.
 - [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
-- [ ] Gestire in modo migliore il passaggio della modalità in server.c
+- [x] Gestire in modo migliore il passaggio della modalità in server.c

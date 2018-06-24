@@ -126,7 +126,7 @@ int lock_file (FILE * file, long len) {
 #elif _WIN32
     HANDLE file_h = (HANDLE)_get_osfhandle(_fileno( file ));
     OVERLAPPED sOverlapped = {0} ;
-    if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
+    if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
         fprintf(stderr, "Couldn't acquire lock on file\n");
         return 1;
     }
@@ -844,6 +844,7 @@ void send_file (int socket, http_header http_h, char * address) {
 
     for(;;) {
         read = fread(buff,1,BUFSIZE,pfile);
+        m_sleep(5);
         printf("read: %d\n", read);
         fflush(stdout);
         Send(socket,buff,read,0);
