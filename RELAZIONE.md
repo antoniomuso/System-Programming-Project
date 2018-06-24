@@ -5,7 +5,7 @@ Antonio Musolino, Giacomo Priamo
 Il progetto è stato sviluppato e testato contemporaneamente su un sistema Unix e uno Windows, il che ci ha permesso di 
 poter gestire da subito gli errori riscontrati sulle diverse piattaforme, di non dover tornare 
 sulle stesse funzioni in un secondo momento per re-implementare le stesse funzionalità 
-e anche per fare massimizzare il riutilizzo del codice.
+e anche allo scopo di massimizzare il riutilizzo del codice.
 
 Le funzionalità fondamentali e critiche, come la creazione e gestione del server pre-forkato, la gestione delle 
 richieste HTTP in accordo con le specifiche, la di gestione segnali ed eventi, sono state realizzate in presenza di 

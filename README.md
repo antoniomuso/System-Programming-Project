@@ -36,3 +36,8 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [x] Gestire in modo migliore il passaggio della modalità in server.c
 - [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [ ] Finire di rivedere command_parser.c
+
+
+## Test Finali
+- [ ] Funzionamento **in remoto e come demone** Unix
+- [ ] Funzionamento Windows 
