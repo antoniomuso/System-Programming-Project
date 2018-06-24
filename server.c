@@ -106,6 +106,8 @@ void* process_routine (void *arg) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);
     }
+    //printf("Event opened\n");
+    fflush(stdout);
 #endif
 
     int server_socket = *((int*)arg);
@@ -144,10 +146,14 @@ void* process_routine (void *arg) {
         if (child_terminate == 1) {
             goto thread_exit;
         }
+
 #ifdef _WIN32
-        DWORD out = WaitForSingleObject(event, 0);
-        if (out == WAIT_OBJECT_0)
+        DWORD out = WaitForSingleObject(event, 100);
+        if (out == WAIT_OBJECT_0) {
+            printf("Event intercepted\n");
+            fflush(stdout);
             goto thread_exit;
+        }
 #endif
 
         FD_SET(server_socket,&fds);
@@ -308,6 +314,8 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
+    printf("exiting\n");
+    fflush(stdout);
     CloseHandle(event);
     ExitThread(0);
 #endif
@@ -485,6 +493,22 @@ int run_server(options c_options, options f_options) {
     }
 
 #elif _WIN32
+
+
+    char *event_name = "threadevent";
+    SECURITY_ATTRIBUTES sattr;
+
+    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sattr.bInheritHandle = TRUE;
+    sattr.lpSecurityDescriptor = NULL;
+
+    if (CreateEvent(&sattr, FALSE, TRUE, event_name) == NULL) {
+        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
+        ExitThread(1);
+    }
+
+
+
     if (strcmp(mode, "MT") == 0) {
 
         HANDLE hThreadArray[n_proc];
@@ -614,7 +638,7 @@ int run_server(options c_options, options f_options) {
 
 #ifdef _WIN32
     HANDLE eventp;
-    char *event_name = "threadevent";
+    //char *event_name = "threadevent";
     if ((eventp = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);

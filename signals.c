@@ -45,13 +45,17 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
         CloseHandle(event);
         return i;
     }
+    printf("Event set\n");
+    fflush(stdout);
     // Attendiamo la terminazione dei thread.
-    for (i = 0; i < len; i++) {
-        if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
-            fprintf(stderr,"Thread wait error\n");
-                return 1;
-        }
-    }
+//    for (i = 0; i < len; i++) {
+//        if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
+//            fprintf(stderr,"Thread wait error\n");
+//                return 1;
+//        }
+//    printf("Wait endend %d\n", i);
+//    fflush(stdout);
+//    }
     CloseHandle(event);
 
 #elif __unix__
@@ -124,12 +128,18 @@ void set_child_handler () {
     }
 
 #elif _WIN32
-    char *event_name = "threadevent";
-    if (CreateEvent(NULL, FALSE, TRUE, event_name) == NULL) {
-        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
-        ExitThread(1);
-    }
-    printf("Thread event \"%s\" created\\opened.\n", event_name);
+//    char *event_name = "threadevent";
+//    SECURITY_ATTRIBUTES sattr;
+//
+//    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
+//    sattr.bInheritHandle = TRUE;
+//    sattr.lpSecurityDescriptor = NULL;
+//
+//    if (CreateEvent(&sattr, FALSE, TRUE, event_name) == NULL) {
+//        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
+//        ExitThread(1);
+//    }
+    //printf("Thread event \"%s\" created\\opened.\n", event_name);
 #endif
 }
 
