@@ -46,9 +46,6 @@
 /*
  * Run thread function
  */
-#ifdef _WIN32
-int launch_mode = 0;
-#endif
 
 // If -1 there are an error.
 int set_blocking(int sockfd, int blocking) {
@@ -105,7 +102,7 @@ void* process_routine (void *arg) {
 #ifdef _WIN32
     HANDLE event;
     char *event_name = "threadevent";
-    if ((event = OpenEvent(SYNCHRONIZE, FALSE, event_name)) == NULL) {
+    if ((event = OpenEvent(READ_CONTROL, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);
     }
@@ -490,8 +487,6 @@ int run_server(options c_options, options f_options) {
 #elif _WIN32
     if (strcmp(mode, "MT") == 0) {
 
-        launch_mode = 0;
-
         HANDLE hThreadArray[n_proc];
         DWORD dwThreadArray[n_proc];
 
@@ -511,12 +506,9 @@ int run_server(options c_options, options f_options) {
             }
         }
 
-        set_thread_event();
         set_signal_handler(hThreadArray, sizeof(HANDLE), n_proc, 0);
 
     } else if (strcmp(mode, "MP") == 0) {
-
-        launch_mode = 1;
 
         int buf_size = 30;
 
@@ -623,7 +615,7 @@ int run_server(options c_options, options f_options) {
 #ifdef _WIN32
     HANDLE eventp;
     char *event_name = "threadevent";
-    if ((eventp = OpenEvent(SYNCHRONIZE | EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+    if ((eventp = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);
     }
