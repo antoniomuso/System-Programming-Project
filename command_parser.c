@@ -201,12 +201,11 @@ authorization parse_authorization (const char * src) {
 }
 
 /**
- *
  * @param argc
  * @param argv
- * @param command_list List of Archetype to parse parameters
- * @param len_comm Len of command_list
- * @return Return Options struct, after use is request free of Options.commands.
+ * @param command_list List of Archetypes used to parse the parameters.
+ * @param len_comm Length of command_list
+ * @return options struct, after use it is required to free options.commands.
  */
 
 options options_parse (int argc, char *argv[], command_arc command_list[], int len_comm) {
