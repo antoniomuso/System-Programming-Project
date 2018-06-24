@@ -43,9 +43,12 @@
 #endif
 
 
-/*
- * Run thread function
+/**
+ * In WINDOWS args is the Handle event
+ * @return 1 if server is in reloading.
  */
+
+
 
 // If -1 there are an error.
 int set_blocking(int sockfd, int blocking) {
@@ -97,18 +100,10 @@ void* process_routine (void *arg) {
     printf("Thread Start\n");
     fflush(stdout);
 
-    set_child_handler();
+    void * event = NULL;
 
-#ifdef _WIN32
-    HANDLE event;
-    char *event_name = "threadevent";
-    if ((event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
-        fprintf(stderr, "Failed Opening Event\n");
-        exit(EXIT_FAILURE);
-    }
-    //printf("Event opened\n");
-    fflush(stdout);
-#endif
+    // Event is define only in windows
+    set_child_handler(event);
 
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
@@ -143,21 +138,10 @@ void* process_routine (void *arg) {
 
     int rc = 0;
     while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, &tv) ) != -1) {
-        if (child_terminate == 1) {
-            goto thread_exit;
-        }
 
-#ifdef _WIN32
-        //printf("Waiting for event");
-        fflush(stdout);
-        DWORD out = WaitForSingleObject(event, 0);
-        //printf("%d %d\n", out, GetLastError());
-        if (out == WAIT_OBJECT_0) {
-            //printf("Event intercepted\n");
-            fflush(stdout);
+        if (is_reloading(event) == 1) {
             goto thread_exit;
         }
-#endif
 
         FD_SET(server_socket,&fds);
         FD_SET(server_socket_chiper,&fds);
@@ -178,7 +162,6 @@ void* process_routine (void *arg) {
             continue;
         }
 
-        //printf("Pid Accept Request: %d\n",getpid());
         printf("Client Connect\n");
         fflush(stdout);
         char * address = inet_ntoa(saddr.sin_addr);
@@ -317,9 +300,7 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    //printf("exiting\n");
-    fflush(stdout);
-    CloseHandle(event);
+    CloseHandle(*event);
     ExitThread(0);
 #endif
 }
@@ -496,17 +477,8 @@ int run_server(options c_options, options f_options) {
     }
 
 #elif _WIN32
-    char *event_name = "threadevent";
-    SECURITY_ATTRIBUTES sattr;
 
-    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sattr.bInheritHandle = TRUE;
-    sattr.lpSecurityDescriptor = NULL;
-
-    if (CreateEvent(&sattr, TRUE, FALSE, event_name) == NULL) {
-        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
-        ExitThread(1);
-    }
+    initialize_windows_event();
 
     if (strcmp(mode, "MT") == 0) {
 
@@ -631,25 +603,12 @@ int run_server(options c_options, options f_options) {
     free_options(c_options);
     free_options(f_options);
 
+    // it is set to 1 when we are in reload config file mode.
     while(flag_restart == 0) {
         m_sleep(1);
     }
 
-#ifdef _WIN32
-    HANDLE eventp;
-    if ((eventp = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
-        fprintf(stderr, "Failed Opening Event\n");
-        exit(EXIT_FAILURE);
-    }
-    if (!ResetEvent(eventp)) {
-        fprintf(stderr, "Failed Resetting Event\n");
-        exit(EXIT_FAILURE);
-    }
-    CloseHandle(eventp);
-#endif
-
-    flag_restart = 0;
-    child_terminate = 0;
+    reset_events();
 
     close_socket(server_socket);
     close_socket(server_socket_cipher);

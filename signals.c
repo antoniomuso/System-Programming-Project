@@ -22,15 +22,63 @@ int len = 0;
 int mode = 0;
 
 int flag_restart = 0;
-int child_terminate = 0;
 
 
+#ifdef _WIN32
+const char * event_name = "threadevent";
+
+void initialize_windows_event () {
+    SECURITY_ATTRIBUTES sattr;
+
+    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sattr.bInheritHandle = TRUE;
+    sattr.lpSecurityDescriptor = NULL;
+
+    if (CreateEvent(&sattr, TRUE, FALSE, event_name) == NULL) {
+        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
+        ExitThread(1);
+    }
+}
+#endif
+
+int is_reloading(void * args) {
+#ifdef __unix__
+    if (flag_restart == 1) {
+        return 1;
+    }
+#elif _WIN32
+    HANDLE event = (HANDLE)(*args);
+    DWORD out = WaitForSingleObject(event, 0);
+    if (out == WAIT_OBJECT_0) {
+        return 1;
+    }
+#endif
+    return 0;
+}
+
+void reset_events() {
+
+    flag_restart = 0;
+
+#ifdef _WIN32
+    HANDLE eventp;
+    if ((eventp = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
+    }
+    if (!ResetEvent(eventp)) {
+        fprintf(stderr, "Failed Resetting Event\n");
+        exit(EXIT_FAILURE);
+    }
+    CloseHandle(eventp);
+#endif
+
+}
 
 int infanticide(void *children_array, int len, int mode, int exit_code) {
     /**
      * Mode: 0 = MT, 1 = MP.
      */
-    int i = 0;
 #ifdef _WIN32
     HANDLE *array = (HANDLE *) children_array;
 
@@ -38,12 +86,12 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     HANDLE event;
     if ((event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event \"%s\" (%d)\n", event_name, GetLastError());
-        return i;
+        return 1;
     }
     if(SetEvent(event) == FALSE) {
         fprintf(stderr, "SetEvent Failed %d\n", GetLastError());
         CloseHandle(event);
-        return i;
+        return 1;
     }
     printf("Event set\n");
     fflush(stdout);
@@ -58,7 +106,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
 #elif __unix__
     if (mode == 0) {
         pthread_t *tids = (pthread_t *) children_array;
-        for (i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             if (pthread_kill(tids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return 1;
@@ -74,7 +122,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     } else if (mode == 1) {
         int *pids = (int *) children_array;
 
-        for (i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             if (kill(pids[i], exit_code) == -1) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return 1;
@@ -89,20 +137,18 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     }
 
 #endif
-    return i;
+    return 0;
 }
-
-void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 
 #ifdef __unix__
 void child_handler (int signal) {
     if (signal == SIGUSR1) {
-        child_terminate = 1;
+        flag_restart = 1;
     }
 }
 #endif
 
-void set_child_handler () {
+void set_child_handler (void * event) {
 #ifdef __unix__
     struct sigaction sa;
     //printf("proc id: %d\n", getpid());
@@ -123,6 +169,16 @@ void set_child_handler () {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
         exit(EXIT_FAILURE);
     }
+#elif _WIN32
+    HANDLE event_h;
+    char *event_name = "threadevent";
+    if ((event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
+    }
+    fflush(stdout);
+    //define event
+    event = &event_h;
 #endif
 }
 
