@@ -22,13 +22,14 @@ Gestire per bene gli errori delle fwrite e delle send.
 - signals.c
 - server.c
 - operations.c `Da riguardare list dir per quanto riguarda le realloc`
+- windows_process_exe.c
 
 ## Idee
 - [x] Gestire child terminate con un diverso meccanismo di sinctronizzazione
 - [x] Controllare che la grandezza dell'header non superi il buffer
 - [x] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
 - [x] Ridefinire lo standard di passaggio dei comandi per /command/
-- [ ] Ridefinire il meccanismo di lock dei file per renderlo universale (Win e Unix)
+- [x] Ridefinire il meccanismo di lock dei file per renderlo universale (Win e Unix)
 
 ## Controllare 
 - [x] ToDo in ctrl_handler.

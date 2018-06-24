@@ -59,7 +59,9 @@ ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendi
 Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette e si procede con la sua
 gestione.
 ### Operazioni
-Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e ...
+Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows.
+Per le richieste di GET si è deciso di rendere i lock sui file bloccanti, mentre per quelle di PUT verrà restituito 
+un errore al client nel caso in cui la risorsa sia già bloccata.
 ##### GET
 Le richieste di GET sulla porta principale (quella specificata in input o dal file di configurazione) sono gestitite 
 dalla funzione `send_file`.
@@ -91,7 +93,8 @@ thread.
 L'implementazione di `exec_command` supporta anche il **passaggio di parametri**, secondo la seguente sintassi:
 `[...]/command/arg1?arg2?[...]?argN`, dove nel caso di passaggio di comandi legati ai terminali 
 (es: _cat_, _ipconfig_, _echo_) il primo argomento deve corrispondere, sia per Unix che per Windows, allo stesso valore
-di _command_. 
+di _command_. La scelta di non inserire automaticamente il nome del comando come primo argomento è stata presa
+al fine di poter eseguire anche comandi che non seguono lo standard di lancio dei due sistemi operativi.
 
 Esempi:
 - Unix: `/command/date?date`, `/command/cat?cat?config.txt` 
