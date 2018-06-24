@@ -46,9 +46,8 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 CloseHandle(event);
                 return i;
             }
-            if(!TerminateThread(array[i], exit_code))
-                return i;
             CloseHandle(event);
+            
         }
     } else if (mode == 1) {
         for (i = 0; i < len; i++) {

@@ -104,12 +104,10 @@ void* process_routine (void *arg) {
 
 #ifdef _WIN32
     HANDLE event;
-    if (launch_mode == 0) {
-        char *event_name = "threadevent";
-        if ((event = OpenEvent(SYNCHRONIZE, FALSE, event_name)) == NULL) {
-            fprintf(stderr, "Failed Opening Event\n");
-            exit(EXIT_FAILURE);
-        }
+    char *event_name = "threadevent";
+    if ((event = OpenEvent(SYNCHRONIZE, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
     }
 #endif
 
@@ -150,11 +148,9 @@ void* process_routine (void *arg) {
             goto thread_exit;
         }
 #ifdef _WIN32
-        if (launch_mode == 0) {
-            DWORD out = WaitForSingleObject(event, 100);
-            if (out == WAIT_OBJECT_0)
-                goto thread_exit;
-        }
+        DWORD out = WaitForSingleObject(event, 0);
+        if (out == WAIT_OBJECT_0)
+            goto thread_exit;
 #endif
 
         FD_SET(server_socket,&fds);
@@ -315,8 +311,8 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    if(launch_mode == 0) CloseHandle(event);
-    //ExitThread(0);
+    CloseHandle(event);
+    ExitThread(0);
 #endif
 }
 int w_process_routine (void *arg) {
@@ -626,19 +622,16 @@ int run_server(options c_options, options f_options) {
 
 #ifdef _WIN32
     HANDLE eventp;
-    if (launch_mode == 0) {
-        char *event_name = "threadevent";
-        if ((eventp = OpenEvent(SYNCHRONIZE | EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
-            fprintf(stderr, "Failed Opening Event\n");
-            exit(EXIT_FAILURE);
-        }
-        if (!ResetEvent(eventp)) {
-            fprintf(stderr, "Failed Resetting Event\n");
-            exit(EXIT_FAILURE);
-        }
-        CloseHandle(eventp);
+    char *event_name = "threadevent";
+    if ((eventp = OpenEvent(SYNCHRONIZE | EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
     }
-
+    if (!ResetEvent(eventp)) {
+        fprintf(stderr, "Failed Resetting Event\n");
+        exit(EXIT_FAILURE);
+    }
+    CloseHandle(eventp);
 #endif
 
     flag_restart = 0;
