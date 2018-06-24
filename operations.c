@@ -888,6 +888,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     if (http_h.attribute.content_length == data_l) {
         // Se ho già letto i dati alla prima lettura con l'header
         int write = fwrite(data,1,data_l,file);
+
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
             if (resp == NULL) {
@@ -936,6 +937,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         }
 
         write = fwrite(buffer,1,read,file);
+        m_sleep(10);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
             if (resp == NULL) {
@@ -1048,6 +1050,12 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         return;
     }
 
+    OVERLAPPED sOverlapped = {0};
+    if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK, 0, lengthOfFile, 0, &sOverlapped) == FALSE) {
+        fprintf(stderr,"lock failed");
+        return;
+    }
+
     HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE, 0, lengthOfFile, NULL);
 
     if (map_h == NULL) {
@@ -1126,6 +1134,9 @@ unlock:
 #elif __WIN32
     if (UnmapViewOfFile(map) == FALSE) {
         fprintf(stderr, "Error during un-mmapping\n");
+    }
+    if (UnlockFileEx(file_h, 0, lengthOfFile, 0, &sOverlapped) == FALSE) {
+        fprintf(stderr,"Unlock failed");
     }
     CloseHandle(map_h);
     CloseHandle(file_h);
