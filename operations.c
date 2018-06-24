@@ -503,123 +503,106 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         strcpy(cpy_args, args);
     }
 
-    struct data_args * data_arguments = malloc(sizeof(struct data_args));
-    if (data_arguments == NULL) {
-        free(cpy_args);
-        free(cpy_command);
-        return 1;
-    }
+    struct data_args data_arguments ;
 
-    data_arguments->fd = socket;
-    data_arguments->command = cpy_command;
-    data_arguments->args = cpy_args;
+    data_arguments.fd = socket;
+    data_arguments.command = cpy_command;
+    data_arguments.args = cpy_args;
 
 #ifdef __unix__
 
-    if (pthread_cond_init(&(data_arguments->cond_var),NULL) != 0) {
+    if (pthread_cond_init(&(data_arguments.cond_var),NULL) != 0) {
         fprintf(stderr,"pthread init failed\n");
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
 
-    if (pthread_mutex_init(&(data_arguments->mutex), NULL) != 0) {
+    if (pthread_mutex_init(&(data_arguments.mutex), NULL) != 0) {
         fprintf(stderr,"pthread init failed\n");
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
     pthread_t tid;
 
-    if (pthread_create(&tid, NULL, &thread, (void *) data_arguments) != 0) {
+    if (pthread_create(&tid, NULL, &thread, (void *) (&data_arguments)) != 0) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
 
-    if (pthread_mutex_lock(&(data_arguments->mutex)) != 0) {
+    if (pthread_mutex_lock(&(data_arguments.mutex)) != 0) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
-        return 1;
-    }
-
-
-    if (pthread_cond_wait(&(data_arguments->cond_var), &(data_arguments->mutex)) != 0) {
-        free(cpy_command);
-        free(cpy_args);
-        free(data_arguments);
         return 1;
     }
 
 
-    if (pthread_mutex_unlock(&(data_arguments->mutex)) != 0) {
+    if (pthread_cond_wait(&(data_arguments.cond_var), &(data_arguments.mutex)) != 0) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
+        return 1;
+    }
+
+
+    if (pthread_mutex_unlock(&(data_arguments.mutex)) != 0) {
+        free(cpy_command);
+        free(cpy_args);
         return 1;
     }
 
 
 #elif _WIN32
-    if ((data_arguments->event = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
+    if ((data_arguments.event = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
     DWORD thr;
     HANDLE thread;
-    if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) data_arguments, 0, &thr)) == NULL) {
+    if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) &data_arguments, 0, &thr)) == NULL) {
         fprintf(stderr, "Error Occurred while trying to create thread\n");
         fflush(stderr);
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
 
-    DWORD out = WaitForSingleObject(data_arguments->event, TIME_WAIT);
+    DWORD out = WaitForSingleObject(data_arguments.event, TIME_WAIT);
 
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
     CloseHandle(thread);
 #endif
-    if (data_arguments->error_out == 1) {
+    if (data_arguments.error_out == 1) {
         fprintf(stderr, "Command Execution Failed\n");
         fflush(stderr);
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments);
         return 1;
     }
 
-    char * response = create_http_response(200, data_arguments->out_size, "text/html; charset=utf-8", NULL, NULL);
+    char * response = create_http_response(200, data_arguments.out_size, "text/html; charset=utf-8", NULL, NULL);
     if (response == NULL) {
         free(cpy_command);
         free(cpy_args);
-        free(data_arguments->out);
-        free(data_arguments);
+        free(data_arguments.out);
         return 1;
     }
 
     Send(socket, response, strlen(response), 0);
-    Send(socket, data_arguments->out, data_arguments->out_size, 0);
+    Send(socket, data_arguments.out, data_arguments.out_size, 0);
 
     http_log(http_h,response,address,0);
 
     free(response);
     free(cpy_command);
     free(cpy_args);
-    free(data_arguments->out);
-    free(data_arguments);
+    free(data_arguments.out);
 
     return 0;
 }
