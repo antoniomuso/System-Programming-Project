@@ -5,7 +5,7 @@ Antonio Musolino, Giacomo Priamo
 Il progetto è stato sviluppato e testato contemporaneamente su un sistema Unix e uno Windows, il che ci ha permesso di 
 poter gestire da subito gli errori riscontrati sulle diverse piattaforme, di non dover tornare 
 sulle stesse funzioni in un secondo momento per re-implementare le stesse funzionalità 
-e anche allo scopo di massimizzare il riutilizzo del codice.
+e di massimizzare il riutilizzo del codice.
 
 Le funzionalità fondamentali e critiche, come la creazione e gestione del server pre-forkato, la gestione delle 
 richieste HTTP in accordo con le specifiche, la di gestione segnali ed eventi, sono state realizzate in presenza di 
@@ -23,7 +23,7 @@ Per compilare l'intero programma è sufficiente posizionarsi nella directory del
 - In Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
 
 ### Lancio
-È possibile avviare il programma eseguendo il _main_ (`./main` su Unix e `main.exe` su Windows). Senza parametri,
+È possibile avviare il programma eseguendo il programma _main_ (`./main` su Unix e `main.exe` su Windows). Senza parametri,
 verranno caricate le impostazioni specificate nel file di configurazione _config.txt_, oppure è possibile specificare 
 manualmente i parametri, tutti o in parte (in quest'ultimo caso, i restanti valori saranno estratti dal file di 
 configurazione), secondo la seguente sintassi di lancio  da linea di comando:
@@ -51,7 +51,7 @@ in seguito le trasmette al processo figlio usando come meccanismo di comunicazio
 comportamento del processo appena creato si uniforma con quello degli altri thread/processi creati con altre
 modalità o sotto piattaforma Unix.    
 ##### Routine 
-Tutti i processi/thread figli eseguono la stessa funzione: `process_routine` che riceve in input le due socket create in
+Tutti i processi/thread figli eseguono la stessa funzione: `process_routine`, che riceve in input le due socket create in
 precedenza dal processo padre e in cui è specificata la modalità di gestione delle richieste in arrivo da
 parte di client esterni. Al fine di evitare che i figli si blocchino su una sola `accept`, 
 si utilizza la funzione `select` per risvegliare i processi appena si verifica un cambiamento su una delle due socket, 
@@ -71,10 +71,10 @@ averlo letto, lo invia al client richiedente. La lettura del file è eseguita a 
 i quali vengono inviati una volta raggiunta tale dimensione; il procedimento continua finquando non è stato letto e 
 inviato l'intero contenuto del file.
 ###### Directory
-Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` che restituisce il 
-**contenuto della directory** indicata, che viene inviato come risposta.
+Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` (che restituisce il 
+**contenuto della directory** indicata), il cui risultato viene inviato come al client risposta.
 ##### GET con cifratura
-Le richieste di GET per i file sulla porta che prevede cifratura preventiva del file stesso sono gestite dalla funzione
+Le richieste di GET per i file sulla porta che prevede cifratura preventiva del contenuto del file stesso sono gestite dalla funzione
 `send_file_cipher`. Dopo essere stato aperto, il file è mappato in memoria grazie alle apposite funzioni dei due sistemi
 operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi di dimensione 
 pari a 4 byte del file mappato  e li cifra mediante lo _XOR_ con un intero random avente come seme l'indirizzo IP del 
@@ -112,25 +112,22 @@ _common log format_. Nel caso di fallimento della funzione di logging, è stato 
 ### Segnali ed Eventi da console
 Come da specifiche, il server è in grado di rileggere il file di configurazione dopo l'avvenimento di uno specifico 
 evento:
-- Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `sighup`, per il quale è stato quindi necessario 
-installare un **_signal handler_**. Una volta ricevuto tale segnale: se la modalità è _multi processo_, i figli vengono
-semplicemente uccisi; se invece la modalità è _multi thread_, è stato deciso di creare un altro **_signal handler_**
-per il segnale `sighup`, che viene implementato su ogni thread figlio*. 
-- Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `ctrl + break` (`ctrl + interr` per
-le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**. Anche qui 
-l'esecuzione si differenzia in base alla modalità di lancio del server: nel caso _multi processo_, i figli sono 
-semplicemente terminati; se la modalità è _multi thread_, si è deciso di implementare un **_Evento_** che viene 
-segnalato ogni qual volta si avvia la routine di gestione del **_ctrl handler_** e che viene resettato prima del 
-rilancio del server*.
+- Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `SIGHUP`, per il quale è stato quindi necessario 
+installare un **_signal handler_**. Una volta ricevuto tale segnale, viene inviato ai thread/processi figli il segnale
+`SIGUSR1` (che ha quindi richiesto l'implementazione di un ulteriore **_signal handler_**), che li spinge a rilasciare
+le risore acquisite e terminare la propria esecuzione.
 
-*Ciò permette di effettuare operazioni aggiuntive per rilasciare le risorse acquisite dai thread, che altrimenti 
-resterebbero acquisite anche dopo la loro morte (cosa che non succede con i processi, poiché essi le rilasciano al 
-momento della loro terminazione).
+- Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `CTRL + BREAK` (`CTRL + INTERR` per
+le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**. Al  fine di 
+permettere ai thread/processi "figli" di rilasciare le proprie risorse in modo corretto (come nel caso di Unix), 
+è stato inserito come meccanismo di segnalazione un **_Evento_**, che viene resettato ogni volta che viene rilanciato
+il server stesso.
  
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
 e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove configurazioni.
 ### Parser
 Sono stati creati molteplici parser per soddisfare varie necessità: per le richieste HTTP (che include la lettura e la
-decodifica delle credenziali cifrate in base64, per cui è stato deciso di usare un modulo esterno riperito in rete), 
-per creare risposte, per interpretare il file di configurazione e i parametri passati da linea di comando. 
+decodifica delle credenziali cifrate in _base64_, per cui è stato deciso di usare un modulo esterno riperito in rete), 
+per creare risposte HTTP, per interpretare il file di configurazione, quello delle credenziali (che per comodità seguono 
+lo stesso formato) e i parametri passati da linea di comando. 
