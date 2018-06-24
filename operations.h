@@ -1,6 +1,3 @@
-//
-// Created by anotoniomusolino on 18/06/18.
-//
 #include "command_parser.h"
 
 #ifndef SYSTEM_PROGRAMMING_PROJECT_OPERATIONS_H

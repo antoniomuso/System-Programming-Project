@@ -90,7 +90,7 @@ void m_sleep (unsigned int time) {
 int Send(int socket, const void * buff, int size, int flag) {
     int res = send(socket,buff ,size ,0);
     if (res == -1) {
-        fprintf(stderr, "send Error\n");
+        fprintf(stderr, "An error occurred while trying to use the send function.\n");
     }
     return res;
 }
@@ -129,7 +129,7 @@ int lock_file (FILE * file, long len, int blocking) {
     OVERLAPPED sOverlapped = {0} ;
     DWORD flag = blocking == 1 ? LOCKFILE_EXCLUSIVE_LOCK : LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY;
     if (LockFileEx(file_h, flag , 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
-        fprintf(stderr, "Couldn't acquire lock on file\n");
+        fprintf(stderr, "Couldn't acquire lock on file.\n");
         return 1;
     }
 #endif
@@ -146,7 +146,7 @@ int unlock_file (FILE * file, long len) {
     HANDLE file_h = (HANDLE)_get_osfhandle(_fileno( file ));
     OVERLAPPED sOverlapped = {0} ;
     if (UnlockFileEx(file_h, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
-        fprintf(stderr, "Couldn't acquire lock on file\n");
+        fprintf(stderr, "Couldn't release lock from file.\n");
         return 1;
     }
 #endif
@@ -158,15 +158,14 @@ int log_write(char * cli_addr, char * user_id, char * username, char * request, 
 
     FILE *logfile = fopen(LOGFILE, "a");
     if (logfile == NULL) {
-        fprintf(stderr, "Unable to open logfile");
+        fprintf(stderr, "Couldn't open logfile.\n");
         return 1;
     }
 
 #ifdef __unix__
     int fd = fileno(logfile);
     if (flock(fd,LOCK_EX) != 0) {
-        fprintf(stderr,"Error during file lock\n");
-        // return response with error lock
+        fprintf(stderr,"Couldn't acquire lock on file\n");
         fclose(logfile);
         return 1;
     }
@@ -174,7 +173,6 @@ int log_write(char * cli_addr, char * user_id, char * username, char * request, 
     int timestr_len = 27;
     char timestamp_str[timestr_len];
 
-//    tzset(); //Controllare se serve su unix
     time_t timestamp = time(NULL);
     struct tm *lat = localtime(&timestamp);
 
@@ -210,7 +208,7 @@ int log_write(char * cli_addr, char * user_id, char * username, char * request, 
 int http_log (http_header h_request, char * h_response, char * client_address, int no_name) {
     http_header h_resp = parse_http_header_response(h_response,strlen(h_response));
     if (h_resp.is_request == -1) {
-        fprintf(stderr, "Error during response parsing");
+        fprintf(stderr, "An error occurred while trying to parse the HTTP response.\n");
         return 1;
     }
     int err = 0;
@@ -297,19 +295,19 @@ void* thread (void *arg) {
     sattr.lpSecurityDescriptor = NULL;
 
     if (!CreatePipe(&pipe_read, &child_write, &sattr , 0)) {
-        fprintf(stderr, "Error occurred while creating pipe\n");
+        fprintf(stderr, "An error occurred while trying to create the Pipe.\n");
         fflush(stderr);
         arguments->error_out = 1;
         if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed");
+            fprintf(stderr, "SetEvent Failed.\n");
         return NULL;
     }
     if (! SetHandleInformation(pipe_read, HANDLE_FLAG_INHERIT, 0) ) {
-        fprintf(stderr, "Error occurred with pipe\n");
+        fprintf(stderr, "Pipe error.\n");
         fflush(stderr);
         arguments->error_out = 1;
         if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed");
+            fprintf(stderr, "SetEvent Failed.\n");
         return NULL;
     }
 
@@ -324,13 +322,13 @@ void* thread (void *arg) {
     startup_info.dwFlags |= STARTF_USESTDHANDLES;
 
     if (!(CreateProcess(arguments->command, arguments->args, NULL, NULL, TRUE, 0, NULL, NULL, &(startup_info), &(proc_info) ))) {
-        fprintf(stderr, "Error occurred while trying to create a process\n");
+        fprintf(stderr, "An error occurred while trying to create the process.\n");
         fflush(stderr);
         arguments->error_out = 1;
         CloseHandle(pipe_read);
         CloseHandle(child_write);
         if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed");
+            fprintf(stderr, "SetEvent Failed.\n");
         return NULL;
     }
 
@@ -343,13 +341,13 @@ void* thread (void *arg) {
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         arguments->error_out = 1;
         if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed");
+            fprintf(stderr, "SetEvent Failed.\n");
         CloseHandle(pipe_read);
         CloseHandle(child_write);
         return NULL;
     }
 
-    printf("Process terminated\n");
+    printf("Process terminated.\n");
     fflush(stdout);
 
     DWORD dwRead;
@@ -360,7 +358,7 @@ void* thread (void *arg) {
     if (buff_out == NULL) {
         arguments->error_out = 1;
         if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed");
+            fprintf(stderr, "SetEvent Failed.\n");
         CloseHandle(pipe_read);
         CloseHandle(child_write);
         return NULL;
@@ -381,7 +379,7 @@ void* thread (void *arg) {
             real = realloc(buff_out, buff_out_s);
             if (real == NULL) {
                 arguments->error_out = 1;
-                if(SetEvent(arguments->event) == FALSE) fprintf(stderr, "SetEvent Failed");
+                if(SetEvent(arguments->event) == FALSE) fprintf(stderr, "SetEvent Failed.\n");
                 CloseHandle(pipe_read);
                 CloseHandle(child_write);
                 free(buff_out);
@@ -400,7 +398,7 @@ void* thread (void *arg) {
     arguments->out = buff_out;
 
     if (SetEvent(arguments->event) == FALSE) {
-        fprintf(stderr, "SetEvent Failed");
+        fprintf(stderr, "SetEvent Failed.\n");
         arguments->error_out = 1;
         CloseHandle(pipe_read);
         CloseHandle(child_write);
@@ -415,23 +413,23 @@ void* thread (void *arg) {
     if (pipe(fd) == -1) {
         arguments->error_out = 1;
         pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
         pthread_mutex_unlock(&arguments->mutex);
         return NULL;
     }
     int pid = fork();
 
     if (pid == -1) {
-        fprintf(stderr, "Error during fork of commands");
+        fprintf(stderr, "Command fork failed.\n");
         arguments->error_out = 1;
         pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+        if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
         pthread_mutex_unlock(&arguments->mutex);
         return NULL;
     }  else if (pid == 0) {
         char ** args = build_arguments(arguments->args);
         if (args == NULL) {
-            fprintf(stderr,"Failed build_arguments\n");
+            fprintf(stderr,"build_arguments failed.\n");
             exit(EXIT_FAILURE);
         }
         close(fd[0]);
@@ -445,11 +443,11 @@ void* thread (void *arg) {
     close(fd[1]);
     int status = 0;
     if (waitpid(pid,&status,0) < 0  && errno != ECHILD) {
-        fprintf(stderr, "Error in waitpid erro: %s\n", strerror(errno));
+        fprintf(stderr, "Error in waitpid: %s\n", strerror(errno));
         arguments->error_out = 1;
         close(fd[0]);
         pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
         pthread_mutex_unlock(&arguments->mutex);
 
         return NULL;
@@ -463,7 +461,7 @@ void* thread (void *arg) {
         arguments->error_out = 1;
         close(fd[0]);
         pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
         pthread_mutex_unlock(&arguments->mutex);
         return NULL;
     }
@@ -478,7 +476,7 @@ void* thread (void *arg) {
             free(buff_out);
             arguments->error_out = 1;
             pthread_mutex_lock(&arguments->mutex);
-            if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+            if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
             pthread_mutex_unlock(&arguments->mutex);
             close(fd[0]);
             return NULL;
@@ -489,12 +487,12 @@ void* thread (void *arg) {
             char * real = NULL;
             real = realloc(buff_out, buff_out_s);
             if (real == NULL) {
-                fprintf(stderr,"realloc error");
+                fprintf(stderr,"realloc error.\n");
                 arguments->error_out = 1;
                 close(fd[0]);
                 free(buff_out);
                 pthread_mutex_lock(&arguments->mutex);
-                if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "Error during signal of cond variable");
+                if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
                 pthread_mutex_unlock(&arguments->mutex);
                 return NULL;
             }
@@ -511,7 +509,7 @@ void* thread (void *arg) {
     arguments->out_size = all_read_data;
     arguments->out = buff_out;
     pthread_mutex_lock(&arguments->mutex);
-    if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "Error during signal of cond variable");
+    if (pthread_cond_signal(&arguments->cond_var)) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
     pthread_mutex_unlock(&arguments->mutex);
     close(fd[0]);
 
@@ -550,14 +548,14 @@ int exec_command(int socket, const char * command, const char * args, http_heade
 #ifdef __unix__
 
     if (pthread_cond_init(&(data_arguments.cond_var),NULL) != 0) {
-        fprintf(stderr,"pthread init failed\n");
+        fprintf(stderr,"pthread_cond_init failed.\n");
         free(cpy_command);
         free(cpy_args);
         return 1;
     }
 
     if (pthread_mutex_init(&(data_arguments.mutex), NULL) != 0) {
-        fprintf(stderr,"pthread init failed\n");
+        fprintf(stderr,"pthread_mutex_init failed.\n");
         free(cpy_command);
         free(cpy_args);
         return 1;
@@ -600,7 +598,7 @@ int exec_command(int socket, const char * command, const char * args, http_heade
     DWORD thr;
     HANDLE thread;
     if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) (&data_arguments), 0, &thr)) == NULL) {
-        fprintf(stderr, "Error Occurred while trying to create thread\n");
+        fprintf(stderr, "An error Occurred while trying to create the thread.\n");
         fflush(stderr);
         free(cpy_command);
         free(cpy_args);
@@ -619,7 +617,7 @@ int exec_command(int socket, const char * command, const char * args, http_heade
     CloseHandle(thread);
 #endif
     if (data_arguments.error_out == 1) {
-        fprintf(stderr, "Command Execution Failed\n");
+        fprintf(stderr, "An error occurred while trying to execute the command.\n");
         fflush(stderr);
         free(cpy_command);
         free(cpy_args);
@@ -724,7 +722,7 @@ char *list_dir(char *dir_name) {
 
 #elif __unix__
     DIR *d;
-    // Apro directory
+    // Open the directory
     d = opendir(dir_name);
 
     if (d == NULL) {
@@ -733,7 +731,7 @@ char *list_dir(char *dir_name) {
 
     for (;;) {
         struct dirent *entry;
-        // leggo un file dalla directory
+        // Select one file from the directory
         entry = readdir(d);
         if (!entry)
             break;
@@ -810,7 +808,6 @@ void send_file (int socket, http_header http_h, char * address) {
 
     pfile = fopen((url+1),"rb");
     if (pfile == NULL) {
-        //Send a error response
         char * resp = create_http_response(404,-1,NULL, NULL, NULL);
         if (resp == NULL) {
             return;
@@ -827,7 +824,7 @@ void send_file (int socket, http_header http_h, char * address) {
     fseek(pfile, 0, SEEK_SET);
 
     if (lock_file(pfile,lengthOfFile, 1) == 1){
-        fprintf(stderr,"lock failed");
+        fprintf(stderr,"Couldn't acquire lock on file.\n");
         return;
     }
 
@@ -861,7 +858,7 @@ void send_file (int socket, http_header http_h, char * address) {
 
 unlock:
     if (unlock_file(pfile,lengthOfFile) == 1) {
-        fprintf(stderr,"Unlock failed");
+        fprintf(stderr,"Couldn't unlock file.\n");
     }
     free(resp);
     fclose(pfile);
@@ -872,12 +869,12 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     file = fopen(http_h.url+1, "w" );
 
     if (file == NULL) {
-        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
+        fprintf(stderr,"An error occurred while trying to open file %s.\n", http_h.url +1);
         return;
     }
 
     if (lock_file(file,http_h.attribute.content_length, 0) == 1) {
-        fprintf(stderr,"lock failed");
+        fprintf(stderr,"Couldn't acquire lock on file.\n");
         char * resp = create_http_response(423,-1, NULL, NULL, NULL);
         if (resp == NULL) {
             fclose(file);
@@ -967,7 +964,6 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         remaining_to_read -= read;
     }
 
-    // mando la risposta
     char * resp = create_http_response(201,-1, NULL, NULL, http_h.url);
     if (resp == NULL) {
         goto unlock;
@@ -978,7 +974,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
 
 unlock:
     if (unlock_file(file,http_h.attribute.content_length) == 1) {
-        fprintf(stderr,"Unlock failed");
+        fprintf(stderr,"Couldn't unlock file.\n");
     }
     fclose(file);
 }
@@ -988,7 +984,7 @@ void encrypt (unsigned int * buff, unsigned int address, int pad) {
     char buff_copy[4] = {0};
     int rem = 4 - pad;
     for (int i = 0; i < rem; i++) {
-        // i restati pad sono zeri (padding)
+        // The remaining "pad" bytes are zeroes (padding)
         buff_copy[i] = ptr[i];
     }
     int *buff_copy_i;
@@ -1008,7 +1004,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     file = fopen(http_h.url+1,"rb");
 
     if (file == NULL) {
-        fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
+        fprintf(stderr,"An error occurred while trying to open file %s\n", http_h.url +1);
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
         if (resp == NULL) {
             return;
@@ -1029,7 +1025,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 #ifdef __unix__
 
     if (lock_file(file,lengthOfFile, 1) == 1) {
-        fprintf(stderr,"lock failed");
+        fprintf(stderr,"Couldn't acquire lock on file.\n");
         return;
     }
 
@@ -1064,7 +1060,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     OVERLAPPED sOverlapped = {0};
     if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK, 0, lengthOfFile, 0, &sOverlapped) == FALSE) {
-        fprintf(stderr,"lock failed");
+        fprintf(stderr,"Couldn't acquire lock on file.\n");
         return;
     }
 
@@ -1117,7 +1113,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 
 #ifdef _WIN32
-    // La cifratura dei bit con il padding la faccio separata in windows
+    // The encryption with padding is performed differently in Windows.
     encrypt(map_int + n_pack, address, padding);
 #endif
 
@@ -1127,7 +1123,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 
     if (Send(socket, resp, strlen(resp), 0) != -1)
-        Send(socket,map,lengthOfFile,0); // il padding non viene inviato
+        Send(socket,map,lengthOfFile,0); // The padding is not sent
 
     http_log(http_h, resp, conv_address, 0);
 
@@ -1136,19 +1132,19 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 unmap:
 #ifdef __unix__
     if (munmap(map, lengthOfFile+padding) == -1) {
-        fprintf(stderr, "Error during un-mmapping\n");
+        fprintf(stderr, "An error occurred while trying to un-mmap file.\n");
     }
 unlock:
     if (unlock_file(file, lengthOfFile) == 1) {
-        fprintf(stderr,"Unlock failed");
+        fprintf(stderr,"Couldn't unlock file\n.");
     }
     fclose(file);
 #elif __WIN32
     if (UnmapViewOfFile(map) == FALSE) {
-        fprintf(stderr, "Error during un-mmapping\n");
+        fprintf(stderr, "EAn error occurred while trying to un-mmap file.\n");
     }
     if (UnlockFileEx(file_h, 0, lengthOfFile, 0, &sOverlapped) == FALSE) {
-        fprintf(stderr,"Unlock failed");
+        fprintf(stderr,"Couldn't unlock file\n");
     }
     CloseHandle(map_h);
     CloseHandle(file_h);

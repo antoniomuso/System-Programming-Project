@@ -1,7 +1,3 @@
-//
-// Created by anotoniomusolino on 31/05/18.
-//
-
 #include "signals.h"
 #include "command_parser.h"
 #include "server.h"
