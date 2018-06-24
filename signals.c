@@ -1,7 +1,3 @@
-//
-// Created by anotoniomusolino on 14/06/18.
-//
-
 #include "signals.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,7 +17,7 @@
 #include <windows.h>
 #endif
 
-void * arr_process = NULL; // array of process
+void * arr_process = NULL; // array of processes/threads
 int len = 0;
 int mode = 0;
 
@@ -42,7 +38,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
             char *event_name = "threadevent";
             HANDLE event;
             if ((event = OpenEvent(EVENT_ALL_ACCESS | SYNCHRONIZE, FALSE, event_name)) == NULL) {
-                fprintf(stderr, "Failed Opening Event %s %d\n", event_name, GetLastError());
+                fprintf(stderr, "Failed Opening Event \"%s\" (%d)\n", event_name, GetLastError());
                 return i;
             }
             if(SetEvent(event) == FALSE) {
@@ -60,8 +56,8 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 return i;
         }
     }
-#elif __unix__
 
+#elif __unix__
     if (mode == 0) {
         pthread_t *tids = (pthread_t *) children_array;
         for (i = 0; i < len; i++) {
@@ -69,7 +65,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return 1;
             }
-            // wait thread exit
+            // wait for thread to exit
             if (pthread_join(tids[i], NULL) != 0) {
                 fprintf(stderr,"Thread join error\n");
                 return 1;
@@ -113,7 +109,7 @@ void set_child_handler () {
     struct sigaction sa;
     //printf("proc id: %d\n", getpid());
 
-    // Setup the sighub handler
+    // Setup the signal handler
     sa.sa_handler = &child_handler;
 
     // Restart the system call, if at all possible
@@ -136,7 +132,7 @@ void set_child_handler () {
 #ifdef __unix__
 void handle_signal(int signal) {
     if (infanticide(arr_process, len, mode, SIGUSR1) == 1) {
-        fprintf(stderr, "Error during kill of child process.");
+        fprintf(stderr, "An error occurred while trying to kill a child process.");
         exit(EXIT_FAILURE);
     }
     free(arr_process);
@@ -146,6 +142,7 @@ void handle_signal(int signal) {
 
 #elif _WIN32
 BOOL ctrl_handler(DWORD ctrl_type) {
+    //Todo Controllare perché viene stampato tante volte quante è stato rilanciato il server
     printf("intercepted %d \n", ctrl_type);
     fflush(stdout);
     if (ctrl_type == CTRL_BREAK_EVENT) { // CTRL+Break triggers the operation
@@ -176,7 +173,7 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
     struct sigaction sa;
     //printf("proc id: %d\n", getpid());
 
-    // Setup the sighub handler
+    // Setup the signal handler
     sa.sa_handler = &handle_signal;
 
     // Restart the system call, if at all possible
@@ -205,9 +202,9 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
 void set_thread_event() {
     char *event_name = "threadevent";
     if (CreateEvent(NULL, FALSE, TRUE, event_name) == NULL) {
-        fprintf(stderr, "Couldn't creare event");
+        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
         ExitThread(1);
     }
-    printf("Thread event %s created\n", event_name);
+    printf("Thread event \"%s\" created\\opened.\n", event_name);
 }
 #endif

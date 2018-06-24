@@ -28,3 +28,8 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [x] Controllare che la grandezza dell'header non superi il buffer
 - [ ] Ridefinire lo standard di passaggio dei comandi per /command/
 - [ ] Gestire child terminate con un diverso meccanismo di sinctronizzazione
+
+## Controllare 
+- [ ] ToDo in ctrl_handler.
+- [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
+- [ ] Gestire in modo migliore il passaggio della modalità in server.c
