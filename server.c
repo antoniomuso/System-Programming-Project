@@ -137,10 +137,11 @@ void* process_routine (void *arg) {
     tv.tv_usec = 0;
 
     int rc = 0;
-    while ((rc = select(maxfdp + 1 , &fds, NULL, NULL, &tv) ) != -1) {
+    while (is_reloading(event) != 1) {
 
-        if (is_reloading(event) == 1) {
-            goto thread_exit;
+        if ((rc = select(maxfdp + 1 , &fds, NULL, NULL, &tv) ) == -1) {
+            fprintf(stderr,"Select error\n");
+            break;
         }
 
         FD_SET(server_socket,&fds);
@@ -293,7 +294,6 @@ void* process_routine (void *arg) {
         }
 
     }
-    fprintf(stderr,"Select error\n");
 
     thread_exit:
     free_options(credentials);
