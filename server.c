@@ -102,8 +102,17 @@ void* process_routine (void *arg) {
 
     void * event = NULL;
 
-    // Event is define only in windows
+    // Event is defined only in windows
+#ifdef __unix__
     set_child_handler(event);
+#elif _WIN32
+    HANDLE event_h;
+    if ((event_h = OpenEvent(EVENT_ALL_ACCESS, FALSE, "threadevent")) == NULL) {
+        fprintf(stderr, "Failed Opening Event\n");
+        exit(EXIT_FAILURE);
+    }
+    event = &event_h;
+#endif
 
     int server_socket = *((int*)arg);
     int server_socket_chiper = *( ((int*)arg) + 1 );
@@ -138,7 +147,6 @@ void* process_routine (void *arg) {
 
     int rc = 0;
     while (is_reloading(event) != 1) {
-
         if ((rc = select(maxfdp + 1 , &fds, NULL, NULL, &tv) ) == -1) {
             fprintf(stderr,"Select error\n");
             break;
@@ -294,13 +302,13 @@ void* process_routine (void *arg) {
         }
 
     }
-
     thread_exit:
     free_options(credentials);
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    CloseHandle(*event);
+    CloseHandle(*((HANDLE *) (event)));
+    free(event);
     ExitThread(0);
 #endif
 }

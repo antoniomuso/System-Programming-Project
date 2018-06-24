@@ -38,6 +38,8 @@ void initialize_windows_event () {
         fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
         ExitThread(1);
     }
+    printf("Event set\n");
+    fflush(stdout);
 }
 #endif
 
@@ -47,7 +49,7 @@ int is_reloading(void * args) {
         return 1;
     }
 #elif _WIN32
-    HANDLE event = (HANDLE)(*args);
+    HANDLE event = *((HANDLE *)(args));
     DWORD out = WaitForSingleObject(event, 0);
     if (out == WAIT_OBJECT_0) {
         return 1;
@@ -169,16 +171,9 @@ void set_child_handler (void * event) {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
         exit(EXIT_FAILURE);
     }
+
 #elif _WIN32
-    HANDLE event_h;
-    char *event_name = "threadevent";
-    if ((event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
-        fprintf(stderr, "Failed Opening Event\n");
-        exit(EXIT_FAILURE);
-    }
-    fflush(stdout);
-    //define event
-    event = &event_h;
+
 #endif
 }
 
