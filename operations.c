@@ -561,7 +561,7 @@ int exec_command(int socket, const char * command, const char * args, http_heade
     }
     DWORD thr;
     HANDLE thread;
-    if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) &data_arguments, 0, &thr)) == NULL) {
+    if ((thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) windows_thread, (LPVOID) (&data_arguments), 0, &thr)) == NULL) {
         fprintf(stderr, "Error Occurred while trying to create thread\n");
         fflush(stderr);
         free(cpy_command);
