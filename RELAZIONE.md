@@ -109,11 +109,21 @@ _common log format_. Nel caso di fallimento della funzione di logging, è stato 
 ### Segnali ed Eventi da console
 Come da specifiche, il server è in grado di rileggere il file di configurazione dopo l'avvenimento di uno specifico 
 evento:
-- Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `sighup`. È stato quindi necessario 
-installare un **_signal handler_**.
+- Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `sighup`, per il quale è stato quindi necessario 
+installare un **_signal handler_**. Una volta ricevuto tale segnale: se la modalità è _multi processo_, i figli vengono
+semplicemente uccisi; se invece la modalità è _multi thread_, è stato deciso di creare un altro **_signal handler_**
+per il segnale `sighup`, che viene implementato su ogni thread figlio*. 
 - Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `ctrl + break` (`ctrl + interr` per
-le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**.
+le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**. Anche qui 
+l'esecuzione si differenzia in base alla modalità di lancio del server: nel caso _multi processo_, i figli sono 
+semplicemente terminati; se la modalità è _multi thread_, si è deciso di implementare un **_Evento_** che viene 
+segnalato ogni qual volta si avvia la routine di gestione del **_ctrl handler_** e che viene resettato prima del 
+rilancio del server*.
 
+*Ciò permette di effettuare operazioni aggiuntive per rilasciare le risorse acquisite dai thread, che altrimenti 
+resterebbero acquisite anche dopo la loro morte (cosa che non succede con i processi, poiché essi le rilasciano al 
+momento della loro terminazione).
+ 
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
 e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove configurazioni.
