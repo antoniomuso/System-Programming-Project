@@ -48,17 +48,10 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     printf("Event set\n");
     fflush(stdout);
     // Attendiamo la terminazione dei thread.
-    if (mode == 1) {
 
-
-        for (i = 0; i < len; i++) {
-            if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
-                fprintf(stderr,"Thread wait error\n");
-                return 1;
-            }
-            printf("Wait endend %d\n", i);
-            fflush(stdout);
-        }
+    if((WaitForMultipleObjects(len, children_array, TRUE, INFINITE)) == WAIT_FAILED) {
+        fprintf(stderr,"Thread wait error\n");
+        return 1;
     }
     CloseHandle(event);
 
@@ -130,20 +123,6 @@ void set_child_handler () {
         fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
         exit(EXIT_FAILURE);
     }
-
-#elif _WIN32
-//    char *event_name = "threadevent";
-//    SECURITY_ATTRIBUTES sattr;
-//
-//    sattr.nLength = sizeof(SECURITY_ATTRIBUTES);
-//    sattr.bInheritHandle = TRUE;
-//    sattr.lpSecurityDescriptor = NULL;
-//
-//    if (CreateEvent(&sattr, FALSE, TRUE, event_name) == NULL) {
-//        fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
-//        ExitThread(1);
-//    }
-    //printf("Thread event \"%s\" created\\opened.\n", event_name);
 #endif
 }
 

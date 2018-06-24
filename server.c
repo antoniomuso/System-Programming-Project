@@ -102,7 +102,7 @@ void* process_routine (void *arg) {
 #ifdef _WIN32
     HANDLE event;
     char *event_name = "threadevent";
-    if ((event = OpenEvent(READ_CONTROL, FALSE, event_name)) == NULL) {
+    if ((event = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);
     }
@@ -148,9 +148,12 @@ void* process_routine (void *arg) {
         }
 
 #ifdef _WIN32
-        DWORD out = WaitForSingleObject(event, 100);
+        //printf("Waiting for event");
+        fflush(stdout);
+        DWORD out = WaitForSingleObject(event, 0);
+        //printf("%d %d\n", out, GetLastError());
         if (out == WAIT_OBJECT_0) {
-            printf("Event intercepted\n");
+            //printf("Event intercepted\n");
             fflush(stdout);
             goto thread_exit;
         }
@@ -314,7 +317,7 @@ void* process_routine (void *arg) {
 #ifdef __unix__
     pthread_exit(NULL);
 #elif _WIN32
-    printf("exiting\n");
+    //printf("exiting\n");
     fflush(stdout);
     CloseHandle(event);
     ExitThread(0);
@@ -493,8 +496,6 @@ int run_server(options c_options, options f_options) {
     }
 
 #elif _WIN32
-
-
     char *event_name = "threadevent";
     SECURITY_ATTRIBUTES sattr;
 
@@ -502,12 +503,10 @@ int run_server(options c_options, options f_options) {
     sattr.bInheritHandle = TRUE;
     sattr.lpSecurityDescriptor = NULL;
 
-    if (CreateEvent(&sattr, FALSE, TRUE, event_name) == NULL) {
+    if (CreateEvent(&sattr, TRUE, FALSE, event_name) == NULL) {
         fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
         ExitThread(1);
     }
-
-
 
     if (strcmp(mode, "MT") == 0) {
 
@@ -638,7 +637,6 @@ int run_server(options c_options, options f_options) {
 
 #ifdef _WIN32
     HANDLE eventp;
-    //char *event_name = "threadevent";
     if ((eventp = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
         fprintf(stderr, "Failed Opening Event\n");
         exit(EXIT_FAILURE);
