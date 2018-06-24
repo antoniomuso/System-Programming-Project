@@ -844,7 +844,6 @@ void send_file (int socket, http_header http_h, char * address) {
 
     for(;;) {
         read = fread(buff,1,BUFSIZE,pfile);
-        m_sleep(5);
         printf("read: %d\n", read);
         fflush(stdout);
         Send(socket,buff,read,0);
@@ -873,15 +872,11 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         fprintf(stderr,"Error during opening of file: %s\n", http_h.url +1);
         return;
     }
-#ifdef __unix__
-    int fd = fileno(file);
-    if (flock(fd,LOCK_EX) != 0) {
-        fprintf(stderr,"Error during file lock\n");
-        // return response with error lock
-        fclose(file);
+
+    if (lock_file(file,http_h.attribute.content_length) == 1) {
+        fprintf(stderr,"lock failed");
         return;
     }
-#endif
 
     char * data = NULL;
     data = buffer + header_len;
@@ -967,14 +962,10 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
     http_log(http_h,resp,address,0);
     free(resp);
 
-#ifdef __unix__
 unlock:
-    while (flock(fd,LOCK_UN) != 0) {
-        sleep(1);
+    if (unlock_file(file,http_h.attribute.content_length) == 1) {
+        fprintf(stderr,"Unlock failed");
     }
-#elif _WIN32
-unlock:
-#endif
     fclose(file);
 }
 
@@ -1022,11 +1013,9 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     int padding = 4 - last;
 
 #ifdef __unix__
-    int fd = fileno(file);
-    if (flock(fd,LOCK_EX) != 0) {
-        fprintf(stderr,"Error during file lock\n");
-        // return response with error lock
-        fclose(file);
+
+    if (lock_file(file,lengthOfFile) == 1) {
+        fprintf(stderr,"lock failed");
         return;
     }
 
@@ -1129,8 +1118,8 @@ unmap:
         fprintf(stderr, "Error during un-mmapping\n");
     }
 unlock:
-    while (flock(fd,LOCK_UN) != 0) {
-        sleep(1);
+    if (unlock_file(file, lengthOfFile) == 1) {
+        fprintf(stderr,"Unlock failed");
     }
     fclose(file);
 #elif __WIN32
