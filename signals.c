@@ -33,28 +33,26 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     int i = 0;
 #ifdef _WIN32
     HANDLE *array = (HANDLE *) children_array;
-    if (mode == 0) {
-        for (i = 0; i < len; i++) {
-            char *event_name = "threadevent";
-            HANDLE event;
-            if ((event = OpenEvent(EVENT_ALL_ACCESS | SYNCHRONIZE, FALSE, event_name)) == NULL) {
-                fprintf(stderr, "Failed Opening Event \"%s\" (%d)\n", event_name, GetLastError());
-                return i;
-            }
-            if(SetEvent(event) == FALSE) {
-                fprintf(stderr, "SetEvent Failed %d\n", GetLastError());
-                CloseHandle(event);
-                return i;
-            }
-            CloseHandle(event);
-            
-        }
-    } else if (mode == 1) {
-        for (i = 0; i < len; i++) {
-            if(!TerminateProcess(array[i], exit_code))
-                return i;
+
+    char *event_name = "threadevent";
+    HANDLE event;
+    if ((event = OpenEvent(EVENT_ALL_ACCESS | SYNCHRONIZE, FALSE, event_name)) == NULL) {
+        fprintf(stderr, "Failed Opening Event \"%s\" (%d)\n", event_name, GetLastError());
+        return i;
+    }
+    if(SetEvent(event) == FALSE) {
+        fprintf(stderr, "SetEvent Failed %d\n", GetLastError());
+        CloseHandle(event);
+        return i;
+    }
+    // Attendiamo la terminazione dei thread.
+    for (i = 0; i < len; i++) {
+        if ((WaitForSingleObject(array[i], INFINITE)) ==  WAIT_FAILED) {
+            fprintf(stderr,"Thread wait error\n");
+                return 1;
         }
     }
+    CloseHandle(event);
 
 #elif __unix__
     if (mode == 0) {
