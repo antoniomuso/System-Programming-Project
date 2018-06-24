@@ -54,19 +54,19 @@ int main(int argc, char* argv[]) {
         printf("WSAEnumProtocols() failed with error code %d\n", WSAGetLastError());
     if ((dwErr = WSAGetLastError()) != WSAENOBUFS) {
         fprintf(stderr, "Critical Error Occurred\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     DWORD dwBufLens = dwBufLen*2;
     lpProtocolBuf = (WSAPROTOCOL_INFO *)malloc(dwBufLens);
     if (lpProtocolBuf == NULL) {
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     if (WSAEnumProtocols(NULL, lpProtocolBuf, &dwBufLens) == SOCKET_ERROR) {
         fprintf(stderr, "Couldn't allocate space for WSAPROTOCOL_INFO structure\n");
         free(lpProtocolBuf);
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     DWORD cbRead_1;
@@ -77,6 +77,7 @@ int main(int argc, char* argv[]) {
     if ((fSuccess = ReadFile(pipe_h, (void *) lpProtocolBuf, 1*dwBufLens, &cbRead_1, NULL) == FALSE)) {
         fprintf(stderr, "Couldn't Read from Pipe\n");
         free(lpProtocolBuf);
+        return 1; // un numero scelto a caso
     }
 
     SOCKET sock_fd[2];
@@ -90,6 +91,7 @@ int main(int argc, char* argv[]) {
         printf("WSASocket() failed with error code %d\n", WSAGetLastError());
         free(lpProtocolBuf);
         WSACleanup();
+        return 1;
     }
 
     free(lpProtocolBuf);
