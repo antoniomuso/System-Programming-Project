@@ -116,7 +116,42 @@ struct data_args {
 #endif
 };
 
-int log_write(char *cli_addr, char *user_id, char *username, char *request, char * url,
+
+int lock_file (FILE * file, long len) {
+#ifdef __unix__
+    int fd = fileno(file);
+    if (flock(fd,LOCK_EX) != 0) {
+        return 1;
+    }
+#elif _WIN32
+    HANDLE file_h = (HANDLE)_get_osfhandle(_fileno( file ));
+    OVERLAPPED sOverlapped = {0} ;
+    if (LockFileEx(file_h, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
+        fprintf(stderr, "Couldn't acquire lock on file\n");
+        return 1;
+    }
+#endif
+    return 0;
+}
+
+int unlock_file (FILE * file, long len) {
+#ifdef __unix__
+    int fd = fileno(file);
+    if (flock(fd,LOCK_UN) != 0) {
+        return 1;
+    }
+#elif _WIN32
+    HANDLE file_h = (HANDLE)_get_osfhandle(_fileno( file ));
+    OVERLAPPED sOverlapped = {0} ;
+    if (UnlockFileEx(file_h, 0,(DWORD) len, 0, &sOverlapped) == FALSE) {
+        fprintf(stderr, "Couldn't acquire lock on file\n");
+        return 1;
+    }
+#endif
+    return 0;
+}
+
+int log_write(char * cli_addr, char * user_id, char * username, char * request, char * url,
               char * protocol_type, int return_code, int bytes_sent) {
 
     FILE *logfile = fopen(LOGFILE, "a");
@@ -784,19 +819,14 @@ void send_file (int socket, http_header http_h, char * address) {
         return;
     }
 
-#ifdef __unix__
-    int fd = fileno(pfile);
-    if (flock(fd,LOCK_EX) != 0) {
-        fprintf(stderr,"Error during file lock\n");
-        // return response with error lock
-        fclose(pfile);
+    fseek(pfile, 0, SEEK_END);
+    long lengthOfFile = ftell(pfile);
+    fseek(pfile, 0, SEEK_SET);
+
+    if (lock_file(pfile,lengthOfFile) == 1){
+        fprintf(stderr,"lock failed");
         return;
     }
-#endif
-
-    fseek(pfile, 0, SEEK_END);
-    int lengthOfFile = ftell(pfile);
-    fseek(pfile, 0, SEEK_SET);
 
     char * resp = create_http_response(200,lengthOfFile,"text/html; charset=utf-8", get_file_name(url),NULL);
     if (resp == NULL) {
@@ -826,14 +856,10 @@ void send_file (int socket, http_header http_h, char * address) {
 
     http_log(http_h,resp,address,0);
 
-#ifdef __unix__
 unlock:
-    while (flock(fd,LOCK_UN) != 0) {
-        sleep(1);
+    if (unlock_file(pfile,lengthOfFile) == 1) {
+        fprintf(stderr,"Unlock failed");
     }
-#elif _WIN32
-unlock:
-#endif
     free(resp);
     fclose(pfile);
 }
