@@ -33,5 +33,6 @@ Gestire per bene gli errori delle fwrite e delle send.
 
 ## Controllare 
 - [x] ToDo in ctrl_handler.
-- [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [x] Gestire in modo migliore il passaggio della modalità in server.c
+- [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
+- [ ] Finire di rivedere command_parser.c
