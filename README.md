@@ -30,6 +30,7 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [x] Modificare list_dir e gestirla come send_file per non caricare tutto in memoria
 - [x] Ridefinire lo standard di passaggio dei comandi per /command/
 - [x] Ridefinire il meccanismo di lock dei file per renderlo universale (Win e Unix)
+- [ ] Creare funzione per logging errori interni del server (fprintf -> logerror).
 
 ## Controllare 
 - [x] ToDo in ctrl_handler.
@@ -37,6 +38,8 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [ ] Finire di rivedere command_parser.c
 - [ ] Doppio controllo (potenzialmente uguale) in server.c: 345, 358
+- [ ] Gestire, restituendo errore, il caso di PUT e /command/ nel caso in cui la richiesta sia effettuata sulla socket
+cypher.
 
 
 ## Test Finali

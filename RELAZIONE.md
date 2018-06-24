@@ -54,12 +54,13 @@ modalità o sotto piattaforma Unix.
 Tutti i processi/thread figli eseguono la stessa funzione: `process_routine`, che riceve in input le due socket create in
 precedenza dal processo padre e in cui è specificata la modalità di gestione delle richieste in arrivo da
 parte di client esterni. Al fine di evitare che i figli si blocchino su una sola `accept`, 
-si utilizza la funzione `select` per risvegliare i processi appena si verifica un cambiamento su una delle due socket, 
-ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendiosa.  
-Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette e si procede con la sua
-gestione.
+si è deciso utilizzare la funzione `select` per risvegliare i processi appena si verifica un cambiamento su una delle 
+due socket, ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendiosa.  
+Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette confrontandole con quelle
+presenti nel file `passwordFile.txt` e si procede con la sua gestione.
 ### Operazioni
-Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows.
+Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows, 
+le operazioni di file locking e unlocking sono state universalizzate nelle funzioni `lock_file` e `unlock_file`.
 Per le richieste di GET si è deciso di rendere i lock sui file bloccanti, mentre per quelle di PUT verrà restituito 
 un errore al client nel caso in cui la risorsa sia già bloccata.
 ##### GET
@@ -72,18 +73,18 @@ i quali vengono inviati una volta raggiunta tale dimensione; il procedimento con
 inviato l'intero contenuto del file.
 ###### Directory
 Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` (che restituisce il 
-**contenuto della directory** indicata), il cui risultato viene inviato come al client risposta.
+**contenuto della directory** indicata), il cui risultato viene inviato al client come risposta.
 ##### GET con cifratura
 Le richieste di GET per i file sulla porta che prevede cifratura preventiva del contenuto del file stesso sono gestite dalla funzione
 `send_file_cipher`. Dopo essere stato aperto, il file è mappato in memoria grazie alle apposite funzioni dei due sistemi
 operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi di dimensione 
-pari a 4 byte del file mappato  e li cifra mediante lo _XOR_ con un intero random avente come seme l'indirizzo IP del 
+pari a 4 byte del file mappato  e li cifra mediante lo _XOR bitwise_ con un intero random avente come seme l'indirizzo IP del 
 client. 
 Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri 
 (0) all'ultimo blocco al fine di effettuare correttamente la cifratura, tale **padding** tuttavia non è né mappato in 
 memoria né tantomeno inviato inviato al client. 
 ##### Esecuzione comandi
-Come da specifiche, nel caso in cui il primo elemento del path contenga la la stringa **command** viene eseguita la 
+Come da specifiche, nel caso in cui il primo elemento del path contenga la stringa **command** viene eseguita la 
 funzione `exec_command`, la quale crea un thread che andrà a generare il processo che eseguirà il comando passato in 
 input. Come meccanismi di sincronizzazione, sono stati usati una **_condition variable_** per Unix e un **_Evento_** per
 Windows. Per entrambe le piattaforme si è deciso di usare il meccanismo delle **_pipe_** per redirezionare l'output dei
@@ -115,13 +116,13 @@ evento:
 - Su Unix, ciò avviene quando il server (processo padre) riceve il segnale `SIGHUP`, per il quale è stato quindi necessario 
 installare un **_signal handler_**. Una volta ricevuto tale segnale, viene inviato ai thread/processi figli il segnale
 `SIGUSR1` (che ha quindi richiesto l'implementazione di un ulteriore **_signal handler_**), che li spinge a rilasciare
-le risore acquisite e terminare la propria esecuzione.
+le risorse acquisite (tra cui le socket) e terminare la propria esecuzione.
 
 - Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `CTRL + BREAK` (`CTRL + INTERR` per
-le tastiere italiane). In questo caso, invece, è stato necessario installare un **_ctrl handler_**. Al  fine di 
+le tastiere italiane), perciò è stato necessario installare un **_ctrl handler_**. Al  fine di 
 permettere ai thread/processi "figli" di rilasciare le proprie risorse in modo corretto (come nel caso di Unix), 
-è stato inserito come meccanismo di segnalazione un **_Evento_**, che viene resettato ogni volta che viene rilanciato
-il server stesso.
+è stato inserito come meccanismo di segnalazione un **_Evento_**, che viene segnalato nella routine associata 
+**_ctrl handler_**  e resettato ogni volta che viene rilanciato il server stesso.
  
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
