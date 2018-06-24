@@ -97,10 +97,9 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
     }
     printf("Event set\n");
     fflush(stdout);
-    // Attendiamo la terminazione dei thread.
-
+    // Wait for threads/processes to exit
     if((WaitForMultipleObjects(len, children_array, TRUE, INFINITE)) == WAIT_FAILED) {
-        fprintf(stderr,"Thread wait error\n");
+        fprintf(stderr,"WaitForMultipleObjects error.\n");
         return 1;
     }
     CloseHandle(event);
@@ -113,9 +112,9 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 fprintf(stderr,"%s\n", strerror(errno));
                 return 1;
             }
-            // wait for thread to exit
+            // Wait for threads to exit
             if (pthread_join(tids[i], NULL) != 0) {
-                fprintf(stderr,"Thread join error\n");
+                fprintf(stderr,"pthread_join error\n");
                 return 1;
             }
         }
@@ -130,8 +129,9 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
                 return 1;
             }
             int status = 0;
+            // Wait for processes to exit
             if (waitpid(pids[i], &status, 0) == -1) {
-                fprintf(stderr,"Wait error\n");
+                fprintf(stderr,"waitpid error\n");
                 return 1;
             }
 
@@ -176,7 +176,7 @@ void set_child_handler () {
 HANDLE set_child_handler() {
     HANDLE event_h;
     if ((event_h = OpenEvent(EVENT_ALL_ACCESS, FALSE, event_name)) == NULL) {
-        fprintf(stderr, "Failed Opening Event\n");
+        fprintf(stderr, "OpenEvent failed.\n");
         exit(EXIT_FAILURE);
     }
     return event_h;
@@ -197,10 +197,10 @@ void handle_signal(int signal) {
 
 #elif _WIN32
 BOOL ctrl_handler(DWORD ctrl_type) {
-    printf("intercepted %d \n", ctrl_type);
+    printf("Intercepted: %d\n", ctrl_type);
     fflush(stdout);
     if (ctrl_type == CTRL_BREAK_EVENT) { // CTRL+Break triggers the operation
-        printf("entering handler for %d \n", ctrl_type);
+        printf("Entering handler for %d...\n", ctrl_type);
         fflush(stdout);
         infanticide(arr_process, len, mode, 0);
         free(arr_process);
