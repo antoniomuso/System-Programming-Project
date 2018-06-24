@@ -2,7 +2,7 @@
 
 ## TODO
 - [x] Creare un parser per le opzioni. (Antonio)
-- [x] Creare server Multi-Thread Multi-processo (pre thread e pre processo, pre forkato) (Il processo sotto unix deve essere Deamon sotto windows no).
+- [x] Creare server Multi-Thread Multi-processo (pre thread e pre processo, pre forkato) (Il processo sotto unix deve essere Daemon, sotto windows no).
 - [x] Creare parser per i file. (Giacomino)
 - [x] Trovare o Creare un decodere Base64 per il punto successivo. (Antonio)
 - [x] Creare parser per le richieste HTTP. (Attenzione username e password sono dentro Authorization: )
@@ -11,7 +11,7 @@
 - [x] Gestione command compreso di funzione per spawnare un processo dandogli come input un comando, ritorna come output l'output del comando Gesitsce anche la sincronizzazione. Progettare con la possibilità futura di passare argomenti.
 - [x] Gestire la connessione sulla porta 8081.
 - [x] Creare un funzione che cifra un file che mappa in memoria, la cifratura é: xor bitwise usando srand(ip-client).
-- [x] Gestire download e upload dei file GET PUT. Se viene passato con la GET un nome di una director deve restituire l'albero della directori (non ricorsivo)
+- [x] Gestire download e upload dei file GET PUT. Se viene passato con la GET un nome di una director deve restituire l'albero della directory (non ricorsivo)
 - [x] Gestire l'accesso esclusivo dei file mediante lock.
 
 
@@ -19,9 +19,9 @@ Gestire per bene gli errori delle fwrite e delle send.
 
 ## File Rivisti
 - main.c
-- signal.c
+- signals.c
 - server.c
-- operation.c `Da riguardare list dir per quanto riguarda le realloc`
+- operations.c `Da riguardare list dir per quanto riguarda le realloc`
 
 ## Idee
 - [x] Gestire child terminate con un diverso meccanismo di sinctronizzazione
