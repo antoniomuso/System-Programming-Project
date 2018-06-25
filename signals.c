@@ -38,7 +38,7 @@ void initialize_windows_event () {
         fprintf(stderr, "Couldn't create\\open event \"%s\" (%d)", event_name, GetLastError());
         ExitThread(1);
     }
-    printf("Event set\n");
+    //printf("Event set\n");
     fflush(stdout);
 }
 #endif
