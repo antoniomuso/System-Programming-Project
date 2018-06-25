@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) {
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     // The daemon is created
+    signal(SIGPIPE,SIG_IGN);
 #endif
 
 
