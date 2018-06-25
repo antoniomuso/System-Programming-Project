@@ -716,7 +716,7 @@ char *create_http_response(int response_code, unsigned long content_len, char * 
     int len = snprintf(response, resp_len, "HTTP/1.0 %d %s\r\n"
                                                                   "%s%s%s"
                                                                   "\r\n"
-                                                      , response_code, code_to_message(response_code), content, loc == NULL ? "" : loc, file == NULL ? "" : file);
+                                                      , response_code, code_to_message(response_code), content == NULL ? "" : content, loc == NULL ? "" : loc, file == NULL ? "" : file);
 
     if (len == -1) {
         free(file);
