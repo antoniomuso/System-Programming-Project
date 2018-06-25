@@ -455,7 +455,7 @@ void* thread (void *arg) {
     }
     int exit = WEXITSTATUS(status);
 
-    if (status == exit) {
+    if (exit == 127) {
         fprintf(stderr, "Command not found %s\n", strerror(errno));
         arguments->error_out = 1;
         close(fd[0]);
