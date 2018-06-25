@@ -236,9 +236,19 @@ void* process_routine (void *arg) {
 
             if (strcmp(http_h.type_req, "GET") == 0) {
 
-                if (is_chipher == 1 ) {
+                if (is_chipher == 1) {
                     // Encryption mode
-                    send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr,address);
+                    if (!startsWith("/command/", http_h.url)) {
+                        send_file_chipher(clientfd,http_h,saddr.sin_addr.s_addr,address);
+                    } else {
+                        fprintf(stderr, "Command with chipher not supported\n");
+                        char * resp = create_http_response(501,-1, NULL, NULL, NULL);
+                        if (resp != NULL) {
+                            Send(clientfd, resp,strlen(resp), 0);
+                            http_log(http_h,resp,address,0);
+                            free(resp);
+                        }
+                    }
 
                 } else if (startsWith("/command/", http_h.url)) {
                     // Command mode
@@ -275,9 +285,19 @@ void* process_routine (void *arg) {
                 }
 
 
-            } else if ((strcmp(http_h.type_req, "PUT") == 0) && is_chipher == 0) {
+            } else if ((strcmp(http_h.type_req, "PUT") == 0)) {
+
                 // PUT
-                put_file(clientfd,http_h,address,buffer,BUFF_READ_LEN,header_len,data_read);
+                if (is_chipher == 0) {
+                    put_file(clientfd, http_h, address, buffer, BUFF_READ_LEN, header_len, data_read);
+                } else {
+                    char * resp = create_http_response(501, -1, NULL, NULL, NULL);
+                    if (resp != NULL ) {
+                        Send(clientfd, resp,strlen(resp), 0);
+                        http_log(http_h,resp,address,0);
+                        free(resp);
+                    }
+                }
             }
 
             socket_exit:
