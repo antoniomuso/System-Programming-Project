@@ -35,10 +35,10 @@ Gestire per bene gli errori delle fwrite e delle send.
 ## Controllare 
 - [x] ToDo in ctrl_handler.
 - [x] Gestire in modo migliore il passaggio della modalità in server.c
-- [ ] Eccessivo ed esponenziale uso di memoria di exec_command.
+- [x] Eccessivo ed esponenziale uso di memoria di exec_command.
 - [ ] Finire di rivedere command_parser.c
-- [ ] Doppio controllo (potenzialmente uguale) in server.c: 345, 358
-- [ ] Gestire, restituendo errore, il caso di PUT e /command/ nel caso in cui la richiesta sia effettuata sulla socket
+- [x] Doppio controllo (potenzialmente uguale) in server.c: 345, 358
+- [x] Gestire, restituendo errore, il caso di PUT e /command/ nel caso in cui la richiesta sia effettuata sulla socket
 cypher.
 
 
