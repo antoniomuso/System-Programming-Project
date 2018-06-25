@@ -576,6 +576,15 @@ int exec_command(int socket, const char * command, const char * args, http_heade
 
 
     if (pthread_cond_wait(&(data_arguments.cond_var), &(data_arguments.mutex)) != 0) {
+        fprintf(stderr,"Error pthread_cond_wait\n");
+        free(cpy_command);
+        free(cpy_args);
+        return 1;
+    }
+
+    // disalloc thread memory
+    if (pthread_join(tid,NULL) != 0) {
+        fprintf(stderr,"Error join of thread\n");
         free(cpy_command);
         free(cpy_args);
         return 1;
@@ -605,15 +614,22 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         return 1;
     }
 
-
     DWORD out = WaitForSingleObject(data_arguments.event, INFINITE);
-
 
     if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
         free(cpy_command);
         free(cpy_args);
         return 1;
     }
+
+    out = WaitForSingleObject(thread, INFINITE);
+
+    if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
+        free(cpy_command);
+        free(cpy_args);
+        return 1;
+    }
+
     CloseHandle(thread);
 #endif
     if (data_arguments.error_out == 1) {
