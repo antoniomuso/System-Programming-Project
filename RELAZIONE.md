@@ -37,8 +37,8 @@ multi processo.
 Su Unix, il codice è scritto in modo tale che il server nasca come **_processo demone_** (la daemonizzazione è 
 effettuata nel file `main.c`), mentre su Windows esso nascerà come un normale processo.
 ##### Avvio del server
-Dopo aver caricato i vari parametri, si procede con la configurazione del server con la creazione delle socket: 
-una "normale" e l'altra per le sole operazioni di _GET_ precedute da cifratura.
+Dopo aver caricato i vari parametri, si procede con la configurazione del server partendo con la creazione di 2 socket: 
+una "normale" e l'altra per le sole operazioni di _GET_ per solo file preventivamente cifrati.
 ##### Thread e Processi
 Successivamente vengono creati, attraverso le apposite chiamate a funzione, i thread/processi "figli". 
 
@@ -61,8 +61,8 @@ presenti nel file `passwordFile.txt` e si procede con la sua gestione.
 ### Operazioni
 Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows, 
 le operazioni di file locking e unlocking sono state universalizzate nelle funzioni `lock_file` e `unlock_file`.
-Per le richieste di GET si è deciso di rendere i lock sui file bloccanti, mentre per quelle di PUT verrà restituito 
-un errore al client nel caso in cui la risorsa sia già bloccata.
+Per le richieste di GET si è deciso di rendere le richieste di lock sui file bloccanti, mentre per quelle di PUT verrà 
+restituito un errore al client nel caso in cui la risorsa sia già bloccata.
 ##### GET
 Le richieste di GET sulla porta principale (quella specificata in input o dal file di configurazione) sono gestitite 
 dalla funzione `send_file`.
@@ -75,7 +75,7 @@ inviato l'intero contenuto del file.
 Nel caso in cui il path richiesto corrisponde a una directory, viene invocata la funzione `list_dir` (che restituisce il 
 **contenuto della directory** indicata), il cui risultato viene inviato al client come risposta.
 ##### GET con cifratura
-Le richieste di GET per i file sulla porta che prevede cifratura preventiva del contenuto del file stesso sono gestite dalla funzione
+Le richieste di GET per i file sulla porta che prevede la cifratura preventiva del contenuto del file stesso sono gestite dalla funzione
 `send_file_cipher`. Dopo essere stato aperto, il file è mappato in memoria grazie alle apposite funzioni dei due sistemi
 operativi, successivamente si procede con la cifratura tramite la funzione `encrypt`, che manipola blocchi di dimensione 
 pari a 4 byte del file mappato  e li cifra mediante lo _XOR bitwise_ con un intero random avente come seme l'indirizzo IP del 
@@ -104,9 +104,10 @@ Esempi:
 
 ##### PUT
 Le richieste di PUT vengono gestite dalla funzione `put_file`, che dopo aver creato un file con lo stesso nome di quello
-che il client sta caricando ed ottenuto il lock su di esso, legge e trascrive il contenuto che gli viene inviato. Nel 
-caso in cui esistesse già un file con lo stesso nome di quello che il client sta caricando, il file esistente viene 
-sovrascritto. È anche possibile specificare il nome che il file che verrà caricato scrivendolo nel _path_ della _url_. 
+che il client sta caricando ed ottenuto il lock su di esso, legge e trascrive localmente il contenuto che gli viene 
+inviato. Nel caso in cui esistesse già un file con lo stesso nome di quello che il client sta caricando, il file 
+esistente viene sovrascritto. 
+È anche possibile specificare il nome che il file che verrà caricato scrivendolo nel _path_ dell'_url_. 
 ##### Logging
 Come da specifiche, tutte le richieste sono loggate all'interno del file _log.txt_ secondo il formato stabilito dal 
 _common log format_. Nel caso di fallimento della funzione di logging, è stato deciso di non riportare gli errori.
@@ -127,7 +128,7 @@ al **_ctrl handler_**  e resettato ogni volta che viene rilanciato il server ste
  
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
-e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove configurazioni.
+e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove impostazioni.
 ### Parser
 Sono stati creati molteplici parser per soddisfare varie necessità: per le richieste HTTP (che include la lettura e la
 decodifica delle credenziali cifrate in _base64_, per cui è stato deciso di usare un modulo esterno riperito in rete), 
