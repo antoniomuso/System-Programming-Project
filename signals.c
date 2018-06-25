@@ -130,7 +130,7 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
             }
             int status = 0;
             // Wait for processes to exit
-            if (waitpid(pids[i], &status, 0) == -1) {
+            if (waitpid(pids[i],&status,0) < 0  && errno != ECHILD) {
                 fprintf(stderr,"waitpid error\n");
                 return 1;
             }

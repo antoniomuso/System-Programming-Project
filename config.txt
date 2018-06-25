@@ -1,4 +1,4 @@
 port=8080
 server_ip=127.0.0.1
-mode=MT
+mode=MP
 n_proc=8
