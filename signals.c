@@ -95,8 +95,8 @@ int infanticide(void *children_array, int len, int mode, int exit_code) {
         CloseHandle(event);
         return 1;
     }
-    printf("Event set\n");
-    fflush(stdout);
+    //printf("Event set\n");
+    //fflush(stdout);
     // Wait for threads/processes to exit
     if((WaitForMultipleObjects(len, children_array, TRUE, INFINITE)) == WAIT_FAILED) {
         fprintf(stderr,"WaitForMultipleObjects error.\n");

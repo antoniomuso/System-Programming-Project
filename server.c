@@ -64,7 +64,7 @@ int close_socket(int socketfd) {
 int is_authorize(http_header http_h, options credentials) {
     // gestire la richiesta se authorization è NULL con una risposta 401
     if (http_h.attribute.authorization != NULL) {
-        printf("Auth: %s\n", http_h.attribute.authorization);
+        //printf("Auth: %s\n", http_h.attribute.authorization);
         authorization auth = parse_authorization(http_h.attribute.authorization);
         if (auth.free_pointer == NULL) return 0;
         printf("name: %s, password: %s\n", auth.name, auth.password);
