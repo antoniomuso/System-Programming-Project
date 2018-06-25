@@ -442,6 +442,8 @@ void* thread (void *arg) {
 
     close(fd[1]);
     int status = 0;
+
+
     if (waitpid(pid,&status,0) < 0  && errno != ECHILD) {
         fprintf(stderr, "Error in waitpid: %s\n", strerror(errno));
         arguments->error_out = 1;
@@ -449,11 +451,11 @@ void* thread (void *arg) {
         pthread_mutex_lock(&arguments->mutex);
         if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
         pthread_mutex_unlock(&arguments->mutex);
-
         return NULL;
     }
+    int exit = WEXITSTATUS(status);
 
-    if (status == 127) {
+    if (status == exit) {
         fprintf(stderr, "Command not found %s\n", strerror(errno));
         arguments->error_out = 1;
         close(fd[0]);
