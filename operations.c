@@ -453,6 +453,16 @@ void* thread (void *arg) {
         return NULL;
     }
 
+    if (status == 127) {
+        fprintf(stderr, "Command not found %s\n", strerror(errno));
+        arguments->error_out = 1;
+        close(fd[0]);
+        pthread_mutex_lock(&arguments->mutex);
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
+        pthread_mutex_unlock(&arguments->mutex);
+        return NULL;
+    }
+
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
     char *buff_out = malloc(buff_out_s);
@@ -596,6 +606,10 @@ int exec_command(int socket, const char * command, const char * args, http_heade
         free(cpy_args);
         return 1;
     }
+
+    // Destroy mutex and condition variable
+    pthread_cond_destroy(&(data_arguments.cond_var));
+    pthread_mutex_destroy(&(data_arguments.mutex));
 
 
 #elif _WIN32
