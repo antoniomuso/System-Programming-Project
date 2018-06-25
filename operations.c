@@ -732,8 +732,9 @@ char *list_dir(char *dir_name) {
 
         }
         pos += written;
-    } while (FindNextFile(hFind, &ffd) != 0);
 
+    } while (FindNextFile(hFind, &ffd) != 0);
+    FindClose(hFind);
     CloseHandle(hFind);
 
 #elif __unix__
