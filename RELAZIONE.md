@@ -8,7 +8,7 @@ sulle stesse funzioni in un secondo momento per re-implementare le stesse funzio
 e di massimizzare il riutilizzo del codice.
 
 Le funzionalità fondamentali e critiche, come la creazione e gestione del server pre-forkato, la gestione delle 
-richieste HTTP in accordo con le specifiche, la di gestione segnali ed eventi, sono state realizzate in presenza di 
+richieste HTTP in accordo con le specifiche e la di gestione segnali ed eventi, sono state realizzate in presenza di 
 entrambi in modo  simile alla tecnica di sviluppo "[Pair Programming](https://en.wikipedia.org/wiki/Pair_programming)"; 
 mentre quelle secondarie, come i vari parser, sono state sviluppate individualmente.  
 
@@ -32,7 +32,7 @@ configurazione), secondo la seguente sintassi di lancio  da linea di comando:
 successiva allo scopo di poter scaricare i file richiesti dopo che essi siano stati cifrati come da specifiche.
 - `-mode <modalità>` per specificare la modalità di funzionamento del server: **MT** per multi thread e **MP** per
 multi processo.
-- `-n_proc <numero>` per specificare quanti thread/processi (a seconda della modalità scelta) "figli" creare.
+- `-n_proc <numero>` per specificare quanti thread/processi (a seconda della modalità scelta) figli creare.
 ### Server
 Su Unix, il codice è scritto in modo tale che il server nasca come **_processo demone_** (la daemonizzazione è 
 effettuata nel file `main.c`), mentre su Windows esso nascerà come un normale processo.
@@ -82,7 +82,8 @@ pari a 4 byte del file mappato  e li cifra mediante lo _XOR bitwise_ con un inte
 client. 
 Nel caso in cui la dimensione del file non fosse divisibile per 4, è stato deciso di aggiungere un **padding** di zeri 
 (0) all'ultimo blocco al fine di effettuare correttamente la cifratura, tale **padding** tuttavia non è né mappato in 
-memoria né tantomeno inviato inviato al client. 
+memoria né tantomeno inviato inviato al client. Il risultato di tali operazioni viene inviato al client al termine delle
+stesse.
 ##### Esecuzione comandi
 Come da specifiche, nel caso in cui il primo elemento del path contenga la stringa **command** viene eseguita la 
 funzione `exec_command`, la quale crea un thread che andrà a generare il processo che eseguirà il comando passato in 
@@ -105,7 +106,7 @@ Esempi:
 Le richieste di PUT vengono gestite dalla funzione `put_file`, che dopo aver creato un file con lo stesso nome di quello
 che il client sta caricando ed ottenuto il lock su di esso, legge e trascrive il contenuto che gli viene inviato. Nel 
 caso in cui esistesse già un file con lo stesso nome di quello che il client sta caricando, il file esistente viene 
-sovrascritto.
+sovrascritto. È anche possibile specificare il nome che il file che verrà caricato scrivendolo nel _path_ della _url_. 
 ##### Logging
 Come da specifiche, tutte le richieste sono loggate all'interno del file _log.txt_ secondo il formato stabilito dal 
 _common log format_. Nel caso di fallimento della funzione di logging, è stato deciso di non riportare gli errori.
@@ -122,7 +123,7 @@ le risorse acquisite (tra cui le socket) e terminare la propria esecuzione.
 le tastiere italiane), perciò è stato necessario installare un **_ctrl handler_**. Al  fine di 
 permettere ai thread/processi "figli" di rilasciare le proprie risorse in modo corretto (come nel caso di Unix), 
 è stato inserito come meccanismo di segnalazione un **_Evento_**, che viene segnalato nella routine associata 
-**_ctrl handler_**  e resettato ogni volta che viene rilanciato il server stesso.
+al **_ctrl handler_**  e resettato ogni volta che viene rilanciato il server stesso.
  
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
@@ -131,4 +132,4 @@ e si torna al _main_, dove viene riletto il file  configurazione e avviato il se
 Sono stati creati molteplici parser per soddisfare varie necessità: per le richieste HTTP (che include la lettura e la
 decodifica delle credenziali cifrate in _base64_, per cui è stato deciso di usare un modulo esterno riperito in rete), 
 per creare risposte HTTP, per interpretare il file di configurazione, quello delle credenziali (che per comodità seguono 
-lo stesso formato) e i parametri passati da linea di comando. 
+lo stesso formato: `nome=valore` \ `username=password`) e i parametri passati da linea di comando. 
