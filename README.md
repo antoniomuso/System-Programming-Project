@@ -21,8 +21,9 @@ Gestire per bene gli errori delle fwrite e delle send.
 - main.c
 - signals.c
 - server.c
-- operations.c `Da riguardare list dir per quanto riguarda le realloc`
+- operations.c 
 - windows_process_exe.c
+- command_parser.c
 
 ## Idee
 - [x] Gestire child terminate con un diverso meccanismo di sinctronizzazione
@@ -36,7 +37,7 @@ Gestire per bene gli errori delle fwrite e delle send.
 - [x] ToDo in ctrl_handler.
 - [x] Gestire in modo migliore il passaggio della modalità in server.c
 - [x] Eccessivo ed esponenziale uso di memoria di exec_command.
-- [ ] Finire di rivedere command_parser.c
+- [x] Finire di rivedere command_parser.c
 - [x] Doppio controllo (potenzialmente uguale) in server.c: 345, 358
 - [x] Gestire, restituendo errore, il caso di PUT e /command/ nel caso in cui la richiesta sia effettuata sulla socket
 cypher.
