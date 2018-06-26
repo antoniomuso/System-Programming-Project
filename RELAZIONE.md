@@ -58,7 +58,7 @@ si è deciso utilizzare la funzione `select` per risvegliare i processi appena s
 due socket, ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendiosa.  
 Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette confrontandole con quelle
 presenti nel file `passwordFile.txt` e si procede con la sua gestione. Per questioni di efficienza si è deciso di 
-leggere tale file solo una volta, ossia all'avvio del server.
+leggere tale file solo una volta, ossia all'avvio dei thread/processi.
 ### Operazioni
 Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows, 
 le operazioni di file locking e unlocking sono state universalizzate nelle funzioni `lock_file` e `unlock_file`.
@@ -91,7 +91,9 @@ funzione `exec_command`, la quale crea un thread che andrà a generare il proces
 input. Come meccanismi di sincronizzazione, sono stati usati una **_condition variable_** per Unix e un **_Evento_** per
 Windows. Per entrambe le piattaforme si è deciso di usare il meccanismo delle **_pipe_** per redirezionare l'output dei
 processi che eseguono il comando, al fine di inviarne il contenuto al client una volta completata l'esecuzione del 
-thread.
+thread. Nonostante fossimo a conoscenza di `popen`, per rimanare coerenti con il passaggio dei comandi e 
+per evitare il collegamento con una shell comportato dall'uso di tale funzione, abbiamo deciso di gestire manualmente
+e separatamente nei due sistemi operativi la creazione dei processi e la redirezione delle pipe.  
 
 L'implementazione di `exec_command` supporta anche il **passaggio di parametri**, secondo la seguente sintassi:
 `[...]/command/arg1?arg2?[...]?argN`, dove nel caso di passaggio di comandi legati ai terminali 
@@ -129,9 +131,15 @@ al **_ctrl handler_**  e resettato ogni volta che viene rilanciato il server ste
  
 Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
 l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
-e si torna al _main_, dove viene riletto il file  configurazione e avviato il server con le nuove impostazioni.
+e si torna al _main_, dove vengono riletti il file  configurazione e quello delle password, e infine vine avviato il 
+server con le nuove impostazioni.
 ### Parser
 Sono stati creati molteplici parser per soddisfare varie necessità: per le richieste HTTP (che include la lettura e la
 decodifica delle credenziali cifrate in _base64_, per cui è stato deciso di usare un modulo esterno riperito in rete), 
 per creare risposte HTTP, per interpretare il file di configurazione, quello delle credenziali (che per comodità seguono 
-lo stesso formato: `nome=valore` \ `username=password`) e i parametri passati da linea di comando. 
+lo stesso formato: `nome=valore` \ `username=password`) e i parametri passati da linea di comando.
+### Terminazione
+La terminazione del programma avviene in modi diversi a seconda della piattaforma:
+- Nel caso di Windows, è sufficiente usare la combinazione di tasti `CTRL + C`.
+- In Unix è necessario inviare il segnale `SIGTERM` al processo **padre**, l'handler installato si occuperà di terminare
+correttamente tutti i figli.
