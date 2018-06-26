@@ -1064,7 +1064,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
     char * map;
     int fd = fileno(file);
-    map = mmap(0,lengthOfFile + padding,PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
+    map = mmap(0,lengthOfFile,PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
 
     if (map == MAP_FAILED) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
@@ -1130,14 +1130,6 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     }
 #endif
 
-#ifdef __unix__
-    for (int i = lengthOfFile; i < lengthOfFile + padding; i++) {
-        map[i] = 0;
-    }
-
-    n_pack = last != 0 ? n_pack + 1 : n_pack;
-#endif
-
     unsigned int * map_int;
     map_int = (unsigned int *) map;
 
@@ -1145,10 +1137,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         encrypt(map_int + (i) , address, 0);
     }
 
-#ifdef _WIN32
-    // The encryption with padding is performed differently in Windows.
     encrypt(map_int + n_pack, address, padding);
-#endif
 
     char *resp = create_http_response(200, lengthOfFile, "text/html; charset=utf-8", get_file_name(http_h.url+1), NULL);
     if (resp == NULL) {
@@ -1164,7 +1153,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 
 unmap:
 #ifdef __unix__
-    if (munmap(map, lengthOfFile+padding) == -1) {
+    if (munmap(map, lengthOfFile) == -1) {
         fprintf(stderr, "An error occurred while trying to un-mmap file.\n");
     }
 unlock:
