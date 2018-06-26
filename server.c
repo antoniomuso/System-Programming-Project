@@ -372,7 +372,7 @@ int run_server(options c_options, options f_options) {
     snprintf(chiper_port, MAX_OPTION_LEN, "%d", atoi(port) + 1);
 
     if (n_proc <= 0 || port == NULL || server_ip == NULL || mode == NULL) {
-        fprintf(stderr, "Configuration file error: parameters incomplete.e\n");
+        fprintf(stderr, "Configuration file error: parameters unacceptable or incomplete.\n");
         exit(EXIT_FAILURE);
     }
 
