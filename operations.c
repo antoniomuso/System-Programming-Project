@@ -469,7 +469,7 @@ void* thread (void *arg) {
     int buff_out_s = BUFSIZE;
     char *buff_out = malloc(buff_out_s);
     if (buff_out == NULL) {
-        fprintf(stderr,"malloc error");
+        fprintf(stderr,"malloc error.\n");
         arguments->error_out = 1;
         close(fd[0]);
         pthread_mutex_lock(&arguments->mutex);
