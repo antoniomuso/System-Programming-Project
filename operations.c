@@ -1079,7 +1079,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
 #elif _WIN32
     fclose(file);
 
-    HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_h == NULL) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
         if (resp == NULL) {
@@ -1097,7 +1097,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
         return;
     }
 
-    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READWRITE, 0, lengthOfFile, NULL);
+    HANDLE map_h = CreateFileMapping(file_h, NULL, PAGE_READONLY, 0, lengthOfFile, NULL);
 
     if (map_h == NULL) {
         char *resp = create_http_response(500, -1, NULL, NULL, NULL);
