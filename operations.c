@@ -1080,7 +1080,7 @@ void send_file_chipher (int socket, http_header http_h, unsigned int address, ch
     fclose(file);
 
     HANDLE file_h = CreateFile(http_h.url+1, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_h == NULL) {
+    if (file_h == INVALID_HANDLE_VALUE) {
         char *resp = create_http_response(404, -1, NULL, NULL, NULL);
         if (resp == NULL) {
             return;
