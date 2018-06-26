@@ -430,7 +430,7 @@ void* thread (void *arg) {
         char ** args = build_arguments(arguments->args);
         if (args == NULL) {
             fprintf(stderr,"build_arguments failed.\n");
-            exit(EXIT_FAILURE);
+            exit(127);
         }
         close(fd[0]);
         dup2(fd[1],1);

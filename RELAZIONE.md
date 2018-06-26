@@ -57,7 +57,8 @@ parte di client esterni. Al fine di evitare che i figli si blocchino su una sola
 si è deciso utilizzare la funzione `select` per risvegliare i processi appena si verifica un cambiamento su una delle 
 due socket, ciò permette di evitare un'attesa attiva dei figli, che sarebbe troppo dispendiosa.  
 Una volta ricevuta una richiesta, si verificano che le credenziali sottomesse siano corrette confrontandole con quelle
-presenti nel file `passwordFile.txt` e si procede con la sua gestione.
+presenti nel file `passwordFile.txt` e si procede con la sua gestione. Per questioni di efficienza si è deciso di 
+leggere tale file solo una volta, ossia all'avvio del server.
 ### Operazioni
 Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` per Unix e `[Un]LockFileEx` per Windows, 
 le operazioni di file locking e unlocking sono state universalizzate nelle funzioni `lock_file` e `unlock_file`.
