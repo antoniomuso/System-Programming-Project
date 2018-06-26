@@ -899,7 +899,7 @@ unlock:
 
 void put_file (int clientfd, http_header http_h, char * address, char * buffer, const int BUFF_READ_LEN,int header_len, int data_read) {
     FILE * file;
-    file = fopen(http_h.url+1, "w" );
+    file = fopen(http_h.url+1, "wb" );
 
     if (file == NULL) {
         fprintf(stderr,"An error occurred while trying to open file %s.\n", http_h.url +1);
