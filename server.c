@@ -486,6 +486,7 @@ int run_server(options c_options, options f_options) {
         fprintf(stderr, "Error: invalid mode\n");
         exit(EXIT_FAILURE);
     }
+    set_signal_server_exit();
 
 #elif _WIN32
 

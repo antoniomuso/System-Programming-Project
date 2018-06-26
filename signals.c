@@ -254,3 +254,32 @@ void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod) {
 #endif
 }
 
+#ifdef __unix__
+void signal_terminate (int sig) {
+    handle_signal(sig);
+    exit(0);
+}
+
+int set_signal_server_exit () {
+    struct sigaction sa;
+    //printf("proc id: %d\n", getpid());
+
+    // Setup the signal handler
+    sa.sa_handler = &signal_terminate;
+
+    // Restart the system call, if at all possible
+    sa.sa_flags = SA_RESTART;
+
+    // Block every signal during the handler
+    if (sigfillset(&sa.sa_mask) == -1) {
+        fprintf(stderr, "sigfillset error in set_signal_handler\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
+        exit(EXIT_FAILURE);
+    }
+
+}
+#endif

@@ -7,6 +7,7 @@ int flag_restart;
 void set_signal_handler(void *arr_proc, int type_size, int arr_len, int mod);
 #ifdef __unix__
 void set_child_handler();
+int set_signal_server_exit ();
 #elif _WIN32
 #include <windows.h>
 HANDLE set_child_handler();
