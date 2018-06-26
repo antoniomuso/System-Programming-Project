@@ -277,7 +277,7 @@ int set_signal_server_exit () {
     }
 
     if (sigaction(SIGTERM, &sa, NULL) == -1) {
-        fprintf(stderr,"Error: cannot handle SIGHUP"); // Should not happen
+        fprintf(stderr,"Error: cannot handle SIGTERM"); // Should not happen
         exit(EXIT_FAILURE);
     }
 
