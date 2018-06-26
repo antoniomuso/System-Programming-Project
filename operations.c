@@ -979,7 +979,7 @@ void put_file (int clientfd, http_header http_h, char * address, char * buffer, 
         }
 
         write = fwrite(buffer,1,read,file);
-        m_sleep(10);
+        //m_sleep(10);
         if (write == 0) {
             char * resp = create_http_response(500,-1, NULL, NULL, NULL);
             if (resp == NULL) {
