@@ -441,29 +441,6 @@ void* thread (void *arg) {
     }
 
     close(fd[1]);
-    int status = 0;
-
-
-    if (waitpid(pid,&status,0) < 0  && errno != ECHILD) {
-        fprintf(stderr, "Error in waitpid: %s\n", strerror(errno));
-        arguments->error_out = 1;
-        close(fd[0]);
-        pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
-        pthread_mutex_unlock(&arguments->mutex);
-        return NULL;
-    }
-    int exit = WEXITSTATUS(status);
-
-    if (exit == 127) {
-        fprintf(stderr, "Command not found %s\n", strerror(errno));
-        arguments->error_out = 1;
-        close(fd[0]);
-        pthread_mutex_lock(&arguments->mutex);
-        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
-        pthread_mutex_unlock(&arguments->mutex);
-        return NULL;
-    }
 
     char buff[BUFSIZE];
     int buff_out_s = BUFSIZE;
@@ -480,11 +457,32 @@ void* thread (void *arg) {
     int all_read_data = 0;
 
     fcntl(fd[0], F_SETFL, O_NONBLOCK);
+    int status = 0;
 
     for (;;) {
+
+        int ex = waitpid(pid,&status,WNOHANG);
+
+        if (ex < 0  && errno != ECHILD) {
+            fprintf(stderr, "Error in waitpid: %s\n", strerror(errno));
+            arguments->error_out = 1;
+            close(fd[0]);
+            pthread_mutex_lock(&arguments->mutex);
+            if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
+            pthread_mutex_unlock(&arguments->mutex);
+            return NULL;
+        }
+
         int n_read = read(fd[0], buff, BUFSIZE);
 
-        if (n_read == -1) {
+        if (n_read == -1 && (errno == EWOULDBLOCK || errno == EAGAIN) && ex == 0) {
+            continue;
+        }
+        if (n_read == -1) break;
+
+        /*if (n_read == -1 ) {
+            printf("%s", strerror(errno));
+            fflush(stdout);
             free(buff_out);
             arguments->error_out = 1;
             pthread_mutex_lock(&arguments->mutex);
@@ -492,7 +490,7 @@ void* thread (void *arg) {
             pthread_mutex_unlock(&arguments->mutex);
             close(fd[0]);
             return NULL;
-        }
+        }*/
 
         if (all_read_data+n_read >= buff_out_s) {
             buff_out_s *= 2;
@@ -514,7 +512,19 @@ void* thread (void *arg) {
         memcpy(buff_out+all_read_data, buff, n_read);
         all_read_data += n_read;
 
-        if(n_read == 0 || n_read < BUFSIZE) break;
+        if((n_read == 0 || n_read < BUFSIZE) && ex != 0) break;
+    }
+
+    int exit = WEXITSTATUS(status);
+
+    if (exit == 127) {
+        fprintf(stderr, "Command not found %s\n", strerror(errno));
+        arguments->error_out = 1;
+        close(fd[0]);
+        pthread_mutex_lock(&arguments->mutex);
+        if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
+        pthread_mutex_unlock(&arguments->mutex);
+        return NULL;
     }
 
     arguments->error_out = 0;
