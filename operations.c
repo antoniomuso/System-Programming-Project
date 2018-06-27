@@ -486,9 +486,10 @@ void* thread (void *arg) {
         if (n_read == -1 && (errno == EWOULDBLOCK || errno == EAGAIN) && ex == 0) {
             continue;
         }
-        if (n_read == -1) break;
 
-        /*if (n_read == -1 ) {
+        if (n_read == -1 && (errno == EWOULDBLOCK || errno == EAGAIN)) break;
+
+        if (n_read == -1 ) {
             printf("%s", strerror(errno));
             fflush(stdout);
             free(buff_out);
@@ -498,7 +499,7 @@ void* thread (void *arg) {
             pthread_mutex_unlock(&arguments->mutex);
             close(fd[0]);
             return NULL;
-        }*/
+        }
 
         if (all_read_data+n_read >= buff_out_s) {
             buff_out_s *= 2;
