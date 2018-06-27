@@ -332,20 +332,8 @@ void* thread (void *arg) {
         return NULL;
     }
 
-
-
     DWORD proc_pid = proc_info.dwProcessId;
     HANDLE proc_handle = proc_info.hProcess;
-
-    DWORD out = WaitForSingleObject(proc_handle, INFINITE);
-    if (out == WAIT_TIMEOUT || out == WAIT_FAILED || out == WAIT_ABANDONED ) {
-        arguments->error_out = 1;
-        if(SetEvent(arguments->event) == FALSE)
-            fprintf(stderr, "SetEvent Failed.\n");
-        CloseHandle(pipe_read);
-        CloseHandle(child_write);
-        return NULL;
-    }
 
     printf("Process terminated.\n");
     fflush(stdout);
@@ -371,6 +359,24 @@ void* thread (void *arg) {
 
         printf("Starting to read\n");
         fflush(stdout);
+
+        DWORD out = WaitForSingleObject(proc_handle, 50);
+        if (out == WAIT_FAILED || out == WAIT_ABANDONED ) {
+            arguments->error_out = 1;
+            free(buff_out);
+            if(SetEvent(arguments->event) == FALSE)
+            fprintf(stderr, "SetEvent Failed.\n");
+            CloseHandle(pipe_read);
+            CloseHandle(child_write);
+            return NULL;
+        }
+        DWORD peek_read = 0;
+        PeekNamePipe(pipe_read, NULL, 0, NULL, &peek_read, NULL);
+
+        if (peek_read == 0 && out != WAIT_OBJECT_0 ) continue;
+
+        if (peek_read == 0) break;
+
         bSuccess = ReadFile(pipe_read, buff, BUFSIZE, &dwRead, NULL);
 
         if (read+dwRead >= buff_out_s) {
@@ -467,6 +473,7 @@ void* thread (void *arg) {
             fprintf(stderr, "Error in waitpid: %s\n", strerror(errno));
             arguments->error_out = 1;
             close(fd[0]);
+            free(buff_out);
             pthread_mutex_lock(&arguments->mutex);
             if (pthread_cond_signal(&arguments->cond_var) != 0) fprintf(stderr, "An error occurred while trying to signal the condion variable.\n");
             pthread_mutex_unlock(&arguments->mutex);
@@ -475,6 +482,7 @@ void* thread (void *arg) {
 
         int n_read = read(fd[0], buff, BUFSIZE);
 
+        // se non ho letto nnt ma il processo non ha terminato esco.
         if (n_read == -1 && (errno == EWOULDBLOCK || errno == EAGAIN) && ex == 0) {
             continue;
         }
