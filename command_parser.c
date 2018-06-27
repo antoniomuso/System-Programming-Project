@@ -369,7 +369,7 @@ options parse_file(char *name, command_arc * cmd_arc, int arc_len) {
     char * lines;
 
     int k = 0;
-    while ((lines = strtok_r(p, "\n", &pointer)) != NULL) {
+    while ((lines = strtok_r(p, "\r\n", &pointer)) != NULL) {
         fflush(stdout);
         p = NULL;
         command cmd = extract_command(lines);
