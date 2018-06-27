@@ -371,7 +371,15 @@ void* thread (void *arg) {
             return NULL;
         }
         DWORD peek_read = 0;
-        PeekNamePipe(pipe_read, NULL, 0, NULL, &peek_read, NULL);
+        if(PeekNamedPipe(pipe_read, NULL, 0, NULL, &peek_read, NULL) == FALSE) {
+            arguments->error_out = 1;
+            free(buff_out);
+            if(SetEvent(arguments->event) == FALSE)
+            fprintf(stderr, "SetEvent Failed.\n");
+            CloseHandle(pipe_read);
+            CloseHandle(child_write);
+            return NULL;
+        }
 
         if (peek_read == 0 && out != WAIT_OBJECT_0 ) continue;
 
