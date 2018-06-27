@@ -17,7 +17,7 @@ Per aumentarne la leggibilità e la modularità, è stato deciso di organizzare 
 ognuno con un proprio header, che vengono compilati assieme automaticamente tramite il _makefile_.
 
 ### Compilazione
-Per compilare l'intero programma è sufficiente posizionarsi nella directory del progetto e usare il makefile:
+Per compilare l'intero programma è sufficiente posizionarsi nella directory del progetto e usare il _makefile_:
 
 - Nel caso di Unix, è sufficiente chiamare `make`.
 - In Windows, è possibile invocare il compilatore digitando `mingw32-make.exe` 
