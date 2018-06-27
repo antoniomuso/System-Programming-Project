@@ -64,6 +64,17 @@ Per relizzare l'accesso esclusivo ai file sono state usate la funzione `flock` p
 le operazioni di file locking e unlocking sono state universalizzate nelle funzioni `lock_file` e `unlock_file`.
 Per le richieste di GET si è deciso di rendere le richieste di lock sui file bloccanti, mentre per quelle di PUT verrà 
 restituito un errore al client nel caso in cui la risorsa sia già bloccata.
+
+**NOTA**: L'attuale implementazione del sistema dà la possibilità ad entrambe le richieste di GET e PUT di avere accesso
+completo all'intero filesystem del sistema operativo, ossia non è stata inserita alcuna sorta di restrizione al campo 
+di azione del programma all'interno di una zona specifica e debitamente limitata (come una _root directory_ 
+"fittizia" dentro cui confinare le operazioni messe a disposizione dal server stesso) come normalmente avviene nei 
+server HTTP. È stato deciso di non prendere provvedimenti al riguardo sia perché il "problema" è stato discusso 
+solamente il giorno precedente alla consegna del progetto, ma soprattutto perché, consultando le specifiche, non si è 
+evinta la necessità di gestire la sicurezza del programma in termini di permessi e controllo degli accessi. 
+Infatti, durante la realizzazione del progetto, abbiamo deciso di focalizzare la nostra attenzione sul funzionamento e
+la gestione corretti, coerenti ed efficienti del server e delle funzionalità richieste, piuttosto che concentrarsi su 
+aspetti che ci sono risultati secondari o non rilevanti dopo un'accurata analisi delle specifiche.
 ##### GET
 Le richieste di GET sulla porta principale (quella specificata in input o dal file di configurazione) sono gestitite 
 dalla funzione `send_file`.
@@ -123,14 +134,14 @@ installare un **_signal handler_**. Una volta ricevuto tale segnale, viene invia
 `SIGUSR1` (che ha quindi richiesto l'implementazione di un ulteriore **_signal handler_**), che li spinge a rilasciare
 le risorse acquisite (tra cui le socket) e terminare la propria esecuzione.
 
-- Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `CTRL + BREAK` (`CTRL + INTERR` per
+- Su Windows, ciò avviene quando nella console è premuta la combinazione di tasti `ctrl + break` (`ctrl + interr` per
 le tastiere italiane), perciò è stato necessario installare un **_ctrl handler_**. Al  fine di 
 permettere ai thread/processi "figli" di rilasciare le proprie risorse in modo corretto (come nel caso di Unix), 
 è stato inserito come meccanismo di segnalazione un **_Evento_**, che viene segnalato nella routine associata 
 al **_ctrl handler_**  e resettato ogni volta che viene rilanciato il server stesso.
  
-Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si termina 
-l'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
+Al verificarsi dell'evento specificato sopra, il comportamento per entrambe le piattaforme è lo stesso: si attende il
+termine  dell'esecuzione di tutti i processi/thread figli, si chiudono le 2 socket create dal processo padre,
 e si torna al _main_, dove vengono riletti il file  configurazione e quello delle password, e infine vine avviato il 
 server con le nuove impostazioni.
 ### Parser
@@ -140,6 +151,6 @@ per creare risposte HTTP, per interpretare il file di configurazione, quello del
 lo stesso formato: `nome=valore` \ `username=password`) e i parametri passati da linea di comando.
 ### Terminazione
 La terminazione del programma avviene in modi diversi a seconda della piattaforma:
-- Nel caso di Windows, è sufficiente usare la combinazione di tasti `CTRL + C`.
+- Nel caso di Windows, è sufficiente usare la combinazione di tasti `ctrl + C`.
 - In Unix è necessario inviare il segnale `SIGTERM` al processo **padre**, l'handler installato si occuperà di terminare
 correttamente tutti i figli.
