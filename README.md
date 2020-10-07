@@ -16,3 +16,12 @@ It runs as a normal process on Windows systems, and as a daemon process on Linux
 The `GET` primitive is meant to be used for file downloads (in case the connection port is 8081, the files will preemptively be encrypted) or command executions (bash commands, extra arguments are supported as well).
 The `PUT` primitive is meant to be used for file uploads to the server.
 
+## Compiling
+Under Unix systems, it suffices to call the `make` command inside the folder where the Makefile is located.
+Under Windows systems, the compilation can be performed via the `mingw32-make.exe` program.
+
+## Running
+The server can be run by executing the *main* file. You can optionally use the configuration file or specify the required parameters via command line.
+
+## Further Information
+Further information can be found in the `RELAZIONE.md` file (Italian only).
